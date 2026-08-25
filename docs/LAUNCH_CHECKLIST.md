@@ -35,8 +35,8 @@ Do not set `RESEND_API_KEY` for this beta.
 
 ## Lifecycle cron
 
-- `vercel.json` schedules `GET /api/cron/lifecycle` every minute.
-- **Hobby** only runs Vercel Cron **once per day**. For a live 10-person session, click Kitchen **Run due lifecycle jobs** as needed, or use Pro.
+- `vercel.json` schedules `GET /api/cron/lifecycle` once daily at **08:00 UTC** (`0 8 * * *`).
+- **Hobby** requires a daily (or less frequent) cron. During controlled beta, click Kitchen **Run due lifecycle jobs** as needed for Quick/Live timing. **Pro** can use a more frequent schedule later.
 - Cron never reveals early. Database `now()` is authoritative.
 
 ## Beta operating mode

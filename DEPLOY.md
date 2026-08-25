@@ -45,7 +45,7 @@ Copy names from `.env.example`. Never commit real values.
 
 1. Add env vars in Vercel, then deploy (push to `main` or **Deploy** from the dashboard).
 2. Confirm build succeeds (`npm run build` locally if debugging).
-3. `vercel.json` registers cron `GET /api/cron/lifecycle` (every minute). **Hobby** plans run crons at most once per day; use admin **Run due jobs** for short test loops. **Pro** supports the every-minute schedule.
+3. `vercel.json` registers cron `GET /api/cron/lifecycle` once daily at **08:00 UTC** (`0 8 * * *`). On **Vercel Hobby**, that is the compatible schedule. During controlled beta, use admin **Run due lifecycle jobs** for Quick/Live timing between cron runs. **Pro** can restore a more frequent schedule later if needed.
 
 ## 5. Connect mallowup.com
 
