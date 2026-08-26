@@ -14,10 +14,10 @@ export default function LandingPage() {
           Marshmallow
         </p>
         <h1 className="mt-2 font-display text-[2.35rem] leading-[1.02] font-semibold tracking-tight">
-          The Human Nature Game
+          The Human Relationships Game
         </h1>
         <p className="mt-4 font-display text-xl font-semibold leading-snug">
-          How well do you understand people?
+          How well do you understand other people?
         </p>
         <p className="mt-4 max-w-[19rem] text-sm leading-6 text-ink-muted">
           Answer for yourself.

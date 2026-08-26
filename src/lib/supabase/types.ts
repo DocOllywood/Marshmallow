@@ -625,6 +625,47 @@ export type Database = {
           },
         ]
       }
+      daily_rounds: {
+        Row: {
+          created_at: string
+          id: string
+          round_date: string
+          status: Database["public"]["Enums"]["marshmallow_status"]
+          subtitle: string | null
+          title: string
+          topic_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          round_date: string
+          status?: Database["public"]["Enums"]["marshmallow_status"]
+          subtitle?: string | null
+          title: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          round_date?: string
+          status?: Database["public"]["Enums"]["marshmallow_status"]
+          subtitle?: string | null
+          title?: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_rounds_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marshmallows: {
         Row: {
           cancelled_at: string | null
@@ -633,6 +674,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           daily_on: string | null
+          daily_round_id: string | null
           entity_label: string | null
           expires_at: string | null
           hard_reveals_at: string
@@ -646,6 +688,7 @@ export type Database = {
           quick_priority: number | null
           result_available_at: string | null
           reveals_at: string
+          round_position: number | null
           spoiler_context: string | null
           status: Database["public"]["Enums"]["marshmallow_status"]
           topic_id: string | null
@@ -658,6 +701,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           daily_on?: string | null
+          daily_round_id?: string | null
           entity_label?: string | null
           expires_at?: string | null
           hard_reveals_at: string
@@ -671,6 +715,7 @@ export type Database = {
           quick_priority?: number | null
           result_available_at?: string | null
           reveals_at: string
+          round_position?: number | null
           spoiler_context?: string | null
           status?: Database["public"]["Enums"]["marshmallow_status"]
           topic_id?: string | null
@@ -683,6 +728,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           daily_on?: string | null
+          daily_round_id?: string | null
           entity_label?: string | null
           expires_at?: string | null
           hard_reveals_at?: string

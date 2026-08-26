@@ -1,4 +1,5 @@
 import type { PlayScreen } from "@/domain/play/view";
+import type { DailyRoundProgress } from "@/domain/daily/round";
 import type { Database } from "@/lib/supabase/types";
 
 type Status = Database["public"]["Enums"]["marshmallow_status"];
@@ -60,4 +61,7 @@ export type PlayMarshmallow = {
   nowIso: string;
   reveal: RevealPayload | null;
   nextHref: string;
+  dailyRound?: DailyRoundProgress | null;
+  roundPosition?: number | null;
+  dailyNextHref?: string | null;
 };

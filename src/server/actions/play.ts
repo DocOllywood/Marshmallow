@@ -93,3 +93,39 @@ export async function openRevealAction(marshmallowId: string): Promise<PlayActio
   revalidatePath("/home");
   return { ok: true };
 }
+
+export async function openDailyRoundRevealAction(roundId: string): Promise<PlayActionResult> {
+  await requireOnboarded();
+  const supabase = await createSupabaseServerClient();
+  const { data: questions, error: questionError } = await supabase
+    .from("marshmallows")
+    .select("id, status")
+    .eq("daily_round_id", roundId)
+    .order("round_position", { ascending: true });
+
+  if (questionError) {
+    return { ok: false, error: questionError.message };
+  }
+
+  for (const question of questions ?? []) {
+    if (question.status !== "revealed") {
+      return { ok: false, error: "We're finishing the count." };
+    }
+    const { error } = await supabase.rpc("open_reveal", {
+      p_marshmallow_id: question.id,
+    });
+    if (error && !error.message.includes("already_opened")) {
+      if (error.message.includes("results_not_available")) {
+        return { ok: false, error: "We're finishing the count." };
+      }
+      if (error.message.includes("no_sealed_entry")) {
+        continue;
+      }
+      return mapPlayError(error.message);
+    }
+  }
+
+  revalidatePath(`/daily/${roundId}/reveal`);
+  revalidatePath("/home");
+  return { ok: true };
+}

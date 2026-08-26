@@ -38,7 +38,7 @@ const emptyFeed: HomeFeed = {
   readyToReveal: [],
   quickPlay: [],
   liveNow: [],
-  todays: null,
+  dailyRound: null,
   cooking: [],
   waiting: [],
   openNow: [],
@@ -94,24 +94,51 @@ describe("HomeFeedView", () => {
     expect(screen.queryByText(/more Quick in rotation/i)).toBeNull();
   });
 
-  it("renders a contemplative Daily block with PLAY THE DAILY", () => {
+  it("renders a daily round block with continue and reveal states", () => {
     const feed: HomeFeed = {
       ...emptyFeed,
-      todays: card({
-        id: "30000000-0000-4000-8000-0000000000d1",
-        question: "Would the world be happier if nobody could become famous?",
-        is_daily: true,
-        play_mode: "daily",
-        topicName: "Human Nature",
-      }),
+      dailyRound: {
+        roundId: "40000000-0000-4000-8000-000000000001",
+        title: "Can love survive complete honesty?",
+        subtitle: "5 questions about love, honesty, and trust.",
+        topicName: "Love",
+        roundDate: "2026-08-25",
+        questions: [
+          {
+            id: "31000000-0000-4000-8000-000000000001",
+            question: "Would you want to know?",
+            position: 1,
+            sealed: true,
+            openedReveal: false,
+            status: "open",
+            revealsAt: "2026-08-25T22:00:00.000Z",
+          },
+          {
+            id: "31000000-0000-4000-8000-000000000002",
+            question: "Is emotional cheating worse?",
+            position: 2,
+            sealed: false,
+            openedReveal: false,
+            status: "open",
+            revealsAt: "2026-08-25T22:00:00.000Z",
+          },
+        ],
+        sealedCount: 1,
+        allSealed: false,
+        allRevealed: false,
+        anyRevealOpened: false,
+        currentPlayId: "31000000-0000-4000-8000-000000000002",
+        revealHref: "/daily/40000000-0000-4000-8000-000000000001/reveal",
+      },
     };
 
     render(<HomeFeedView feed={feed} firstName="Alex" />);
 
     expect(screen.getByText("The Daily")).toBeTruthy();
-    expect(screen.getByText(/One big question about being human/i)).toBeTruthy();
-    expect(screen.getByRole("link", { name: "PLAY THE DAILY" })).toBeTruthy();
-    expect(screen.getByText("HUMAN NATURE")).toBeTruthy();
+    expect(screen.getByText(/Can love survive complete honesty/i)).toBeTruthy();
+    expect(screen.getByText(/5 questions about love/i)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "CONTINUE THE DAILY" })).toBeTruthy();
+    expect(screen.getByText(/1 of 2 locked/i)).toBeTruthy();
   });
 
   it("stacks Cooking with humanized wait beneath the question", () => {

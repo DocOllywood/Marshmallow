@@ -6,6 +6,8 @@ import Link from "next/link";
 import { EmptyState } from "@/components/EmptyState";
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import type { DailyRoundProgress } from "@/domain/daily/round";
+import { dailyHomeState } from "@/domain/daily/round";
 import { heroHomeQuick, isWaitingForSample, moreHomeQuick } from "@/domain/play/sample";
 import {
   formatShortCountdown,
@@ -68,7 +70,7 @@ export function HomeFeedView({
   const moreQuick = moreHomeQuick(feed.quickPlay);
 
   const empty =
-    !feed.todays &&
+    !feed.dailyRound &&
     feed.readyToReveal.length === 0 &&
     feed.cooking.length === 0 &&
     !heroQuick &&
@@ -121,7 +123,7 @@ export function HomeFeedView({
 
       {heroQuick ? <QuickHero hero={heroQuick} more={moreQuick} /> : null}
 
-      {feed.todays ? <DailySection card={feed.todays} /> : null}
+      {feed.dailyRound ? <DailyRoundSection round={feed.dailyRound} /> : null}
 
       {feed.liveNow.length > 0 ? <LiveSection cards={feed.liveNow} /> : null}
 
@@ -190,18 +192,50 @@ function QuickHero({ hero, more }: { hero: HomeFeedCard; more: HomeFeedCard[] })
   );
 }
 
-function DailySection({ card }: { card: HomeFeedCard }) {
+function DailyRoundSection({ round }: { round: DailyRoundProgress }) {
+  const state = dailyHomeState(round);
+  const playHref = round.currentPlayId ? `/m/${round.currentPlayId}` : "/home";
+
   return (
     <section className="flex flex-col gap-4 border-l-2 border-primary/30 pl-4">
       <div className="flex flex-col gap-1">
         <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">The Daily</p>
-        <p className="text-sm leading-snug text-ink-muted">One big question about being human.</p>
+        <WorldTag topicName={round.topicName} />
+        <p className="font-display text-[clamp(1.4rem,5.8vw,1.75rem)] leading-[1.1] font-semibold tracking-tight break-words">
+          {round.title}
+        </p>
+        {round.subtitle ? (
+          <p className="text-sm leading-snug text-ink-muted">{round.subtitle}</p>
+        ) : null}
       </div>
-      <WorldTag topicName={card.topicName} />
-      <Link href={`/m/${card.id}`} className="block min-w-0">
-        <QuestionText size="large">{card.question}</QuestionText>
-      </Link>
-      <PrimaryButton href={`/m/${card.id}`}>PLAY THE DAILY</PrimaryButton>
+
+      {state === "play" ? (
+        <PrimaryButton href={playHref}>PLAY THE DAILY</PrimaryButton>
+      ) : null}
+      {state === "continue" ? (
+        <>
+          <p className="text-sm font-semibold text-ink-muted">
+            {round.sealedCount} of {round.questions.length} locked
+          </p>
+          <PrimaryButton href={playHref}>CONTINUE THE DAILY</PrimaryButton>
+        </>
+      ) : null}
+      {state === "sealed" ? (
+        <>
+          <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+            Daily sealed
+          </p>
+          <p className="text-sm text-ink-muted">5 calls locked · Come back for the reveal</p>
+        </>
+      ) : null}
+      {state === "ready" ? (
+        <>
+          <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+            Daily ready
+          </p>
+          <PrimaryButton href={round.revealHref}>REVEAL THE DAILY</PrimaryButton>
+        </>
+      ) : null}
     </section>
   );
 }

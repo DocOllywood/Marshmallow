@@ -14,14 +14,31 @@ export function RevealReadyGate({
   marshmallowId,
   question,
   playMode,
+  revealHref,
 }: {
   marshmallowId: string;
   question: string;
   playMode: PlayMode;
+  revealHref?: string;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  if (revealHref) {
+    return (
+      <div className="flex flex-1 flex-col items-center gap-5 py-10 text-center">
+        <MarshmallowMascot state="toasted" size="lg" heat={2} />
+        <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+          Daily ready
+        </p>
+        <h1 className="font-display text-[clamp(1.5rem,6.5vw,1.85rem)] leading-[1.08] font-semibold tracking-tight break-words">
+          {question}
+        </h1>
+        <PrimaryButton href={revealHref}>REVEAL THE DAILY</PrimaryButton>
+      </div>
+    );
+  }
 
   async function open() {
     setPending(true);

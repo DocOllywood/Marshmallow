@@ -198,6 +198,16 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
     return <MissedView />;
   }
   if (marshmallow.screen === "reveal_ready") {
+    if (marshmallow.dailyRound) {
+      return (
+        <RevealReadyGate
+          marshmallowId={marshmallow.id}
+          question={marshmallow.dailyRound.title}
+          playMode={marshmallow.play_mode}
+          revealHref={marshmallow.dailyRound.revealHref}
+        />
+      );
+    }
     return (
       <RevealReadyGate
         marshmallowId={marshmallow.id}
@@ -207,6 +217,16 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
     );
   }
   if (marshmallow.screen === "revealed" || marshmallow.screen === "revealed_spectator") {
+    if (marshmallow.dailyRound?.anyRevealOpened) {
+      return (
+        <div className="flex flex-1 flex-col items-center gap-4 px-2 py-10 text-center">
+          <PrimaryButton href={marshmallow.dailyRound.revealHref}>VIEW DAILY REVEAL</PrimaryButton>
+          <Link href="/home" className="min-h-11 text-sm font-semibold text-primary">
+            Home
+          </Link>
+        </div>
+      );
+    }
     return <RevealShow marshmallow={marshmallow} />;
   }
   if (marshmallow.screen === "still_cooking") {
@@ -219,6 +239,29 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
       />
     );
   }
+  if (
+    marshmallow.dailyRound &&
+    marshmallow.sealed &&
+    !marshmallow.dailyRound.allSealed &&
+    marshmallow.dailyNextHref
+  ) {
+    return (
+      <div className="flex flex-1 flex-col items-center gap-4 px-2 py-10 text-center">
+        <MarshmallowMascot state="sealed" size="lg" />
+        <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+          Question {marshmallow.roundPosition} locked
+        </p>
+        <p className="text-sm text-ink-muted">
+          {marshmallow.dailyRound.sealedCount} of {marshmallow.dailyRound.questions.length} locked
+        </p>
+        <PrimaryButton href={marshmallow.dailyNextHref}>CONTINUE THE DAILY</PrimaryButton>
+        <Link href="/home" className="min-h-11 text-sm font-semibold text-primary">
+          Home
+        </Link>
+      </div>
+    );
+  }
+
   if (marshmallow.screen === "finishing") {
     return <FinishingView />;
   }
@@ -233,7 +276,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
           <div className="flex flex-col items-center gap-4 px-2 py-10 text-center">
             <MarshmallowMascot state="sealed" size="lg" />
             <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-              {isQuick ? "Call locked" : "Sealed"}
+              {isQuick ? "Call locked" : marshmallow.dailyRound ? "Question locked" : "Sealed"}
             </p>
             <p className="font-display text-2xl font-semibold">
               You picked {selected?.label ?? "your answer"}.
@@ -242,17 +285,39 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
               <p className="text-base text-ink-muted">
                 You think {selectedPct}% of players agree.
               </p>
-            ) : selectedPct != null ? (
+            ) : selectedPct != null && !marshmallow.dailyRound ? (
               <p>You predicted {selectedPct}%.</p>
             ) : null}
             {isQuick ? (
               <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
                 Let&apos;s see how well you read the room.
               </p>
+            ) : marshmallow.dailyRound && !marshmallow.dailyRound.allSealed ? (
+              <p className="text-sm text-ink-muted">
+                {marshmallow.dailyRound.sealedCount} of {marshmallow.dailyRound.questions.length}{" "}
+                locked
+              </p>
             ) : (
               <p className="text-sm text-ink-muted">Come back for the reveal.</p>
             )}
-            {playAnother ? (
+            {marshmallow.dailyRound && marshmallow.dailyNextHref && !marshmallow.dailyRound.allSealed ? (
+              <>
+                <PrimaryButton href={marshmallow.dailyNextHref}>CONTINUE THE DAILY</PrimaryButton>
+                <Link href="/home" className="min-h-11 text-sm font-semibold text-primary">
+                  Home
+                </Link>
+              </>
+            ) : marshmallow.dailyRound && marshmallow.dailyRound.allSealed ? (
+              <>
+                <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+                  Daily sealed
+                </p>
+                <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
+                  5 calls locked · Come back for the reveal
+                </p>
+                <PrimaryButton href="/home">HOME</PrimaryButton>
+              </>
+            ) : playAnother ? (
               <>
                 <PrimaryButton href={marshmallow.nextHref}>PLAY ANOTHER</PrimaryButton>
                 <Link href="/home" className="min-h-11 text-sm font-semibold text-primary">
@@ -273,6 +338,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
             nextHref={marshmallow.nextHref}
             showPlayAnother={playAnother}
             playMode={marshmallow.play_mode}
+            dailyRound={marshmallow.dailyRound ?? undefined}
           />
         )}
       </div>
@@ -285,6 +351,11 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
     <div className="flex flex-1 flex-col gap-6 pb-8">
       <div className="pt-4">
         <PlayModeBadge mode={marshmallow.play_mode} />
+        {marshmallow.dailyRound && marshmallow.roundPosition ? (
+          <p className="mt-2 text-xs font-semibold tracking-[0.16em] text-ink-muted uppercase">
+            Question {marshmallow.roundPosition} of {marshmallow.dailyRound.questions.length}
+          </p>
+        ) : null}
       </div>
       <h1 className="font-display text-[clamp(1.65rem,7.5vw,2.15rem)] leading-[1.08] font-semibold tracking-tight break-words">
         {marshmallow.question}

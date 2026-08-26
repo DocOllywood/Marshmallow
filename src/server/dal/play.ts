@@ -3,11 +3,13 @@ import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { resolvePlayScreen, type PlayScreen } from "@/domain/play/view";
 import { nextMarshmallowHref, pickNextMarshmallowId } from "@/domain/play/next";
+import { nextDailyQuestionId } from "@/domain/daily/round";
 import type { NextPickContext, PlayMode } from "@/domain/play/mode";
 import { isPlayMode, playModeFromDailyFlag } from "@/domain/play/mode";
 import type { PlayAllocation, PlayChoice, PlayMarshmallow, RevealChoiceRow, RevealPayload } from "@/domain/play/types";
 import { crowdsenseDelta, crowdsenseFromScores } from "@/domain/crowdsense/rating";
 import { listActiveTopics, listOwnTopicPrefIds } from "@/server/dal/topics";
+import { getDailyRoundProgressByMarshmallowId } from "@/server/dal/daily-round";
 
 export type { PlayAllocation, PlayChoice, PlayMarshmallow, RevealChoiceRow, RevealPayload };
 export type { PlayScreen };
@@ -30,7 +32,7 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
   const { data, error } = await supabase
     .from("marshmallows")
     .select(
-      "id, question, status, opens_at, closes_at, reveals_at, hard_reveals_at, is_daily, play_mode, topic_id, entity_label, spoiler_context, image_url, expires_at, topics(name, image_url), marshmallow_choices(id, label, sort_order)",
+      "id, question, status, opens_at, closes_at, reveals_at, hard_reveals_at, is_daily, play_mode, topic_id, daily_round_id, round_position, entity_label, spoiler_context, image_url, expires_at, topics(name, image_url), marshmallow_choices(id, label, sort_order)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -72,8 +74,20 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
   const allocations = entry?.entry_allocations ?? [];
   const sealed = entry?.sealed_at != null;
   const openedReveal = openRow != null;
+  const playMode = isPlayMode(data.play_mode)
+    ? data.play_mode
+    : playModeFromDailyFlag(data.is_daily);
 
-  const screen = resolvePlayScreen({
+  const topicNameById = new Map(
+    topic?.name && data.topic_id ? [[data.topic_id, topic.name] as const] : [],
+  );
+  const dailyRound = data.daily_round_id
+    ? await getDailyRoundProgressByMarshmallowId(id, topicNameById)
+    : null;
+  const dailyNextId =
+    dailyRound && playMode === "daily" ? nextDailyQuestionId(dailyRound, id) : null;
+
+  let screen = resolvePlayScreen({
     status: data.status,
     nowMs: Date.parse(nowIso),
     opensAtMs: Date.parse(data.opens_at),
@@ -85,15 +99,25 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     openedReveal,
   });
 
-  const playMode = isPlayMode(data.play_mode)
-    ? data.play_mode
-    : playModeFromDailyFlag(data.is_daily);
+  if (dailyRound && playMode === "daily") {
+    if (dailyRound.allRevealed && dailyRound.allSealed && !dailyRound.anyRevealOpened) {
+      screen = "reveal_ready";
+    } else if (dailyRound.allRevealed && dailyRound.anyRevealOpened) {
+      screen = "revealed";
+    } else if (sealed && !dailyRound.allSealed) {
+      screen = "play";
+    } else if (sealed && dailyRound.allSealed && !dailyRound.allRevealed) {
+      screen = "waiting";
+    }
+  }
+
   const nextHref = await resolveNextHref(
     id,
     playMode === "quick" ? "after_quick_reveal" : "after_other_reveal",
   );
   const mayLoadResults =
-    screen === "revealed" || screen === "revealed_spectator";
+    (screen === "revealed" || screen === "revealed_spectator") &&
+    !(dailyRound && playMode === "daily");
 
   let reveal: RevealPayload | null = null;
   if (mayLoadResults) {
@@ -133,6 +157,9 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     nowIso,
     reveal,
     nextHref,
+    dailyRound,
+    roundPosition: data.round_position,
+    dailyNextHref: dailyNextId ? `/m/${dailyNextId}` : dailyRound?.revealHref ?? null,
   };
 
   if (!mayLoadResults) {

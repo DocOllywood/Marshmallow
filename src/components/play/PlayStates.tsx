@@ -3,6 +3,7 @@ import { CountdownDisplay } from "@/components/CountdownDisplay";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { playModeTimingCopy, type PlayMode } from "@/domain/play/mode";
 import { formatWaitPresentation } from "@/lib/format/duration";
+import type { DailyRoundProgress } from "@/domain/daily/round";
 import Link from "next/link";
 
 function HomeCta() {
@@ -171,6 +172,7 @@ export function WaitingCopy({
   showPlayAnother,
   playMode,
   waitingForSample,
+  dailyRound,
 }: {
   choiceLabel: string;
   predictedPct: number | null;
@@ -181,6 +183,7 @@ export function WaitingCopy({
   showPlayAnother?: boolean;
   playMode?: PlayMode;
   waitingForSample?: boolean;
+  dailyRound?: DailyRoundProgress;
 }) {
   const expired = remainingMs <= 0;
   const heat: 0 | 1 | 2 = expired ? 2 : remainingMs < 90_000 ? 1 : 0;
@@ -194,6 +197,20 @@ export function WaitingCopy({
     closesAt,
     waitingForSample,
   });
+
+  if (dailyRound?.allSealed) {
+    return (
+      <div className="flex flex-1 flex-col items-center gap-5 px-2 py-8 text-center">
+        <MarshmallowMascot state="sealed" size="lg" />
+        <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">Daily sealed</p>
+        <p className="font-display text-2xl font-semibold">{dailyRound.title}</p>
+        <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
+          5 calls locked · Come back for the reveal
+        </p>
+        <PrimaryButton href="/home">HOME</PrimaryButton>
+      </div>
+    );
+  }
 
   if (isQuick) {
     return (

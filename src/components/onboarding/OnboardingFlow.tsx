@@ -11,7 +11,7 @@ import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { cn } from "@/lib/utils";
 import {
   childTopicsForParents,
-  isTopLevelTopic,
+  consumerRelationshipWorlds,
   type TopicRow,
 } from "@/domain/onboarding/topics";
 import { completeOnboardingAction } from "@/server/actions/onboarding";
@@ -38,7 +38,7 @@ export function OnboardingFlow({
   const [started, setStarted] = useState(false);
   const [state, action, pending] = useActionState(completeOnboardingAction, null);
 
-  const worlds = topics.filter(isTopLevelTopic);
+  const worlds = consumerRelationshipWorlds(topics);
   const selectedWorlds = worlds.filter((topic) => selected.has(topic.id)).map((topic) => topic.id);
   const fandoms = useMemo(
     () => childTopicsForParents(topics, selectedWorlds),
@@ -169,10 +169,10 @@ function Welcome({ onContinue }: { onContinue: () => void }) {
         Marshmallow
       </p>
       <h1 className="mt-2 font-display text-[2.2rem] leading-[0.98] font-semibold tracking-tight">
-        The Human Nature Game
+        The Human Relationships Game
       </h1>
       <p className="mt-4 max-w-[18rem] text-sm leading-6 text-ink-muted">
-        Answer for yourself. Predict everyone else. Discover how well you understand people.
+        Answer for yourself. Predict everyone else. See how well you read the room.
       </p>
       <div className="mt-10 w-full">
         <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
@@ -199,9 +199,9 @@ function Worlds({
   return (
     <div className="flex flex-1 flex-col pb-6">
       <h1 className="mt-8 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
-        What are you into?
+        What part of people fascinates you?
       </h1>
-      <p className="mt-2 text-sm text-ink-muted">Pick at least one world.</p>
+      <p className="mt-2 text-sm text-ink-muted">Pick what you want to read the room on.</p>
       {worlds.length === 0 ? (
         <p className="mt-6 text-sm text-ink-muted">
           No worlds are published yet. That&apos;s a content setup issue, not you.

@@ -11,6 +11,8 @@ import {
 } from "@/domain/play/sample";
 import type { TopicRow } from "@/domain/onboarding/topics";
 import type { Database } from "@/lib/supabase/types";
+import type { DailyRoundProgress } from "@/domain/daily/round";
+import { getTodayDailyRoundProgress } from "@/server/dal/daily-round";
 
 type MarshmallowRow = Pick<
   Database["public"]["Tables"]["marshmallows"]["Row"],
@@ -47,7 +49,7 @@ export type HomeFeed = {
   readyToReveal: HomeFeedCard[];
   quickPlay: HomeFeedCard[];
   liveNow: HomeFeedCard[];
-  todays: HomeFeedCard | null;
+  dailyRound: DailyRoundProgress | null;
   cooking: HomeFeedCard[];
   waiting: HomeFeedCard[];
   openNow: HomeFeedCard[];
@@ -100,6 +102,8 @@ export async function getHomeFeed(
   const scoreByMarshmallow = new Map((scores ?? []).map((row) => [row.marshmallow_id, row]));
   const topicName = new Map(topics.map((topic) => [topic.id, topic.name]));
   const topicImage = new Map(topics.map((topic) => [topic.id, topic.image_url]));
+  const dailyRound = await getTodayDailyRoundProgress(topicName);
+  const dailyRoundIds = new Set((dailyRound?.questions ?? []).map((question) => question.id));
 
   const cards: HomeFeedCard[] = (marshmallows ?? []).map((row) => {
     const entry = entryByMarshmallow.get(row.id);
@@ -154,35 +158,19 @@ export async function getHomeFeed(
     throw new Error("home_payload_leaked_aggregates");
   }
 
-  const todays =
-    cards.find((card) => card.is_daily && card.status === "open") ??
-    cards.find(
-      (card) =>
-        card.is_daily &&
-        card.sealed &&
-        card.status === "closed",
-    ) ??
-    cards.find(
-      (card) =>
-        card.is_daily &&
-        card.sealed &&
-        card.status === "revealed" &&
-        !card.openedReveal,
-    ) ??
-    null;
 
   const readyToReveal = cards.filter(
     (card) =>
       card.sealed &&
       card.status === "revealed" &&
       !card.openedReveal &&
-      card.id !== todays?.id,
+      !dailyRoundIds.has(card.id),
   );
   const waiting = cards.filter(
     (card) =>
       card.sealed &&
       (card.status === "open" || card.status === "closed") &&
-      card.id !== todays?.id,
+      !dailyRoundIds.has(card.id),
   );
   const readyIds = new Set(readyToReveal.map((card) => card.id));
   const cooking = waiting;
@@ -192,7 +180,7 @@ export async function getHomeFeed(
         card.play_mode === "quick" &&
         card.status === "open" &&
         !card.sealed &&
-        card.id !== todays?.id &&
+        !dailyRoundIds.has(card.id) &&
         isDiscoverable({
           nowMs,
           expiresAtMs: card.expiresAt ? Date.parse(card.expiresAt) : null,
@@ -216,7 +204,7 @@ export async function getHomeFeed(
         card.play_mode === "live" &&
         card.status === "open" &&
         !card.sealed &&
-        card.id !== todays?.id &&
+        !dailyRoundIds.has(card.id) &&
         isProminentLive(card) &&
         isDiscoverable({
           nowMs,
@@ -232,7 +220,7 @@ export async function getHomeFeed(
       (card.status === "revealed" &&
         card.sealed &&
         card.openedReveal &&
-        card.id !== todays?.id &&
+        !dailyRoundIds.has(card.id) &&
         !readyIds.has(card.id)),
   );
 
@@ -240,7 +228,7 @@ export async function getHomeFeed(
     readyToReveal,
     quickPlay,
     liveNow,
-    todays,
+    dailyRound,
     cooking: cooking.slice(0, HOME_COOKING_VISIBLE),
     waiting: waiting.slice(0, HOME_COOKING_VISIBLE),
     openNow: [],
