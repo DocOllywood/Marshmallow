@@ -1,8 +1,15 @@
 import Link from "next/link";
 
 import type { OwnProfilePayload } from "@/server/dal/crowdsense";
+import { ProfileSignOutSection } from "@/components/profile/ProfileSignOutSection";
 
-export function ProfileView({ profile }: { profile: OwnProfilePayload }) {
+export function ProfileView({
+  profile,
+  isAnonymous,
+}: {
+  profile: OwnProfilePayload;
+  isAnonymous: boolean;
+}) {
   const rating = profile.crowdsense.rating;
 
   return (
@@ -95,6 +102,8 @@ export function ProfileView({ profile }: { profile: OwnProfilePayload }) {
           ))}
         </section>
       ) : null}
+
+      <ProfileSignOutSection isAnonymous={isAnonymous} />
     </main>
   );
 }

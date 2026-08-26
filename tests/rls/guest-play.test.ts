@@ -152,6 +152,46 @@ describe("anonymous guest play (hosted)", () => {
       .single();
     expect(profile?.id).toBe(emailUserId);
 
+    await emailClient.auth.signOut();
+    const {
+      data: { session },
+    } = await emailClient.auth.getSession();
+    expect(session).toBeNull();
+
     await admin.auth.admin.deleteUser(emailUserId);
+  });
+
+  it("signOut then new anonymous sign-in yields a fresh guest with no prior progress", async () => {
+    if (!anonymousEnabled || !guestAId) return;
+
+    const priorAId = guestAId;
+    const { data: priorEntries } = await guestA.from("entries").select("id");
+    expect(priorEntries?.length ?? 0).toBeGreaterThanOrEqual(0);
+
+    await guestA.auth.signOut();
+    const afterSignOut = await guestA.auth.getSession();
+    expect(afterSignOut.data.session).toBeNull();
+
+    const fresh = await guestA.auth.signInAnonymously();
+    expect(fresh.error).toBeNull();
+    guestAId = fresh.data.user?.id ?? "";
+    expect(guestAId).not.toBe(priorAId);
+    expect(fresh.data.user?.is_anonymous).toBe(true);
+
+    const { data: freshProfile } = await guestA
+      .from("profiles")
+      .select("onboarding_completed_at")
+      .eq("id", guestAId)
+      .single();
+    expect(freshProfile?.onboarding_completed_at).toBeNull();
+
+    const { data: inheritedEntries } = await guestA.from("entries").select("*");
+    expect(inheritedEntries).toEqual([]);
+
+    const { data: priorGuestEntries } = await admin
+      .from("entries")
+      .select("user_id")
+      .eq("user_id", priorAId);
+    expect(priorGuestEntries?.every((row) => row.user_id === priorAId)).toBe(true);
   });
 });

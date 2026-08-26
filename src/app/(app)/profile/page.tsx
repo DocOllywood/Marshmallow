@@ -6,7 +6,7 @@ import { ProfileView } from "@/components/profile/ProfileView";
 import { ErrorState } from "@/components/ErrorState";
 
 export default async function ProfilePage() {
-  const { profile } = await requireOnboarded();
+  const { user, profile } = await requireOnboarded();
   await trackEvent(ANALYTICS_EVENTS.profileViewed, {});
 
   let payload: Awaited<ReturnType<typeof getOwnProfilePayload>> | null = null;
@@ -24,5 +24,5 @@ export default async function ProfilePage() {
     );
   }
 
-  return <ProfileView profile={payload} />;
+  return <ProfileView profile={payload} isAnonymous={user.is_anonymous === true} />;
 }

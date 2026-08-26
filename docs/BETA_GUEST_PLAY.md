@@ -49,3 +49,7 @@ Anonymous users are `authenticated` JWT role — same RLS as email users. No pol
 ## Email notifications
 
 Guests have no email. Reveal-ready email outbox skips with `recipient_ineligible` — in-app notifications still work.
+
+## Sign out / start fresh
+
+**You → Start fresh** (anonymous) or **Log out** (email account) calls `signOut()` and returns to `/`. Tapping **PLAY MARSHMALLOW** again creates a new anonymous user — prior guest data stays in the database but is not accessible without the old session.
