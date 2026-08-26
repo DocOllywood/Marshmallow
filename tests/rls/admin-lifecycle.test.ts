@@ -3,12 +3,12 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { Database } from "@/lib/supabase/types";
 
+import { ACTIVE_TOPIC_ID } from "./fixtures";
+
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const password = "test-pass-admin-1";
-const REALITY_TV_ID = "20000000-0000-4000-8000-000000000002";
-
 function requireEnv() {
   if (!url || !anonKey || !serviceKey) {
     throw new Error("Hosted Supabase env is required for admin/lifecycle tests");
@@ -104,7 +104,7 @@ describe("admin composer and lifecycle (hosted)", () => {
       p_reveals_at: input.reveals_at,
       p_choices: input.choices.map((label, sort_order) => ({ label, sort_order })),
       p_id: input.id,
-      p_topic_id: REALITY_TV_ID,
+      p_topic_id: ACTIVE_TOPIC_ID,
       p_is_daily: input.is_daily ?? false,
     });
     if (data?.id) createdIds.push(data.id);
@@ -159,26 +159,25 @@ describe("admin composer and lifecycle (hosted)", () => {
     expect(times.error?.message).toContain("timestamps_invalid");
   });
 
-  it("enforces one Daily per UTC date", async () => {
-    const first = await upsert({
-      question: `Daily A ${suffix}`,
-      opens_at: isoFromNow(40 * 24 * 60),
-      closes_at: isoFromNow(40 * 24 * 60 + 60),
-      reveals_at: isoFromNow(40 * 24 * 60 + 120),
-      choices: ["Left", "Right"],
-      is_daily: true,
+  it("enforces one Daily round per UTC date", async () => {
+    const farDate = new Date(Date.now() + 40 * 24 * 60 * 60_000).toISOString().slice(0, 10);
+
+    const first = await adminApi.from("daily_rounds").insert({
+      round_date: farDate,
+      title: `Daily A ${suffix}`,
+      status: "draft",
     });
     expect(first.error).toBeNull();
 
-    const second = await upsert({
-      question: `Daily B ${suffix}`,
-      opens_at: isoFromNow(40 * 24 * 60 + 5),
-      closes_at: isoFromNow(40 * 24 * 60 + 65),
-      reveals_at: isoFromNow(40 * 24 * 60 + 125),
-      choices: ["Up", "Down"],
-      is_daily: true,
+    const second = await adminApi.from("daily_rounds").insert({
+      round_date: farDate,
+      title: `Daily B ${suffix}`,
+      status: "draft",
     });
-    expect(second.error?.message).toContain("daily_conflict");
+    expect(second.error).toBeTruthy();
+    expect(second.error?.message.toLowerCase()).toMatch(/duplicate|unique|violates/);
+
+    await adminApi.from("daily_rounds").delete().eq("round_date", farDate);
   });
 
   it("does not open, close, or reveal early, then advances when due", async () => {
@@ -393,7 +392,7 @@ describe("admin composer and lifecycle (hosted)", () => {
 
   it("cannot spoof caller identity on onboarding or internal event helpers", async () => {
     const spoof = await userClient.rpc("complete_onboarding", {
-      p_topic_ids: [REALITY_TV_ID],
+      p_topic_ids: [ACTIVE_TOPIC_ID],
       p_display_name: "Hijack",
     });
     expect(spoof.error).toBeNull();

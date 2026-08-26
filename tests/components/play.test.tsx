@@ -1,6 +1,10 @@
 import { fireEvent, render, screen, cleanup } from "@testing-library/react";
 import { useState } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/server/actions/analytics", () => ({
+  trackEvent: vi.fn(async () => undefined),
+}));
 
 import { ChoiceButton } from "@/components/ChoiceButton";
 import { BinaryPredictor, MultiPredictor } from "@/components/play/Predictors";

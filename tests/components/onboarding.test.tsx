@@ -21,9 +21,9 @@ afterEach(() => {
 
 const worlds: TopicRow[] = [
   {
-    id: "world-1",
-    name: "Reality TV",
-    slug: "reality-tv",
+    id: "20000000-0000-4000-8000-000000000101",
+    name: "Love",
+    slug: "love",
     kind: "category",
     parent_id: null,
     image_url: null,
@@ -46,13 +46,13 @@ describe("OnboardingFlow analytics", () => {
     );
     expect(trackEvent).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: /let's play/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Continue$/i }));
     expect(trackEvent).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(await screen.findByRole("button", { name: "Reality TV" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Love" }));
     expect(trackEvent).toHaveBeenCalledTimes(2);
 
-    fireEvent.click(screen.getByRole("button", { name: "Reality TV" }));
+    fireEvent.click(screen.getByRole("button", { name: "Love" }));
     expect(trackEvent).toHaveBeenCalledTimes(2);
   });
 });

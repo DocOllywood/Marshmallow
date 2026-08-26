@@ -1,9 +1,10 @@
 export const LEADERBOARD_TABS = [
   { id: "overall", label: "Overall" },
-  { id: "reality-tv", label: "Reality TV" },
-  { id: "celebrity", label: "Celebrity" },
-  { id: "pop-culture", label: "Pop Culture" },
-  { id: "internet-culture", label: "Internet" },
+  { id: "love", label: "Love" },
+  { id: "friendship", label: "Friendship" },
+  { id: "dating-sex", label: "Dating & Sex" },
+  { id: "family", label: "Family" },
+  { id: "human-nature", label: "Human Nature" },
   { id: "weekly", label: "This Week" },
 ] as const;
 

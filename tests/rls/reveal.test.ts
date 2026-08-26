@@ -3,12 +3,12 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { revealBonusPoints } from "@/domain/reputation/points";
 import type { Database, Json } from "@/lib/supabase/types";
+import { ACTIVE_TOPIC_ID } from "./fixtures";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const password = "test-pass-reveal-1";
-const REALITY_TV_ID = "20000000-0000-4000-8000-000000000002";
 
 function requireEnv() {
   if (!url || !anonKey || !serviceKey) {
@@ -129,7 +129,7 @@ describe("reveal, bonus, streak, RRR (hosted)", () => {
         label,
         sort_order,
       })),
-      p_topic_id: REALITY_TV_ID,
+      p_topic_id: ACTIVE_TOPIC_ID,
       p_is_daily: options?.daily ?? false,
     });
     if (created.error || !created.data?.id) throw created.error ?? new Error("upsert");

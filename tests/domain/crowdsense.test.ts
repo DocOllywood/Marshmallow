@@ -86,22 +86,20 @@ describe("CrowdSense skill vs luck and volume", () => {
 });
 
 describe("CrowdSense category ancestry", () => {
-  const reality = topic({ id: "r", name: "Reality TV", slug: "reality-tv" });
-  const island = topic({
-    id: "i",
-    name: "Island Heat",
-    slug: "island-heat",
-    kind: "show",
-    parent_id: "r",
-  });
-  const celebrity = topic({ id: "c", name: "Celebrity", slug: "celebrity" });
+  const love = topic({ id: "l", name: "Love", slug: "love" });
+  const friendship = topic({ id: "f", name: "Friendship", slug: "friendship" });
 
-  it("maps nested topics to the world category and keeps worlds independent", () => {
-    const topics = [reality, island, celebrity];
-    expect(worldSlugForTopic("i", topics)).toBe("reality-tv");
-    expect(worldSlugForTopic("c", topics)).toBe("celebrity");
-    expect(worldSlugForTopic("r", topics)).toBe("reality-tv");
+  it("maps active Human Relationships worlds and ignores deactivated slugs", () => {
+    const topics = [love, friendship];
+    expect(worldSlugForTopic("l", topics)).toBe("love");
+    expect(worldSlugForTopic("f", topics)).toBe("friendship");
     expect(worldSlugForTopic(null, topics)).toBeNull();
+    expect(
+      worldSlugForTopic(
+        "x",
+        [topic({ id: "x", name: "Reality TV", slug: "reality-tv" })],
+      ),
+    ).toBeNull();
   });
 });
 
@@ -129,10 +127,11 @@ describe("leaderboard tabs", () => {
   it("exports a typed tab list the page and view can share", () => {
     expect(LEADERBOARD_TABS.map((tab) => tab.id)).toEqual([
       "overall",
-      "reality-tv",
-      "celebrity",
-      "pop-culture",
-      "internet-culture",
+      "love",
+      "friendship",
+      "dating-sex",
+      "family",
+      "human-nature",
       "weekly",
     ]);
     expect(isLeaderboardTabId("overall")).toBe(true);

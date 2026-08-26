@@ -2,12 +2,12 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { Database } from "@/lib/supabase/types";
+import { ACTIVE_TOPIC_ID } from "./fixtures";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const password = "test-pass-modes-1";
-const REALITY_TV_ID = "20000000-0000-4000-8000-000000000002";
 
 function requireEnv() {
   if (!url || !anonKey || !serviceKey) {
@@ -97,7 +97,7 @@ describe("Quick / Live / Daily modes (hosted)", () => {
       p_closes_at: isoFromNow(mode === "quick" ? 2 : 40),
       p_reveals_at: isoFromNow(mode === "quick" ? 3 : 80),
       p_choices: ["Alex", "Jordan"].map((label, sort_order) => ({ label, sort_order })),
-      p_topic_id: REALITY_TV_ID,
+      p_topic_id: ACTIVE_TOPIC_ID,
       p_is_daily: mode === "daily",
       p_play_mode: mode,
     });
@@ -153,18 +153,27 @@ describe("Quick / Live / Daily modes (hosted)", () => {
     expect(live.mode).toBe("live");
     expect(daily.mode).toBe("daily");
 
-    const conflict = await adminClient.rpc("admin_upsert_marshmallow", {
-      p_question: `Daily conflict ${suffix}`,
-      p_opens_at: new Date(
-        Date.UTC(1972, 0, 1 + (Number.parseInt(suffix, 36) % 10000) + dailyDay, 15, 0, 0),
-      ).toISOString(),
-      p_closes_at: isoFromNow(40),
-      p_reveals_at: isoFromNow(80),
-      p_choices: ["Alex", "Jordan"].map((label, sort_order) => ({ label, sort_order })),
-      p_play_mode: "daily",
-      p_is_daily: true,
+    const farDate = new Date(
+      Date.UTC(1972, 0, 1 + (Number.parseInt(suffix, 36) % 10000) + dailyDay),
+    )
+      .toISOString()
+      .slice(0, 10);
+    const firstRound = await adminApi.from("daily_rounds").insert({
+      round_date: farDate,
+      title: `Modes round ${suffix}`,
+      status: "draft",
     });
-    expect(conflict.error?.message).toContain("daily_conflict");
+    expect(firstRound.error).toBeNull();
+
+    const duplicateRound = await adminApi.from("daily_rounds").insert({
+      round_date: farDate,
+      title: `Modes round dup ${suffix}`,
+      status: "draft",
+    });
+    expect(duplicateRound.error).toBeTruthy();
+    expect(duplicateRound.error?.message.toLowerCase()).toMatch(/duplicate|unique|violates/);
+
+    await adminApi.from("daily_rounds").delete().eq("round_date", farDate);
 
     await seal(quick.id, quick.choices);
     const early = await userA.rpc("get_marshmallow_results", { p_marshmallow_id: quick.id });

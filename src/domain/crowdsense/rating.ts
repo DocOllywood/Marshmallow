@@ -36,19 +36,21 @@ export const CROWDSENSE_MIN = 500;
 export const CROWDSENSE_MAX = 1000;
 
 export const CROWDSENSE_WORLD_SLUGS = [
-  "reality-tv",
-  "celebrity",
-  "pop-culture",
-  "internet-culture",
+  "love",
+  "friendship",
+  "dating-sex",
+  "family",
+  "human-nature",
 ] as const;
 
 export type CrowdsenseWorldSlug = (typeof CROWDSENSE_WORLD_SLUGS)[number];
 
 export const CROWDSENSE_WORLD_LABELS: Record<CrowdsenseWorldSlug, string> = {
-  "reality-tv": "Reality TV",
-  celebrity: "Celebrity",
-  "pop-culture": "Pop Culture",
-  "internet-culture": "Internet Culture",
+  love: "Love",
+  friendship: "Friendship",
+  "dating-sex": "Dating & Sex",
+  family: "Family",
+  "human-nature": "Human Nature",
 };
 
 export type CrowdsenseSnapshot = {

@@ -10,16 +10,16 @@ describe("reveal presentation", () => {
     const summary = formatRevealSummary(64, 61);
 
     expect(summary.errorPoints).toBe(3);
-    expect(summary.errorCopy).toBe("Only 3 points off.");
+    expect(summary.errorCopy).toBe("Only 3 points off");
     expect(summary.errorCopy.toLowerCase()).not.toContain("brier");
   });
 
   it("uses singular copy for a one-point miss", () => {
-    expect(formatRevealSummary(50, 49).errorCopy).toBe("Only 1 point off.");
+    expect(formatRevealSummary(50, 49).errorCopy).toBe("Only 1 point off");
   });
 
   it("celebrates an exact call", () => {
-    expect(formatRevealSummary(40, 40).errorCopy).toBe("Exact call.");
+    expect(formatRevealSummary(40, 40).errorCopy).toBe("Exact call");
   });
 });
 

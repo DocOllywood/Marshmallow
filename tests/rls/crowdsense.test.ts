@@ -3,13 +3,12 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { crowdsenseFromScores } from "@/domain/crowdsense/rating";
 import type { Database } from "@/lib/supabase/types";
+import { ACTIVE_TOPIC_ID, FRIENDSHIP_TOPIC_ID } from "./fixtures";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const password = "test-pass-cs-1";
-const REALITY_TV_ID = "20000000-0000-4000-8000-000000000002";
-const CELEBRITY_ID = "20000000-0000-4000-8000-000000000006";
 
 function requireEnv() {
   if (!url || !anonKey || !serviceKey) {
@@ -161,7 +160,7 @@ describe("CrowdSense rebuild, boards, and privacy (hosted)", () => {
   it("stays off the board until 5 scores, then matches the rebuilt rating", async () => {
     const accuracies: number[] = [];
     for (let i = 0; i < 5; i += 1) {
-      const item = await createOpen(REALITY_TV_ID);
+      const item = await createOpen(ACTIVE_TOPIC_ID);
       await seal(userA, item, [90, 10]);
       await closeAndReveal(item.id);
       const score = await adminApi
@@ -202,7 +201,7 @@ describe("CrowdSense rebuild, boards, and privacy (hosted)", () => {
   }, 120000);
 
   it("keeps category boards independent and blocks user writes", async () => {
-    const celeb = await createOpen(CELEBRITY_ID);
+    const celeb = await createOpen(FRIENDSHIP_TOPIC_ID);
     await seal(userA, celeb, [50, 50]);
     await closeAndReveal(celeb.id);
     const overall = await adminApi
@@ -245,7 +244,7 @@ describe("CrowdSense rebuild, boards, and privacy (hosted)", () => {
     expect(blob).not.toContain("onboarding_completed");
     expect(publicPlayer.data as { username: string }).toHaveProperty("username");
 
-    const open = await createOpen(REALITY_TV_ID);
+    const open = await createOpen(ACTIVE_TOPIC_ID);
     await seal(userA, open, [50, 50]);
     const bEntries = await userB.from("entries").select("*").eq("marshmallow_id", open.id);
     expect(bEntries.data).toEqual([]);

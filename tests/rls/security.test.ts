@@ -2,17 +2,14 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { Database } from "@/lib/supabase/types";
+import { ACTIVE_TOPIC_ID } from "./fixtures";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const OPEN_ID = "10000000-0000-4000-8000-000000000001";
-const ALEX_ID = "11000000-0000-4000-8000-000000000001";
-const JORDAN_ID = "11000000-0000-4000-8000-000000000002";
 const CLOSED_ID = "10000000-0000-4000-8000-000000000003";
 const REVEALED_ID = "10000000-0000-4000-8000-000000000004";
-const REALITY_TV_ID = "20000000-0000-4000-8000-000000000002";
 
 const password = "test-pass-a1";
 
@@ -31,6 +28,9 @@ describe("two-user PostgREST isolation", () => {
   let userB: SupabaseClient<Database>;
   let userAId: string;
   let userBId: string;
+  let openMarshmallowId = "";
+  let alexChoiceId = "";
+  let jordanChoiceId = "";
   const suffix = Date.now().toString(36);
 
   beforeAll(async () => {
@@ -81,13 +81,49 @@ describe("two-user PostgREST isolation", () => {
     if (signedB.error) throw signedB.error;
 
     const now = Date.now();
+    const opensAt = new Date(now - 60 * 60_000).toISOString();
+    const closesAt = new Date(now + 12 * 60 * 60_000).toISOString();
+    const revealsAt = new Date(now + 18 * 60 * 60_000).toISOString();
+
+    const created = await admin
+      .from("marshmallows")
+      .insert({
+        question: `Security seal ${suffix}`,
+        topic_id: ACTIVE_TOPIC_ID,
+        opens_at: opensAt,
+        closes_at: closesAt,
+        reveals_at: revealsAt,
+        hard_reveals_at: revealsAt,
+        status: "draft",
+        is_daily: false,
+        daily_on: null,
+        play_mode: "quick",
+        minimum_result_sample: 0,
+      })
+      .select("id")
+      .single();
+    if (created.error || !created.data) throw created.error ?? new Error("open marshmallow");
+    openMarshmallowId = created.data.id;
+
+    const choices = await admin
+      .from("marshmallow_choices")
+      .insert([
+        { marshmallow_id: openMarshmallowId, label: "Alex", sort_order: 0 },
+        { marshmallow_id: openMarshmallowId, label: "Jordan", sort_order: 1 },
+      ])
+      .select("id, sort_order");
+    if (choices.error || !choices.data?.length) throw choices.error ?? new Error("choices");
+    alexChoiceId = choices.data.find((row) => row.sort_order === 0)?.id ?? "";
+    jordanChoiceId = choices.data.find((row) => row.sort_order === 1)?.id ?? "";
+    if (!alexChoiceId || !jordanChoiceId) throw new Error("choice ids missing");
+
+    const opened = await admin
+      .from("marshmallows")
+      .update({ status: "open" })
+      .eq("id", openMarshmallowId);
+    if (opened.error) throw opened.error;
+
     await admin.from("marshmallow_results").delete().eq("marshmallow_id", CLOSED_ID);
-    await admin.from("marshmallows").update({
-      opens_at: new Date(now - 60 * 60_000).toISOString(),
-      closes_at: new Date(now + 12 * 60 * 60_000).toISOString(),
-      reveals_at: new Date(now + 18 * 60 * 60_000).toISOString(),
-      status: "open",
-    }).eq("id", OPEN_ID);
     await admin.from("marshmallows").update({
       opens_at: new Date(now - 2 * 24 * 60 * 60_000).toISOString(),
       closes_at: new Date(now - 2 * 60 * 60_000).toISOString(),
@@ -98,17 +134,22 @@ describe("two-user PostgREST isolation", () => {
 
   afterAll(async () => {
     if (!admin) return;
+    if (openMarshmallowId) {
+      await admin.from("entries").delete().eq("marshmallow_id", openMarshmallowId);
+      await admin.from("marshmallow_choices").delete().eq("marshmallow_id", openMarshmallowId);
+      await admin.from("marshmallows").delete().eq("id", openMarshmallowId);
+    }
     if (userAId) await admin.auth.admin.deleteUser(userAId);
     if (userBId) await admin.auth.admin.deleteUser(userBId);
   });
 
   it("lets user A seal and keeps user B isolated from that prediction", async () => {
     const { data: sealed, error: sealError } = await userA.rpc("seal_entry", {
-      p_marshmallow_id: OPEN_ID,
-      p_own_choice_id: ALEX_ID,
+      p_marshmallow_id: openMarshmallowId,
+      p_own_choice_id: alexChoiceId,
       p_allocations: [
-        { choice_id: ALEX_ID, predicted_pct: 64 },
-        { choice_id: JORDAN_ID, predicted_pct: 36 },
+        { choice_id: alexChoiceId, predicted_pct: 64 },
+        { choice_id: jordanChoiceId, predicted_pct: 36 },
       ],
       p_idempotency_key: `idem-${suffix}`,
     });
@@ -116,14 +157,14 @@ describe("two-user PostgREST isolation", () => {
     expect(sealed?.sealed_at).toBeTruthy();
 
     const { data: second } = await userA.rpc("seal_entry", {
-      p_marshmallow_id: OPEN_ID,
-      p_own_choice_id: JORDAN_ID,
+      p_marshmallow_id: openMarshmallowId,
+      p_own_choice_id: jordanChoiceId,
       p_allocations: [
-        { choice_id: ALEX_ID, predicted_pct: 10 },
-        { choice_id: JORDAN_ID, predicted_pct: 90 },
+        { choice_id: alexChoiceId, predicted_pct: 10 },
+        { choice_id: jordanChoiceId, predicted_pct: 90 },
       ],
     });
-    expect(second?.own_choice_id).toBe(ALEX_ID);
+    expect(second?.own_choice_id).toBe(alexChoiceId);
 
     const { data: bEntries } = await userB.from("entries").select("*");
     expect(bEntries).toEqual([]);
@@ -196,7 +237,7 @@ describe("two-user PostgREST isolation", () => {
 
   it("keeps onboarding preferences isolated", async () => {
     const { error } = await userA.rpc("complete_onboarding", {
-      p_topic_ids: [REALITY_TV_ID],
+      p_topic_ids: [ACTIVE_TOPIC_ID],
       p_display_name: "Player A",
     });
     expect(error).toBeNull();
@@ -205,6 +246,6 @@ describe("two-user PostgREST isolation", () => {
     expect(bPrefs).toEqual([]);
 
     const { data: aPrefs } = await userA.from("user_topic_prefs").select("topic_id");
-    expect(aPrefs?.map((row) => row.topic_id)).toContain(REALITY_TV_ID);
+    expect(aPrefs?.map((row) => row.topic_id)).toContain(ACTIVE_TOPIC_ID);
   });
 });
