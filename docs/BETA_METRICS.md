@@ -50,6 +50,26 @@ Optional stricter return: `daily_completed` only (completed another full Daily).
 
 Events should carry **metadata only** — e.g. `round_id`, `position`, `line`, `legacy`, `gap_points`. Never choice labels, question text, or PII beyond existing `user_id`.
 
+## Psychological loop measurement (internal)
+
+Map existing events to the product loop — do not expose these labels in consumer UI:
+
+| Loop stage | Event(s) |
+|------------|----------|
+| COMMIT | `daily_completed` |
+| WONDER | `todays_read_viewed` |
+| RETURN | `daily_reveal_opened` (after `daily_reveal_available`) |
+| DISCOVER | `gap_viewed` |
+| Next loop | `next_daily_return`, next-day `daily_started` / `daily_completed` |
+
+**Core beta funnel:** daily completed → Today's Read viewed → leave → reveal opened later → Gap viewed → next Daily started/completed.
+
+## Beta hypotheses (Beta 1)
+
+**Primary:** Great questions + coherent tensions + immediate self-insight (Today's Read) + delayed social revelation will make players voluntarily return to discover whether they understood the room.
+
+**Delay:** The delayed crowd reveal creates useful anticipation rather than merely frustration. Do not run instant-reveal A/B tests until after a delayed-reveal baseline with 50–100+ users.
+
 ## Example cohort query (sketch)
 
 ```sql

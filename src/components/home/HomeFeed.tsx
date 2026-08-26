@@ -251,7 +251,7 @@ function DailyRoundSection({ round }: { round: DailyRoundProgress }) {
       {state === "ready" ? (
         <>
           <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-            Daily ready
+            The crowd is in
           </p>
           <PrimaryButton href={round.revealHref}>REVEAL THE DAILY</PrimaryButton>
         </>

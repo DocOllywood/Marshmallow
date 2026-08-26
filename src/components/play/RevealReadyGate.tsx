@@ -30,7 +30,7 @@ export function RevealReadyGate({
       <div className="flex flex-1 flex-col items-center gap-5 py-10 text-center">
         <MarshmallowMascot state="toasted" size="lg" heat={2} />
         <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-          Daily ready
+          The crowd is in
         </p>
         <h1 className="font-display text-[clamp(1.5rem,6.5vw,1.85rem)] leading-[1.08] font-semibold tracking-tight break-words">
           {question}

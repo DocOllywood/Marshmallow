@@ -57,7 +57,7 @@ export function TodaysReadCard({
           Your calls are locked
         </p>
         <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
-          Marshmallow player results will reveal separately.
+          The crowd is still deciding. Come back for the reveal.
         </p>
       </div>
       {read.tomorrowTease ? (

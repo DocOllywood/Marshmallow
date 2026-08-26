@@ -226,7 +226,7 @@ export function WaitingCopy({
           <p className="font-display text-2xl font-semibold">You picked {choiceLabel}.</p>
           {predictedPct != null ? (
             <p className="text-base text-ink-muted">
-              You think {predictedPct}% of players agree.
+              You think {predictedPct}% of Marshmallow players agree.
             </p>
           ) : null}
         </div>

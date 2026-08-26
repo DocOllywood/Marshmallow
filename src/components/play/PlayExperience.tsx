@@ -390,7 +390,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
             </p>
             {isQuick && selectedPct != null ? (
               <p className="text-base text-ink-muted">
-                You think {selectedPct}% of players agree.
+                You think {selectedPct}% of Marshmallow players agree.
               </p>
             ) : selectedPct != null && !marshmallow.dailyRound ? (
               <p>You predicted {selectedPct}%.</p>
