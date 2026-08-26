@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useState } from "react";
 
 import { MarshmallowLogo } from "@/components/MarshmallowLogo";
 import { MarshmallowMascot, type MascotState } from "@/components/MarshmallowMascot";
@@ -9,130 +9,45 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { cn } from "@/lib/utils";
-import {
-  childTopicsForParents,
-  consumerRelationshipWorlds,
-  type TopicRow,
-} from "@/domain/onboarding/topics";
+import { BETA_ONBOARDING_DEFAULT_TOPIC_ID } from "@/domain/onboarding/beta";
 import { completeOnboardingAction } from "@/server/actions/onboarding";
 import { trackEvent } from "@/server/actions/analytics";
 
 type OnboardingFlowProps = {
-  topics: TopicRow[];
   username: string;
   displayName: string;
-  initialTopicIds: string[];
 };
 
-const STEPS = ["welcome", "worlds", "fandoms", "how", "finish"] as const;
+const STEPS = ["welcome", "how", "finish"] as const;
 type Step = (typeof STEPS)[number];
 
-export function OnboardingFlow({
-  topics,
-  username,
-  displayName,
-  initialTopicIds,
-}: OnboardingFlowProps) {
+export function OnboardingFlow({ username, displayName }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>("welcome");
-  const [selected, setSelected] = useState<Set<string>>(() => new Set(initialTopicIds));
   const [started, setStarted] = useState(false);
   const [state, action, pending] = useActionState(completeOnboardingAction, null);
-
-  const worlds = consumerRelationshipWorlds(topics);
-  const selectedWorlds = worlds.filter((topic) => selected.has(topic.id)).map((topic) => topic.id);
-  const fandoms = useMemo(
-    () => childTopicsForParents(topics, selectedWorlds),
-    [topics, selectedWorlds],
-  );
-  const persistedIds = [...selected].filter((id) => {
-    const topic = topics.find((item) => item.id === id);
-    if (!topic) {
-      return false;
-    }
-    if (topic.parent_id == null) {
-      return true;
-    }
-    return selected.has(topic.parent_id);
-  });
-
-  function toggle(id: string, kind: "world" | "fandom") {
-    const adding = !selected.has(id);
-    setSelected((current) => {
-      const next = new Set(current);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-    if (adding) {
-      void trackEvent(
-        kind === "world"
-          ? ANALYTICS_EVENTS.onboardingCategorySelected
-          : ANALYTICS_EVENTS.onboardingTopicSelected,
-        { topic_id: id },
-      );
-    }
-  }
 
   function start() {
     if (!started) {
       setStarted(true);
       void trackEvent(ANALYTICS_EVENTS.onboardingStarted);
     }
-    setStep("worlds");
-  }
-
-  function goFandoms() {
-    if (selectedWorlds.length === 0) {
-      return;
-    }
-    if (fandoms.length === 0) {
-      setStep("how");
-      return;
-    }
-    setStep("fandoms");
+    setStep("how");
   }
 
   return (
     <main className="flex flex-1 flex-col">
       <StepDots step={step} />
 
-      {step === "welcome" ? (
-        <Welcome onContinue={start} />
-      ) : null}
-
-      {step === "worlds" ? (
-        <Worlds
-          worlds={worlds}
-          selected={selected}
-          onToggle={(id) => toggle(id, "world")}
-          onBack={() => setStep("welcome")}
-          onContinue={goFandoms}
-        />
-      ) : null}
-
-      {step === "fandoms" ? (
-        <Fandoms
-          fandoms={fandoms}
-          selected={selected}
-          onToggle={(id) => toggle(id, "fandom")}
-          onBack={() => setStep("worlds")}
-          onContinue={() => setStep("how")}
-        />
-      ) : null}
+      {step === "welcome" ? <Welcome onContinue={start} /> : null}
 
       {step === "how" ? (
-        <HowToPlay onBack={() => setStep(fandoms.length ? "fandoms" : "worlds")} onContinue={() => setStep("finish")} />
+        <HowToPlay onBack={() => setStep("welcome")} onContinue={() => setStep("finish")} />
       ) : null}
 
       {step === "finish" ? (
         <Finish
           username={username}
           displayName={displayName}
-          topicIds={persistedIds}
-          canSubmit={selectedWorlds.length > 0}
           state={state}
           action={action}
           pending={pending}
@@ -176,99 +91,6 @@ function Welcome({ onContinue }: { onContinue: () => void }) {
       </p>
       <div className="mt-10 w-full">
         <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
-      </div>
-    </div>
-  );
-}
-
-function Worlds({
-  worlds,
-  selected,
-  onToggle,
-  onBack,
-  onContinue,
-}: {
-  worlds: TopicRow[];
-  selected: Set<string>;
-  onToggle: (id: string) => void;
-  onBack: () => void;
-  onContinue: () => void;
-}) {
-  const canContinue = worlds.some((topic) => selected.has(topic.id));
-
-  return (
-    <div className="flex flex-1 flex-col pb-6">
-      <h1 className="mt-8 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
-        Pick what fascinates you.
-      </h1>
-      <p className="mt-2 text-sm text-ink-muted">
-        Your picks shape discovery. The Daily is shared by everyone.
-      </p>
-      {worlds.length === 0 ? (
-        <p className="mt-6 text-sm text-ink-muted">
-          No worlds are published yet. That&apos;s a content setup issue, not you.
-        </p>
-      ) : (
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          {worlds.map((topic) => (
-            <TopicCard
-              key={topic.id}
-              name={topic.name}
-              selected={selected.has(topic.id)}
-              onClick={() => onToggle(topic.id)}
-            />
-          ))}
-        </div>
-      )}
-      <div className="mt-auto flex flex-col gap-3 pt-8">
-        <PrimaryButton onClick={onContinue} disabled={!canContinue}>
-          Continue
-        </PrimaryButton>
-        <BackButton onClick={onBack} />
-      </div>
-    </div>
-  );
-}
-
-function Fandoms({
-  fandoms,
-  selected,
-  onToggle,
-  onBack,
-  onContinue,
-}: {
-  fandoms: TopicRow[];
-  selected: Set<string>;
-  onToggle: (id: string) => void;
-  onBack: () => void;
-  onContinue: () => void;
-}) {
-  return (
-    <div className="flex flex-1 flex-col pb-6">
-      <h1 className="mt-8 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
-        Anything you never miss?
-      </h1>
-      <p className="mt-2 text-sm text-ink-muted">Optional. Continue without extra picks.</p>
-      <div className="mt-6 flex flex-wrap gap-2">
-        {fandoms.map((topic) => (
-          <button
-            key={topic.id}
-            type="button"
-            onClick={() => onToggle(topic.id)}
-            className={cn(
-              "min-h-12 rounded-full border px-4 text-sm font-semibold touch-manipulation",
-              selected.has(topic.id)
-                ? "border-primary bg-primary text-primary-ink"
-                : "border-border bg-surface text-ink",
-            )}
-          >
-            {topic.name}
-          </button>
-        ))}
-      </div>
-      <div className="mt-auto flex flex-col gap-3 pt-8">
-        <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
-        <BackButton onClick={onBack} />
       </div>
     </div>
   );
@@ -323,8 +145,6 @@ function HowStep({
 function Finish({
   username,
   displayName,
-  topicIds,
-  canSubmit,
   state,
   action,
   pending,
@@ -332,8 +152,6 @@ function Finish({
 }: {
   username: string;
   displayName: string;
-  topicIds: string[];
-  canSubmit: boolean;
   state: { error: string } | null;
   action: (payload: FormData) => void;
   pending: boolean;
@@ -341,9 +159,7 @@ function Finish({
 }) {
   return (
     <form action={action} className="flex flex-1 flex-col pb-6">
-      {topicIds.map((id) => (
-        <input key={id} type="hidden" name="topic_ids" value={id} />
-      ))}
+      <input type="hidden" name="topic_ids" value={BETA_ONBOARDING_DEFAULT_TOPIC_ID} />
       <MarshmallowMascot state="celebrating" size="lg" className="mt-8 self-center" />
       <h1 className="mt-6 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
         You&apos;re in, @{username}.
@@ -367,37 +183,12 @@ function Finish({
         </p>
       ) : null}
       <div className="mt-auto flex flex-col gap-3 pt-8">
-        <PrimaryButton type="submit" disabled={pending || !canSubmit}>
+        <PrimaryButton type="submit" disabled={pending}>
           {pending ? "Saving…" : "PLAY MY FIRST MARSHMALLOW"}
         </PrimaryButton>
         <BackButton onClick={onBack} />
       </div>
     </form>
-  );
-}
-
-function TopicCard({
-  name,
-  selected,
-  onClick,
-}: {
-  name: string;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex min-h-28 items-center justify-center rounded-[1.5rem] border px-3 text-center text-base font-semibold leading-tight touch-manipulation",
-        selected
-          ? "border-primary bg-primary text-primary-ink"
-          : "border-border bg-surface text-ink",
-      )}
-    >
-      {name}
-    </button>
   );
 }
 

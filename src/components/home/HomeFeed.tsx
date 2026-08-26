@@ -258,7 +258,7 @@ function DailyRoundSection({ round }: { round: DailyRoundProgress }) {
             <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
               Daily sealed
             </p>
-            <p className="text-sm text-ink-muted">5 calls locked · Come back for the reveal</p>
+            <p className="text-sm text-ink-muted">The crowd is still deciding. Come back tonight.</p>
           </>
         )
       ) : null}

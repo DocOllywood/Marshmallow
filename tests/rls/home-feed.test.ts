@@ -66,7 +66,7 @@ describe("home feed queries", () => {
     const marshmallows = await user
       .from("marshmallows")
       .select(
-        "id, question, topic_id, opens_at, closes_at, reveals_at, hard_reveals_at, status, is_daily, play_mode, quick_priority, entity_label, spoiler_context, image_url, expires_at, marshmallow_choices(id, label)",
+        "id, question, topic_id, daily_round_id, opens_at, closes_at, reveals_at, hard_reveals_at, status, is_daily, play_mode, quick_priority, entity_label, spoiler_context, image_url, expires_at, marshmallow_choices(id, label)",
       )
       .in("status", ["open", "closed", "revealed", "cancelled"])
       .order("reveals_at", { ascending: false });

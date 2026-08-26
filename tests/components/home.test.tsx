@@ -13,6 +13,7 @@ afterEach(() => cleanup());
 function card(overrides: Partial<HomeFeedCard> & Pick<HomeFeedCard, "id" | "question">): HomeFeedCard {
   return {
     topic_id: null,
+    daily_round_id: null,
     opens_at: "2026-08-25T12:00:00.000Z",
     closes_at: "2026-08-25T15:00:00.000Z",
     reveals_at: "2026-08-25T16:00:00.000Z",
@@ -294,7 +295,8 @@ describe("HomeFeedView", () => {
 
     expect(screen.getByText(/Today's read/i)).toBeTruthy();
     expect(screen.getByText(/Your calls are locked/i)).toBeTruthy();
-    expect(screen.getByText(/You've played today's Marshmallow/i)).toBeTruthy();
+    expect(screen.getByText(/The crowd is still deciding/i)).toBeTruthy();
+    expect(screen.getByText(/Come back tonight/i)).toBeTruthy();
   });
 
   it("stacks Cooking with humanized wait beneath the question", () => {

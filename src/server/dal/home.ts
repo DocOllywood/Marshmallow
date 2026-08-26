@@ -12,6 +12,7 @@ import {
 import type { TopicRow } from "@/domain/onboarding/topics";
 import type { Database } from "@/lib/supabase/types";
 import type { DailyRoundProgress } from "@/domain/daily/round";
+import { isStandaloneHomeInventory } from "@/domain/home/inventory";
 import { getTodayDailyRoundProgress } from "@/server/dal/daily-round";
 
 type MarshmallowRow = Pick<
@@ -19,6 +20,7 @@ type MarshmallowRow = Pick<
   | "id"
   | "question"
   | "topic_id"
+  | "daily_round_id"
   | "opens_at"
   | "closes_at"
   | "reveals_at"
@@ -67,7 +69,7 @@ export async function getHomeFeed(
   const { data: marshmallows, error: marshmallowError } = await supabase
     .from("marshmallows")
     .select(
-      "id, question, topic_id, opens_at, closes_at, reveals_at, hard_reveals_at, status, is_daily, play_mode, quick_priority, entity_label, spoiler_context, image_url, expires_at, marshmallow_choices(id, label)",
+      "id, question, topic_id, daily_round_id, opens_at, closes_at, reveals_at, hard_reveals_at, status, is_daily, play_mode, quick_priority, entity_label, spoiler_context, image_url, expires_at, marshmallow_choices(id, label)",
     )
     .in("status", ["open", "closed", "revealed", "cancelled"])
     .order("reveals_at", { ascending: false });
@@ -103,7 +105,6 @@ export async function getHomeFeed(
   const topicName = new Map(topics.map((topic) => [topic.id, topic.name]));
   const topicImage = new Map(topics.map((topic) => [topic.id, topic.image_url]));
   const dailyRound = await getTodayDailyRoundProgress(topicName);
-  const dailyRoundIds = new Set((dailyRound?.questions ?? []).map((question) => question.id));
 
   const cards: HomeFeedCard[] = (marshmallows ?? []).map((row) => {
     const entry = entryByMarshmallow.get(row.id);
@@ -124,6 +125,7 @@ export async function getHomeFeed(
       id: row.id,
       question: row.question,
       topic_id: row.topic_id,
+      daily_round_id: row.daily_round_id,
       opens_at: row.opens_at,
       closes_at: row.closes_at,
       reveals_at: row.reveals_at,
@@ -161,26 +163,26 @@ export async function getHomeFeed(
 
   const readyToReveal = cards.filter(
     (card) =>
+      isStandaloneHomeInventory(card.daily_round_id) &&
       card.sealed &&
       card.status === "revealed" &&
-      !card.openedReveal &&
-      !dailyRoundIds.has(card.id),
+      !card.openedReveal,
   );
   const waiting = cards.filter(
     (card) =>
+      isStandaloneHomeInventory(card.daily_round_id) &&
       card.sealed &&
-      (card.status === "open" || card.status === "closed") &&
-      !dailyRoundIds.has(card.id),
+      (card.status === "open" || card.status === "closed"),
   );
   const readyIds = new Set(readyToReveal.map((card) => card.id));
   const cooking = waiting;
   const quickCandidates = cards
     .filter(
       (card) =>
+        isStandaloneHomeInventory(card.daily_round_id) &&
         card.play_mode === "quick" &&
         card.status === "open" &&
         !card.sealed &&
-        !dailyRoundIds.has(card.id) &&
         isDiscoverable({
           nowMs,
           expiresAtMs: card.expiresAt ? Date.parse(card.expiresAt) : null,
@@ -201,10 +203,10 @@ export async function getHomeFeed(
   const liveNow = cards
     .filter(
       (card) =>
+        isStandaloneHomeInventory(card.daily_round_id) &&
         card.play_mode === "live" &&
         card.status === "open" &&
         !card.sealed &&
-        !dailyRoundIds.has(card.id) &&
         isProminentLive(card) &&
         isDiscoverable({
           nowMs,
@@ -216,12 +218,12 @@ export async function getHomeFeed(
     .slice(0, 2);
   const recent = cards.filter(
     (card) =>
-      (card.status === "cancelled" && card.sealed) ||
-      (card.status === "revealed" &&
-        card.sealed &&
-        card.openedReveal &&
-        !dailyRoundIds.has(card.id) &&
-        !readyIds.has(card.id)),
+      isStandaloneHomeInventory(card.daily_round_id) &&
+      ((card.status === "cancelled" && card.sealed) ||
+        (card.status === "revealed" &&
+          card.sealed &&
+          card.openedReveal &&
+          !readyIds.has(card.id))),
   );
 
   return {

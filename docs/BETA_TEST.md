@@ -21,7 +21,7 @@ Steps:
 2. Create 6 Quick (⚡ QUICK, open now / close 3m / target 4m / hard 10m). Use **Promote next** / reorder so only ~3 are promoted.
 3. Schedule one Daily. Confirm no Daily conflict.
 4. Click **Run due lifecycle jobs**. Promoted Quicks should be `open`.
-5. If you are on Vercel Hobby, keep **Run due jobs** handy; Hobby cron is once per day.
+5. Vercel cron runs lifecycle at **08:00 UTC** and **02:00 UTC** (evening pass for same-day Daily reveal). On **Vercel Hobby**, both slots are once daily — keep **Run due jobs** handy if you need to finalize between cron runs.
 6. Open Beta Health. Rates may be —; the blocks should still render.
 
 Do not leave 10 Quicks equally promoted. Extra scheduled/open items can sit in the queue.
@@ -33,7 +33,7 @@ If a Quick hits target reveal with fewer than the minimum seals, testers see **S
 Expected states are in **bold**.
 
 1. **Signup** — landing: *Predict what everyone else will choose.* Privacy / Terms / Community are drafts. Account + profile created. No confirm-email loop.
-2. **Onboarding** — pick at least one world. Back works. Finish lands on a **promoted open Quick** when inventory exists.
+2. **Onboarding** — welcome, how-it-works (PICK / PREDICT / LOCK / REVEAL), display name, finish. World-preference pick is **skipped in Beta 1** (prefs schema remains; a silent default is stored). Back works. Finish lands on **Home** with today's shared Daily.
 3. **First Quick** — ⚡ QUICK + **Results soon**. Question first. Pick → predict → **SEAL MY MARSHMALLOW**.
 4. **Sealed** — **SEALED**, countdown, “Your call is locked.” **PLAY ANOTHER** if another playable item exists; otherwise **HOME**. Same Quick is never re-offered.
 5. **Play another** — next unsealed promoted Quick, then other eligible Quick, then Daily / Live.
@@ -72,3 +72,7 @@ Numerators and denominators are always shown.
 - Countdown zero does not unlock numbers.
 - Home READY and the browser title update on refetch only.
 - TEST SESSION shows sealed counts only.
+
+## Beta 1 crowd semantics (frozen)
+
+Beta 1 crowd percentages represent the completed Marshmallow-player cohort and **currently include the viewing player's own response**. Exclude-self prediction semantics are a post-Beta candidate. Do not treat Beta Accuracy, Gap, or CrowdSense scores as exclude-self semantics when comparing to future releases.
