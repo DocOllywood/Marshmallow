@@ -1,5 +1,29 @@
 # Daily Round Editorial Rules
 
+## Human Relationships taxonomy
+
+**Human Relationships** is the product universe. Consumer worlds are:
+
+| World | Slug | Relational context |
+|-------|------|--------------------|
+| Love | `love` | Established romantic relationships |
+| Dating & Sex | `dating-sex` | Attraction, early dating, sex, choosing partners |
+| Friendship | `friendship` | Friend loyalty, boundaries, drifting apart |
+| Family | `family` | Parents, siblings, children, obligation |
+| Human Nature | `human-nature` | General human behavior without a specific relationship |
+
+**Daily rounds** should normally be coherent within **one world** — all five questions share the same relational context.
+
+**Tensions** (e.g. HONESTY vs. KINDNESS) are independent narrative axes that can recur across worlds. The tension is reusable; the world determines who the dilemma is about:
+
+- **Love** — "Do you tell your partner…"
+- **Friendship** — "Do you tell your best friend…"
+- **Family** — "Do you tell your sibling…"
+
+The Daily is a **shared experience**: one UTC day, one world, one set of questions, one reveal — the same for every Marshmallow player. Onboarding world picks shape discovery and Quick; they do not select today's Daily.
+
+---
+
 Each Daily explores **one human tension** (e.g. HONESTY vs. KINDNESS). The **topic/world** (Love, Friendship, etc.) is context only.
 
 ## Five-question structure

@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { consumeReturnPath, attributeShareSignup } from "@/server/dal/notify-share";
-import { firstSessionPlayHref } from "@/server/dal/play";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { trackEvent } from "@/server/actions/analytics";
 import {
@@ -59,9 +58,5 @@ export async function completeOnboardingAction(
   if (attributed) {
     await trackEvent(ANALYTICS_EVENTS.shareSignupCompleted);
   }
-  const next = await consumeReturnPath();
-  if (next === "/home") {
-    redirect(await firstSessionPlayHref());
-  }
-  redirect(next);
+  redirect(await consumeReturnPath());
 }

@@ -199,9 +199,11 @@ function Worlds({
   return (
     <div className="flex flex-1 flex-col pb-6">
       <h1 className="mt-8 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
-        What part of people fascinates you?
+        Pick what fascinates you.
       </h1>
-      <p className="mt-2 text-sm text-ink-muted">Pick what you want to read the room on.</p>
+      <p className="mt-2 text-sm text-ink-muted">
+        Your picks shape discovery. The Daily is shared by everyone.
+      </p>
       {worlds.length === 0 ? (
         <p className="mt-6 text-sm text-ink-muted">
           No worlds are published yet. That&apos;s a content setup issue, not you.
