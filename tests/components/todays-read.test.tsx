@@ -14,10 +14,13 @@ describe("TodaysReadCard", () => {
     render(
       <TodaysReadCard
         read={{
-          headline: "You leaned toward honesty — until honesty became destructive.",
-          bodyLines: ["You chose honesty in 3 of today's dilemmas."],
+          headline: "You chose honesty — until the cost changed your call.",
+          bodyLines: [
+            "As today's dilemmas became more complicated, you still preferred honesty over kindness.",
+            "When the consequence became permanent, you shifted toward kindness.",
+          ],
           lineCopy: "After a month",
-          switchCopy: "You favored honesty until the consequence became permanent.",
+          switchCopy: null,
           tomorrowTease: "LOYALTY vs. SELF-PRESERVATION",
           isLegacy: false,
         }}
@@ -26,9 +29,10 @@ describe("TodaysReadCard", () => {
     );
 
     expect(screen.getByText(/Today's read/i)).toBeTruthy();
-    expect(screen.getByText(/You leaned toward honesty/i)).toBeTruthy();
-    expect(screen.getByText(/You chose honesty in 3/i)).toBeTruthy();
+    expect(screen.getByText(/You chose honesty/i)).toBeTruthy();
+    expect(screen.getByText(/As today's dilemmas became more complicated/i)).toBeTruthy();
     expect(screen.getByText(/After a month/i)).toBeTruthy();
+    expect(screen.getByText(/You've played today's Marshmallow/i)).toBeTruthy();
     expect(screen.getByText(/LOYALTY vs. SELF-PRESERVATION/i)).toBeTruthy();
     expect(screen.queryByText(/answers held/i)).toBeNull();
   });

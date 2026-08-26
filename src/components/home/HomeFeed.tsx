@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
-import { TensionDisplay } from "@/components/daily/TensionDisplay";
 import { EmptyState } from "@/components/EmptyState";
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -200,6 +199,8 @@ function DailyRoundSection({ round }: { round: DailyRoundProgress }) {
   const state = dailyHomeState(round);
   const playHref = round.currentPlayId ? `/m/${round.currentPlayId}` : "/home";
   const viewed = useRef(false);
+  const world = worldLabel(round.topicName);
+  const dilemmaCount = round.questions.length;
 
   useEffect(() => {
     if (viewed.current) return;
@@ -213,27 +214,40 @@ function DailyRoundSection({ round }: { round: DailyRoundProgress }) {
 
   return (
     <section className="flex flex-col gap-4 border-l-2 border-primary/30 pl-4">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">The Daily</p>
-        {round.tension ? <TensionDisplay tension={round.tension} /> : null}
-        <WorldTag topicName={round.topicName} />
+        <p className="text-[10px] font-semibold tracking-[0.2em] text-ink-muted/80 uppercase">
+          Today everyone is playing
+        </p>
+        {world ? (
+          <p className="text-xs font-semibold tracking-[0.2em] text-ink uppercase">{world}</p>
+        ) : null}
         <p className="font-display text-[clamp(1.2rem,5vw,1.55rem)] leading-[1.1] font-semibold tracking-tight break-words">
           {round.title}
         </p>
-        {round.subtitle ? (
+        {round.tension ? (
+          <p className="font-display text-sm font-semibold tracking-tight text-ink">
+            {round.tension.displayLabel}
+          </p>
+        ) : null}
+        {dilemmaCount > 0 ? (
+          <p className="text-sm text-ink-muted">
+            {dilemmaCount} {dilemmaCount === 1 ? "dilemma" : "dilemmas"}
+          </p>
+        ) : round.subtitle ? (
           <p className="text-sm leading-snug text-ink-muted">{round.subtitle}</p>
         ) : null}
       </div>
 
       {state === "play" ? (
-        <PrimaryButton href={playHref}>PLAY THE DAILY</PrimaryButton>
+        <PrimaryButton href={playHref}>PLAY TODAY&apos;S DAILY</PrimaryButton>
       ) : null}
       {state === "continue" ? (
         <>
           <p className="text-sm font-semibold text-ink-muted">
             {round.sealedCount} of {round.questions.length} locked
           </p>
-          <PrimaryButton href={playHref}>CONTINUE THE DAILY</PrimaryButton>
+          <PrimaryButton href={playHref}>CONTINUE TODAY&apos;S DAILY</PrimaryButton>
         </>
       ) : null}
       {state === "sealed" ? (

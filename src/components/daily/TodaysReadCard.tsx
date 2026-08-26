@@ -57,7 +57,8 @@ export function TodaysReadCard({
           Your calls are locked
         </p>
         <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
-          The crowd is still deciding. Come back for the reveal.
+          You&apos;ve played today&apos;s Marshmallow. The crowd is still deciding. Come back for
+          the reveal.
         </p>
       </div>
       {read.tomorrowTease ? (

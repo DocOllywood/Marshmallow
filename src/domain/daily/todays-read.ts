@@ -58,10 +58,14 @@ export function buildTodaysRead(
 
   if (!tension || sideQuestions.length === 0) {
     return {
-      headline: legacyHeadline({ hasSwitch: Boolean(switchQuestion), switchStayed: switchQuestion?.switchStayed ?? null, hasLine: lineCopy != null }),
-      bodyLines: [],
+      headline: legacyHeadline({
+        hasSwitch: Boolean(switchQuestion),
+        switchStayed: switchQuestion?.switchStayed ?? null,
+        hasLine: lineCopy != null,
+      }),
+      bodyLines: legacyBodyLines(switchQuestion),
       lineCopy,
-      switchCopy: legacySwitchCopy(switchQuestion),
+      switchCopy: null,
       tomorrowTease,
       isLegacy: true,
     };
@@ -81,7 +85,7 @@ export function buildTodaysRead(
     headline,
     bodyLines,
     lineCopy,
-    switchCopy: buildSwitchCopy(switchQuestion, tension, lean),
+    switchCopy: null,
     tomorrowTease,
     isLegacy: false,
   };
@@ -117,27 +121,22 @@ function buildNarrativeHeadline(input: {
   const right = labelForSide(input.tension, "right");
 
   if (input.hasSwitch && input.switchStayed === false) {
-    if (input.lean === "left") {
-      return `You leaned toward ${left} — until ${left} became destructive.`;
-    }
-    if (input.lean === "right") {
-      return `You leaned toward ${right} — until the cost changed your call.`;
-    }
-    return "You changed your call when the consequence shifted.";
+    const favored = input.lean === "right" ? right : left;
+    return `You chose ${favored} — until the cost changed your call.`;
   }
 
   if (input.hasSwitch && input.switchStayed === true) {
     const favored = input.lean === "right" ? right : left;
-    return `You leaned toward ${favored} — and held when the stakes changed.`;
+    return `You chose ${favored} — and held when the stakes changed.`;
   }
 
   if (input.lean === "left") {
-    return `You leaned toward ${left} today.`;
+    return `You chose ${left} today.`;
   }
   if (input.lean === "right") {
-    return `You leaned toward ${right} today.`;
+    return `You chose ${right} today.`;
   }
-  return `You split today's dilemmas between ${left} and ${right}.`;
+  return `You split today between ${left} and ${right}.`;
 }
 
 function buildBodyLines(input: {
@@ -146,39 +145,27 @@ function buildBodyLines(input: {
   lean: Lean;
   switchQuestion: TodaysReadQuestion | undefined;
 }): string[] {
+  const left = labelForSide(input.tension, "left");
+  const right = labelForSide(input.tension, "right");
   const lines: string[] = [];
-  const dominantSide = input.lean === "right" ? "right" : "left";
-  const dominantCount = dominantSide === "left" ? input.counts.left : input.counts.right;
-  const dominantLabel = labelForSide(input.tension, dominantSide);
 
-  if (dominantCount > 0 && input.lean !== "split") {
-    lines.push(
-      `You chose ${dominantLabel} in ${dominantCount} of today's dilemmas.`,
-    );
+  if (input.lean === "left") {
+    lines.push(`As today's dilemmas became more complicated, you still preferred ${left} over ${right}.`);
+  } else if (input.lean === "right") {
+    lines.push(`As today's dilemmas became more complicated, you still preferred ${right} over ${left}.`);
+  } else {
+    lines.push(`You weighed ${left} and ${right} differently across today's dilemmas.`);
   }
 
-  if (input.switchQuestion?.switchStayed === false) {
-    lines.push("But when the consequence changed, you changed your call.");
-  } else if (input.switchQuestion?.switchStayed === true) {
-    lines.push("You held your position when the circumstances changed.");
+  if (input.switchQuestion?.switchStayed === true) {
+    const favored = input.lean === "right" ? right : left;
+    lines.push(`When the stakes shifted, you stayed with ${favored}.`);
+  } else if (input.switchQuestion?.switchStayed === false) {
+    const shiftedToward = input.lean === "right" ? left : right;
+    lines.push(`When the consequence became permanent, you shifted toward ${shiftedToward}.`);
   }
 
   return lines;
-}
-
-function buildSwitchCopy(
-  switchQuestion: TodaysReadQuestion | undefined,
-  tension: HumanTension,
-  lean: Lean,
-): string | null {
-  if (!switchQuestion || switchQuestion.switchStayed == null) {
-    return null;
-  }
-  if (switchQuestion.switchStayed) {
-    return "You held your position when the circumstances changed.";
-  }
-  const favored = lean === "right" ? tension.rightLabel.toLowerCase() : tension.leftLabel.toLowerCase();
-  return `You favored ${favored} until the consequence became permanent.`;
 }
 
 function legacyHeadline(input: {
@@ -198,12 +185,12 @@ function legacyHeadline(input: {
   return "Your calls are locked in.";
 }
 
-function legacySwitchCopy(switchQuestion: TodaysReadQuestion | undefined): string | null {
+function legacyBodyLines(switchQuestion: TodaysReadQuestion | undefined): string[] {
   if (!switchQuestion || switchQuestion.switchStayed == null) {
-    return null;
+    return [];
   }
   if (switchQuestion.switchStayed) {
-    return "You held your position when the circumstances changed.";
+    return ["When the circumstances changed, you kept the same call."];
   }
-  return "You changed your call when the consequence shifted.";
+  return ["When the consequence shifted, you changed your call."];
 }

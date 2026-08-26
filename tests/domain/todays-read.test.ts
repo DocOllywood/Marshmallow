@@ -41,8 +41,12 @@ describe("today's read narrative", () => {
       tomorrow,
     );
 
-    expect(read?.headline).toBe("You leaned toward honesty — and held when the stakes changed.");
-    expect(read?.bodyLines[0]).toBe("You chose honesty in 3 of today's dilemmas.");
+    expect(read?.headline).toBe("You chose honesty — and held when the stakes changed.");
+    expect(read?.bodyLines[0]).toBe(
+      "As today's dilemmas became more complicated, you still preferred honesty over kindness.",
+    );
+    expect(read?.bodyLines[1]).toBe("When the stakes shifted, you stayed with honesty.");
+    expect(read?.switchCopy).toBeNull();
     expect(read?.lineCopy).toBe("After a month");
     expect(read?.tomorrowTease).toBe("LOYALTY vs. SELF-PRESERVATION");
     expect(read?.isLegacy).toBe(false);
@@ -59,8 +63,10 @@ describe("today's read narrative", () => {
       null,
     );
 
-    expect(read?.headline).toBe("You leaned toward kindness today.");
-    expect(read?.bodyLines[0]).toBe("You chose kindness in 2 of today's dilemmas.");
+    expect(read?.headline).toBe("You chose kindness today.");
+    expect(read?.bodyLines[0]).toBe(
+      "As today's dilemmas became more complicated, you still preferred kindness over honesty.",
+    );
   });
 
   it("narrates switch stay", () => {
@@ -72,9 +78,12 @@ describe("today's read narrative", () => {
       null,
     );
 
-    expect(read?.headline).toBe("You leaned toward honesty — and held when the stakes changed.");
-    expect(read?.bodyLines[0]).toBe("You chose honesty in 1 of today's dilemmas.");
-    expect(read?.switchCopy).toBe("You held your position when the circumstances changed.");
+    expect(read?.headline).toBe("You chose honesty — and held when the stakes changed.");
+    expect(read?.bodyLines[0]).toBe(
+      "As today's dilemmas became more complicated, you still preferred honesty over kindness.",
+    );
+    expect(read?.bodyLines[1]).toBe("When the stakes shifted, you stayed with honesty.");
+    expect(read?.switchCopy).toBeNull();
   });
 
   it("narrates switch change", () => {
@@ -88,8 +97,14 @@ describe("today's read narrative", () => {
       null,
     );
 
-    expect(read?.headline).toBe("You leaned toward honesty — until honesty became destructive.");
-    expect(read?.bodyLines.at(-1)).toBe("But when the consequence changed, you changed your call.");
+    expect(read?.headline).toBe("You chose honesty — until the cost changed your call.");
+    expect(read?.bodyLines[0]).toBe(
+      "As today's dilemmas became more complicated, you still preferred honesty over kindness.",
+    );
+    expect(read?.bodyLines.at(-1)).toBe(
+      "When the consequence became permanent, you shifted toward kindness.",
+    );
+    expect(read?.switchCopy).toBeNull();
   });
 
   it("narrates line threshold copy", () => {
@@ -124,6 +139,8 @@ describe("today's read narrative", () => {
 
     expect(read?.isLegacy).toBe(true);
     expect(read?.headline).toBe("You shifted when the circumstances changed.");
+    expect(read?.bodyLines[0]).toBe("When the consequence shifted, you changed your call.");
+    expect(read?.switchCopy).toBeNull();
     expect(read?.tomorrowTease).toBe("LOYALTY vs. SELF-PRESERVATION");
   });
 

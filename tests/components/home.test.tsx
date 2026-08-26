@@ -141,8 +141,93 @@ describe("HomeFeedView", () => {
     render(<HomeFeedView feed={feed} firstName="Alex" />);
 
     expect(screen.getByText("The Daily")).toBeTruthy();
+    expect(screen.getByText(/Today everyone is playing/i)).toBeTruthy();
+    expect(screen.getByText("LOVE")).toBeTruthy();
     expect(screen.getByText(/Can love survive complete honesty/i)).toBeTruthy();
-    expect(screen.getByRole("link", { name: "CONTINUE THE DAILY" })).toBeTruthy();
+    expect(screen.getByText(/2 dilemmas/i)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "CONTINUE TODAY'S DAILY" })).toBeTruthy();
+  });
+
+  it("renders shared daily framing with tension when assigned", () => {
+    const feed: HomeFeed = {
+      ...emptyFeed,
+      dailyRound: {
+        roundId: "40000000-0000-4000-8000-000000000004",
+        title: "When does honesty become cruelty?",
+        subtitle: null,
+        topicName: "Love",
+        tension: {
+          id: "50000000-0000-4000-8000-000000000001",
+          slug: "honesty-kindness",
+          leftLabel: "HONESTY",
+          rightLabel: "KINDNESS",
+          displayLabel: "HONESTY vs. KINDNESS",
+        },
+        roundDate: "2026-08-28",
+        questions: [
+          {
+            id: "q1",
+            question: "Q1",
+            position: 1,
+            sealed: false,
+            openedReveal: false,
+            status: "open",
+            revealsAt: "2026-08-28T22:00:00.000Z",
+          },
+          {
+            id: "q2",
+            question: "Q2",
+            position: 2,
+            sealed: false,
+            openedReveal: false,
+            status: "open",
+            revealsAt: "2026-08-28T22:00:00.000Z",
+          },
+          {
+            id: "q3",
+            question: "Q3",
+            position: 3,
+            sealed: false,
+            openedReveal: false,
+            status: "open",
+            revealsAt: "2026-08-28T22:00:00.000Z",
+          },
+          {
+            id: "q4",
+            question: "Q4",
+            position: 4,
+            sealed: false,
+            openedReveal: false,
+            status: "open",
+            revealsAt: "2026-08-28T22:00:00.000Z",
+          },
+          {
+            id: "q5",
+            question: "Q5",
+            position: 5,
+            sealed: false,
+            openedReveal: false,
+            status: "open",
+            revealsAt: "2026-08-28T22:00:00.000Z",
+          },
+        ],
+        sealedCount: 0,
+        allSealed: false,
+        allRevealed: false,
+        anyRevealOpened: false,
+        currentPlayId: "31000000-0000-4000-8000-000000000010",
+        revealHref: "/daily/40000000-0000-4000-8000-000000000004/reveal",
+        todaysRead: null,
+      },
+    };
+
+    render(<HomeFeedView feed={feed} firstName="Alex" />);
+
+    expect(screen.getByText(/Today everyone is playing/i)).toBeTruthy();
+    expect(screen.getByText("HONESTY vs. KINDNESS")).toBeTruthy();
+    expect(screen.getByText(/5 dilemmas/i)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "PLAY TODAY'S DAILY" })).toBeTruthy();
+    expect(screen.queryByText(/Today's tension/i)).toBeNull();
   });
 
   it("renders tension on daily rounds that have one", () => {
@@ -174,9 +259,7 @@ describe("HomeFeedView", () => {
 
     render(<HomeFeedView feed={feed} firstName="Alex" />);
 
-    expect(screen.getByText(/Today's tension/i)).toBeTruthy();
-    expect(screen.getByText("HONESTY")).toBeTruthy();
-    expect(screen.getByText("KINDNESS")).toBeTruthy();
+    expect(screen.getByText("HONESTY vs. KINDNESS")).toBeTruthy();
   });
 
   it("shows today's read when the daily round is fully sealed", () => {
@@ -211,6 +294,7 @@ describe("HomeFeedView", () => {
 
     expect(screen.getByText(/Today's read/i)).toBeTruthy();
     expect(screen.getByText(/Your calls are locked/i)).toBeTruthy();
+    expect(screen.getByText(/You've played today's Marshmallow/i)).toBeTruthy();
   });
 
   it("stacks Cooking with humanized wait beneath the question", () => {
