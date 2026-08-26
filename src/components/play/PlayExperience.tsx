@@ -420,6 +420,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
                   read={marshmallow.dailyRound.todaysRead}
                   showHomeButton={false}
                   roundId={marshmallow.dailyRound.roundId}
+                  tensionSlug={marshmallow.dailyRound.tension?.slug}
                 />
               ) : (
                 <>

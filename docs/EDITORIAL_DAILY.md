@@ -1,5 +1,36 @@
 # Daily Round Editorial Rules
 
+## Marshmallow mission
+
+Marshmallow exists to make people notice other people.
+
+It explores the small decisions that shape everyday human experience.
+
+The product does not tell users how to behave. It creates dilemmas, reveals disagreement, and occasionally invites one small act of consideration outside the app.
+
+No points. No proof. No performance.
+
+---
+
+## Editorial tensions
+
+Future Dailies can explore tensions such as:
+
+- COURTESY vs CONVENIENCE
+- HONESTY vs KINDNESS
+- GENEROSITY vs FAIRNESS
+- ATTENTION vs INDIFFERENCE
+- SELF vs STRANGER
+- PRIVACY vs CONNECTION
+- LOYALTY vs PRINCIPLE
+- FORGIVENESS vs SELF-RESPECT
+- TRUST vs PRIVACY
+- LOVE vs FREEDOM
+
+Love, family, and friendship remain valid worlds and contexts. Do not rewrite historical rounds.
+
+---
+
 ## Human Relationships taxonomy
 
 **Human Relationships** is the product universe. Consumer worlds are:

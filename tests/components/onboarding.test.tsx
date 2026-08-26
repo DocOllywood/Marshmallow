@@ -23,6 +23,8 @@ describe("OnboardingFlow", () => {
   it("tracks start from welcome and skips the world-preference step in Beta 1", async () => {
     render(<OnboardingFlow username="tester" displayName="Tester" />);
     expect(trackEvent).not.toHaveBeenCalled();
+    expect(screen.getByText("A Daily Experiment in Being Human")).toBeTruthy();
+    expect(screen.getByText(/Five small dilemmas about how we treat each other/i)).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: /^Continue$/i }));
     expect(trackEvent).toHaveBeenCalledTimes(1);
@@ -39,6 +41,10 @@ describe("OnboardingFlow", () => {
   it("submits the silent Beta default world on finish", async () => {
     render(<OnboardingFlow username="tester" displayName="Tester" />);
     fireEvent.click(screen.getByRole("button", { name: /^Continue$/i }));
+
+    expect(screen.getByText(/other Marshmallow players chose/i)).toBeTruthy();
+    expect(screen.getByText(/Come back and see how well you read the room/i)).toBeTruthy();
+
     fireEvent.click(screen.getByRole("button", { name: /^Got it$/i }));
 
     const hidden = screen.getByDisplayValue(BETA_ONBOARDING_DEFAULT_TOPIC_ID);

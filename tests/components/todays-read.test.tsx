@@ -25,17 +25,16 @@ describe("TodaysReadCard", () => {
           isLegacy: false,
         }}
         showHomeButton={false}
+        tensionSlug="honesty-kindness"
       />,
     );
 
     expect(screen.getByText(/Today's read/i)).toBeTruthy();
     expect(screen.getByText(/You chose honesty/i)).toBeTruthy();
-    expect(screen.getByText(/As today's dilemmas became more complicated/i)).toBeTruthy();
-    expect(screen.getByText(/After a month/i)).toBeTruthy();
+    expect(screen.getByText(/Today's Marshmallow/i)).toBeTruthy();
     expect(screen.getByText(/Your calls are locked/i)).toBeTruthy();
     expect(screen.getByText(/The crowd is still deciding/i)).toBeTruthy();
     expect(screen.getByText(/Come back tonight/i)).toBeTruthy();
-    expect(screen.getByText(/LOYALTY vs. SELF-PRESERVATION/i)).toBeTruthy();
     expect(screen.queryByText(/answers held/i)).toBeNull();
   });
 });

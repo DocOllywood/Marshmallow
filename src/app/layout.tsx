@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s · Marshmallow",
   },
   description:
-    "The Human Nature Game. Answer for yourself, predict everyone else, and discover how well you read the room.",
+    "A daily experiment in being human. Make your call, predict the crowd, and come back for the reveal.",
 };
 
 export const viewport: Viewport = {

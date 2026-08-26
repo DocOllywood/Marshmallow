@@ -7,17 +7,20 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import type { TodaysRead } from "@/domain/daily/todays-read";
 import { trackEvent } from "@/server/actions/analytics";
+import { TodaysMarshmallow } from "@/components/daily/TodaysMarshmallow";
 
 export function TodaysReadCard({
   read,
   homeHref = "/home",
   showHomeButton = true,
   roundId,
+  tensionSlug,
 }: {
   read: TodaysRead;
   homeHref?: string;
   showHomeButton?: boolean;
   roundId?: string;
+  tensionSlug?: string | null;
 }) {
   const tracked = useRef(false);
 
@@ -52,6 +55,7 @@ export function TodaysReadCard({
           <p className="font-semibold text-ink">{read.lineCopy}</p>
         </div>
       ) : null}
+      <TodaysMarshmallow tensionSlug={tensionSlug} />
       <div className="flex flex-col gap-2 pt-2">
         <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
           Your calls are locked

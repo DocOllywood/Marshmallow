@@ -5,13 +5,13 @@ import { useActionState } from "react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { startGuestPlayAction } from "@/server/actions/auth";
 
-export function PlayMarshmallowButton() {
+export function PlayMarshmallowButton({ label = "PLAY MARSHMALLOW" }: { label?: string }) {
   const [state, action, pending] = useActionState(startGuestPlayAction, null);
 
   return (
     <form action={action} className="flex flex-col gap-2">
       <PrimaryButton type="submit" disabled={pending}>
-        {pending ? "Starting…" : "PLAY MARSHMALLOW"}
+        {pending ? "Starting…" : label}
       </PrimaryButton>
       {state?.error ? (
         <p role="alert" className="text-center text-sm text-toasted">

@@ -111,11 +111,11 @@ export function HomeFeedView({
       {empty ? (
         <EmptyState
           mascot="fluffy"
-          title={feed.hasInterests ? "Nothing is cooking yet" : "No worlds picked"}
+          title={feed.hasInterests ? "Nothing is cooking yet" : "Nothing open yet"}
           description={
             feed.hasInterests
               ? "No questions are open right now. Check back soon."
-              : "Pick worlds in onboarding to personalize what shows up here."
+              : "Today's experiment will show up here when it's ready."
           }
         />
       ) : null}
@@ -222,14 +222,14 @@ function DailyRoundSection({ round }: { round: DailyRoundProgress }) {
         {world ? (
           <p className="text-xs font-semibold tracking-[0.2em] text-ink uppercase">{world}</p>
         ) : null}
-        <p className="font-display text-[clamp(1.2rem,5vw,1.55rem)] leading-[1.1] font-semibold tracking-tight break-words">
-          {round.title}
-        </p>
         {round.tension ? (
           <p className="font-display text-sm font-semibold tracking-tight text-ink">
             {round.tension.displayLabel}
           </p>
         ) : null}
+        <p className="font-display text-[clamp(1.2rem,5vw,1.55rem)] leading-[1.1] font-semibold tracking-tight break-words">
+          {round.title}
+        </p>
         {dilemmaCount > 0 ? (
           <p className="text-sm text-ink-muted">
             {dilemmaCount} {dilemmaCount === 1 ? "dilemma" : "dilemmas"}
@@ -252,7 +252,12 @@ function DailyRoundSection({ round }: { round: DailyRoundProgress }) {
       ) : null}
       {state === "sealed" ? (
         round.todaysRead ? (
-          <TodaysReadCard read={round.todaysRead} showHomeButton={false} roundId={round.roundId} />
+          <TodaysReadCard
+            read={round.todaysRead}
+            showHomeButton={false}
+            roundId={round.roundId}
+            tensionSlug={round.tension?.slug}
+          />
         ) : (
           <>
             <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">

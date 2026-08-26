@@ -84,10 +84,10 @@ function Welcome({ onContinue }: { onContinue: () => void }) {
         Marshmallow
       </p>
       <h1 className="mt-2 font-display text-[2.2rem] leading-[0.98] font-semibold tracking-tight">
-        The Human Relationships Game
+        A Daily Experiment in Being Human
       </h1>
       <p className="mt-4 max-w-[18rem] text-sm leading-6 text-ink-muted">
-        Answer for yourself. Predict everyone else. See how well you read the room.
+        Five small dilemmas about how we treat each other.
       </p>
       <div className="mt-10 w-full">
         <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
@@ -109,10 +109,18 @@ function HowToPlay({
         How Marshmallow works
       </h1>
       <ol className="mt-6 flex flex-col gap-4">
-        <HowStep state="thinking" title="PICK" body="What would you choose?" />
-        <HowStep state="thinking" title="PREDICT" body="What do you think everyone else chose?" />
+        <HowStep state="thinking" title="PICK" body="What would you do?" />
+        <HowStep
+          state="thinking"
+          title="PREDICT"
+          body="What do you think other Marshmallow players chose?"
+        />
         <HowStep state="sealed" title="LOCK" body="Make your call before seeing the crowd." />
-        <HowStep state="toasted" title="REVEAL" body="Find out how well you understand people." />
+        <HowStep
+          state="toasted"
+          title="REVEAL"
+          body="Come back and see how well you read the room."
+        />
       </ol>
       <div className="mt-auto flex flex-col gap-3 pt-8">
         <PrimaryButton onClick={onContinue}>Got it</PrimaryButton>

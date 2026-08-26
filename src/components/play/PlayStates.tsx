@@ -200,7 +200,12 @@ export function WaitingCopy({
   });
 
   if (dailyRound?.allSealed && !dailyRound.allRevealed && dailyRound.todaysRead) {
-    return <TodaysReadCard read={dailyRound.todaysRead} />;
+    return (
+      <TodaysReadCard
+        read={dailyRound.todaysRead}
+        tensionSlug={dailyRound.tension?.slug}
+      />
+    );
   }
 
   if (dailyRound?.allSealed) {

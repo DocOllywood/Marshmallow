@@ -28,6 +28,33 @@ describe("today's read narrative", () => {
     ).toBe("A month before you'd consider it a betrayal.");
   });
 
+  it("narrates courtesy vs convenience without moral labels", () => {
+    const courtesy = {
+      id: "50000000-0000-4000-8000-000000000010",
+      slug: "courtesy-convenience",
+      leftLabel: "COURTESY",
+      rightLabel: "CONVENIENCE",
+      displayLabel: "COURTESY vs. CONVENIENCE",
+    };
+
+    const read = buildTodaysRead(
+      [
+        { position: 1, question: "Q1", choiceLabel: "Yes, ask", tensionSide: "left", hasSwitch: false, switchStayed: null, isLine: false },
+        { position: 2, question: "Q2", choiceLabel: "Hold it", tensionSide: "left", hasSwitch: false, switchStayed: null, isLine: false },
+        { position: 3, question: "Q3", choiceLabel: "No", tensionSide: "right", hasSwitch: false, switchStayed: null, isLine: false },
+        { position: 4, question: "Q4", choiceLabel: "Yes", tensionSide: "left", hasSwitch: true, switchStayed: false, isLine: false },
+        { position: 5, question: "How much inconvenience would you accept to help a stranger with something minor?", choiceLabel: "5 minutes", tensionSide: "neutral", hasSwitch: false, switchStayed: null, isLine: true },
+      ],
+      courtesy,
+      null,
+    );
+
+    expect(read?.headline).toBe("You chose courtesy — until the cost changed your call.");
+    expect(read?.bodyLines[0]).toContain("courtesy");
+    expect(read?.bodyLines[0]).not.toMatch(/kind|selfish|rude|generous/i);
+    expect(read?.lineCopy).toBe("5 minutes");
+  });
+
   it("narrates mostly-left tension choices", () => {
     const read = buildTodaysRead(
       [
