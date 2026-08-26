@@ -23,6 +23,12 @@ function mapPlayError(message: string): PlayActionResult {
   if (message.includes("allocations_invalid") || message.includes("own_choice_mismatch")) {
     return { ok: false, error: "That prediction isn't valid. Adjust the mix to 100%." };
   }
+  if (message.includes("switch_required")) {
+    return { ok: false, error: "Complete The Switch before locking." };
+  }
+  if (message.includes("own_choice_protected") || message.includes("switch_locked")) {
+    return { ok: false, error: "Your original answer is locked in." };
+  }
   if (message.includes("not_authenticated")) {
     return { ok: false, error: "Sign in to play." };
   }
@@ -72,6 +78,51 @@ export async function sealPlayAction(input: {
   revalidatePath(`/m/${input.marshmallowId}`);
   revalidatePath("/home");
   return { ok: true, sealed: true };
+}
+
+export async function sealLinePlayAction(input: {
+  marshmallowId: string;
+  ownChoiceId: string;
+}): Promise<PlayActionResult> {
+  await requireOnboarded();
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("seal_line_entry", {
+    p_marshmallow_id: input.marshmallowId,
+    p_own_choice_id: input.ownChoiceId,
+  });
+  if (error) {
+    if (error.message.includes("not_a_line_question")) {
+      return { ok: false, error: "This isn't a Line question." };
+    }
+    return mapPlayError(error.message);
+  }
+  revalidatePath(`/m/${input.marshmallowId}`);
+  revalidatePath("/home");
+  return { ok: true, sealed: true };
+}
+
+export async function saveSwitchResponseAction(input: {
+  marshmallowId: string;
+  switchStayed: boolean;
+}): Promise<PlayActionResult> {
+  await requireOnboarded();
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("save_switch_response", {
+    p_marshmallow_id: input.marshmallowId,
+    p_switch_stayed: input.switchStayed,
+  });
+  if (error) {
+    if (error.message.includes("pick_required")) {
+      return { ok: false, error: "Pick an answer first." };
+    }
+    if (error.message.includes("switch_not_available")) {
+      return { ok: false, error: "The Switch isn't available for this question." };
+    }
+    return mapPlayError(error.message);
+  }
+  revalidatePath(`/m/${input.marshmallowId}`);
+  revalidatePath("/home");
+  return { ok: true };
 }
 
 export async function openRevealAction(marshmallowId: string): Promise<PlayActionResult> {

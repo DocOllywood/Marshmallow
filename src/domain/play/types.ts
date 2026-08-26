@@ -51,6 +51,10 @@ export type PlayMarshmallow = {
   spoilerContext: string | null;
   imageUrl: string | null;
   expiresAt: string | null;
+  switchPrompt: string | null;
+  switchStayed: boolean | null;
+  switchOriginalChoiceId: string | null;
+  isLine: boolean;
   choices: PlayChoice[];
   ownChoiceId: string | null;
   sealed: boolean;

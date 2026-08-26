@@ -129,6 +129,7 @@ describe("HomeFeedView", () => {
         anyRevealOpened: false,
         currentPlayId: "31000000-0000-4000-8000-000000000002",
         revealHref: "/daily/40000000-0000-4000-8000-000000000001/reveal",
+        todaysRead: null,
       },
     };
 
@@ -139,6 +140,37 @@ describe("HomeFeedView", () => {
     expect(screen.getByText(/5 questions about love/i)).toBeTruthy();
     expect(screen.getByRole("link", { name: "CONTINUE THE DAILY" })).toBeTruthy();
     expect(screen.getByText(/1 of 2 locked/i)).toBeTruthy();
+  });
+
+  it("shows today's read when the daily round is fully sealed", () => {
+    const feed: HomeFeed = {
+      ...emptyFeed,
+      dailyRound: {
+        roundId: "40000000-0000-4000-8000-000000000001",
+        title: "Can love survive complete honesty?",
+        subtitle: "5 questions about love, honesty, and trust.",
+        topicName: "Love",
+        roundDate: "2026-08-25",
+        questions: [],
+        sealedCount: 5,
+        allSealed: true,
+        allRevealed: false,
+        anyRevealOpened: false,
+        currentPlayId: null,
+        revealHref: "/daily/40000000-0000-4000-8000-000000000001/reveal",
+        todaysRead: {
+          headline: "You held your ground when the circumstances changed.",
+          lineCopy: "A month before you'd consider it a betrayal.",
+          heldCount: 4,
+          shiftedCount: 1,
+        },
+      },
+    };
+
+    render(<HomeFeedView feed={feed} firstName="Alex" />);
+
+    expect(screen.getByText(/Today's read/i)).toBeTruthy();
+    expect(screen.getByText(/Your calls are locked/i)).toBeTruthy();
   });
 
   it("stacks Cooking with humanized wait beneath the question", () => {

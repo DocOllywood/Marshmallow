@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
 import { EmptyState } from "@/components/EmptyState";
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -221,12 +222,16 @@ function DailyRoundSection({ round }: { round: DailyRoundProgress }) {
         </>
       ) : null}
       {state === "sealed" ? (
-        <>
-          <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-            Daily sealed
-          </p>
-          <p className="text-sm text-ink-muted">5 calls locked · Come back for the reveal</p>
-        </>
+        round.todaysRead ? (
+          <TodaysReadCard read={round.todaysRead} showHomeButton={false} />
+        ) : (
+          <>
+            <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+              Daily sealed
+            </p>
+            <p className="text-sm text-ink-muted">5 calls locked · Come back for the reveal</p>
+          </>
+        )
       ) : null}
       {state === "ready" ? (
         <>

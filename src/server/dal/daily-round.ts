@@ -9,6 +9,7 @@ import {
   questionRevealSummary,
   type DailyRoundSummary,
 } from "@/domain/daily/round";
+import { buildTodaysRead, type TodaysReadQuestion } from "@/domain/daily/todays-read";
 import type { PlayChoice } from "@/domain/play/types";
 import { crowdsenseDelta, crowdsenseFromScores } from "@/domain/crowdsense/rating";
 
@@ -89,7 +90,7 @@ async function loadDailyRoundProgress(
   );
   const openedIds = new Set((opens ?? []).map((row) => row.marshmallow_id));
 
-  return buildDailyRoundProgress({
+  const progress = buildDailyRoundProgress({
     roundId: round.id,
     title: round.title,
     subtitle: round.subtitle,
@@ -106,6 +107,68 @@ async function loadDailyRoundProgress(
     })),
     openedRevealIds: openedIds,
   });
+
+  if (progress.allSealed && !progress.allRevealed) {
+    return {
+      ...progress,
+      todaysRead: await loadTodaysRead(ids, questions ?? []),
+    };
+  }
+
+  return progress;
+}
+
+async function loadTodaysRead(
+  marshmallowIds: string[],
+  questions: readonly { id: string; question: string; round_position: number | null }[],
+): Promise<ReturnType<typeof buildTodaysRead>> {
+  if (marshmallowIds.length === 0) {
+    return null;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const [{ data: entries }, { data: marshmallows }, { data: choices }] = await Promise.all([
+    supabase
+      .from("entries")
+      .select("marshmallow_id, own_choice_id, switch_stayed, sealed_at")
+      .in("marshmallow_id", marshmallowIds)
+      .not("sealed_at", "is", null),
+    supabase
+      .from("marshmallows")
+      .select("id, question, switch_prompt, is_line, round_position")
+      .in("id", marshmallowIds),
+    supabase
+      .from("marshmallow_choices")
+      .select("id, marshmallow_id, label")
+      .in("marshmallow_id", marshmallowIds),
+  ]);
+
+  const choiceLabelById = new Map(
+    (choices ?? []).map((row) => [row.id, row.label] as const),
+  );
+  const marshmallowById = new Map((marshmallows ?? []).map((row) => [row.id, row]));
+  const entryByMarshmallowId = new Map(
+    (entries ?? []).map((row) => [row.marshmallow_id, row] as const),
+  );
+
+  const readQuestions: TodaysReadQuestion[] = [...questions]
+    .sort((a, b) => (a.round_position ?? 0) - (b.round_position ?? 0))
+    .map((question) => {
+      const row = marshmallowById.get(question.id);
+      const entry = entryByMarshmallowId.get(question.id);
+      return {
+        position: question.round_position ?? 0,
+        question: row?.question ?? question.question,
+        choiceLabel: entry?.own_choice_id
+          ? (choiceLabelById.get(entry.own_choice_id) ?? null)
+          : null,
+        hasSwitch: Boolean(row?.switch_prompt?.trim()),
+        switchStayed: entry?.switch_stayed ?? null,
+        isLine: row?.is_line ?? false,
+      };
+    });
+
+  return buildTodaysRead(readQuestions);
 }
 
 export async function getDailyRoundProgressByMarshmallowId(
@@ -150,6 +213,7 @@ export async function getDailyRoundReveal(
     { data: choices },
     { data: scores },
     { data: allScoresBefore },
+    { data: marshmallowRows },
   ] = await Promise.all([
     supabase
       .from("entries")
@@ -161,11 +225,14 @@ export async function getDailyRoundReveal(
       .in("marshmallow_id", ids),
     supabase.from("scores").select("marshmallow_id, accuracy").in("marshmallow_id", ids),
     supabase.from("scores").select("accuracy, marshmallow_id"),
+    supabase.from("marshmallows").select("id, is_line").in("id", ids),
   ]);
 
   const reveals: DailyRoundQuestionReveal[] = [];
 
   for (const question of progress.questions) {
+    const marshmallowRow = (marshmallowRows ?? []).find((row) => row.id === question.id);
+    const isLine = marshmallowRow?.is_line ?? false;
     const entry = (entries ?? []).find((row) => row.marshmallow_id === question.id);
     const questionChoices = (choices ?? []).filter((row) => row.marshmallow_id === question.id);
     const ownChoice = questionChoices.find((row) => row.id === entry?.own_choice_id);
@@ -185,13 +252,18 @@ export async function getDailyRoundReveal(
     const crowdPct = Number(leader?.vote_pct ?? 0);
     const crowdLabel =
       sortedChoices.find((choice) => choice.id === leader?.choice_id)?.label ?? "";
-    const { errorCopy } = questionRevealSummary(predictedPct, crowdPct);
-    const accuracy = (scores ?? []).find((row) => row.marshmallow_id === question.id)?.accuracy ?? null;
+    const { errorCopy } = isLine
+      ? { errorCopy: null }
+      : questionRevealSummary(predictedPct, crowdPct);
+    const accuracy = isLine
+      ? null
+      : (scores ?? []).find((row) => row.marshmallow_id === question.id)?.accuracy ?? null;
 
     reveals.push({
       id: question.id,
       question: question.question,
       position: question.position,
+      isLine,
       ownChoiceLabel: ownChoice?.label ?? null,
       predictedPct,
       crowdPct,

@@ -360,6 +360,8 @@ export type Database = {
           marshmallow_id: string
           own_choice_id: string | null
           sealed_at: string | null
+          switch_original_choice_id: string | null
+          switch_stayed: boolean | null
           updated_at: string
           user_id: string
         }
@@ -371,6 +373,8 @@ export type Database = {
           marshmallow_id: string
           own_choice_id?: string | null
           sealed_at?: string | null
+          switch_original_choice_id?: string | null
+          switch_stayed?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -382,6 +386,8 @@ export type Database = {
           marshmallow_id?: string
           own_choice_id?: string | null
           sealed_at?: string | null
+          switch_original_choice_id?: string | null
+          switch_stayed?: boolean | null
           updated_at?: string
           user_id?: string
         }
@@ -691,6 +697,8 @@ export type Database = {
           round_position: number | null
           spoiler_context: string | null
           status: Database["public"]["Enums"]["marshmallow_status"]
+          switch_prompt: string | null
+          is_line: boolean
           topic_id: string | null
           updated_at: string
         }
@@ -718,6 +726,8 @@ export type Database = {
           round_position?: number | null
           spoiler_context?: string | null
           status?: Database["public"]["Enums"]["marshmallow_status"]
+          switch_prompt?: string | null
+          is_line?: boolean
           topic_id?: string | null
           updated_at?: string
         }
@@ -735,6 +745,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_daily?: boolean
+          is_line?: boolean
           minimum_result_sample?: number
           opens_at?: string
           play_mode?: Database["public"]["Enums"]["play_mode"]
@@ -742,8 +753,10 @@ export type Database = {
           quick_priority?: number | null
           result_available_at?: string | null
           reveals_at?: string
+          round_position?: number | null
           spoiler_context?: string | null
           status?: Database["public"]["Enums"]["marshmallow_status"]
+          switch_prompt?: string | null
           topic_id?: string | null
           updated_at?: string
         }
@@ -1820,6 +1833,57 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      seal_line_entry: {
+        Args: {
+          p_idempotency_key?: string
+          p_marshmallow_id: string
+          p_own_choice_id: string
+        }
+        Returns: {
+          created_at: string
+          draft_updated_at: string
+          id: string
+          idempotency_key: string | null
+          marshmallow_id: string
+          own_choice_id: string | null
+          sealed_at: string | null
+          switch_original_choice_id: string | null
+          switch_stayed: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "entries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_switch_response: {
+        Args: {
+          p_marshmallow_id: string
+          p_switch_stayed: boolean
+        }
+        Returns: {
+          created_at: string
+          draft_updated_at: string
+          id: string
+          idempotency_key: string | null
+          marshmallow_id: string
+          own_choice_id: string | null
+          sealed_at: string | null
+          switch_original_choice_id: string | null
+          switch_stayed: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "entries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       save_entry_draft: {
         Args: {
           p_allocations?: Json
@@ -1834,6 +1898,8 @@ export type Database = {
           marshmallow_id: string
           own_choice_id: string | null
           sealed_at: string | null
+          switch_original_choice_id: string | null
+          switch_stayed: boolean | null
           updated_at: string
           user_id: string
         }
@@ -1859,6 +1925,8 @@ export type Database = {
           marshmallow_id: string
           own_choice_id: string | null
           sealed_at: string | null
+          switch_original_choice_id: string | null
+          switch_stayed: boolean | null
           updated_at: string
           user_id: string
         }

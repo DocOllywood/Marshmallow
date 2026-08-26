@@ -71,24 +71,36 @@ export function DailyRoundRevealShow({
           <li key={item.id} className="flex flex-col gap-3 border-b border-border/60 pb-6 last:border-0">
             <p className="text-[10px] font-semibold tracking-[0.2em] text-ink-muted uppercase">
               Question {item.position}
+              {item.isLine ? " · The Line" : ""}
             </p>
             <p className="font-display text-lg font-semibold leading-snug break-words">{item.question}</p>
             {item.ownChoiceLabel ? (
               <p className="text-sm text-ink-muted">
-                You picked <span className="font-semibold text-ink">{item.ownChoiceLabel}</span>
-                {item.predictedPct != null ? ` · You called ${item.predictedPct}%` : null}
+                {item.isLine ? "Your line" : "You picked"}{" "}
+                <span className="font-semibold text-ink">{item.ownChoiceLabel}</span>
+                {!item.isLine && item.predictedPct != null ? ` · You called ${item.predictedPct}%` : null}
               </p>
             ) : null}
-            <p className="font-display text-4xl font-semibold tabular-nums">{Math.round(item.crowdPct)}%</p>
-            <p className="font-display text-lg font-semibold uppercase break-words">{item.crowdLabel}</p>
-            {item.errorCopy ? (
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-ink-muted">
-                {item.errorCopy}
+            {!item.isLine ? (
+              <>
+                <p className="font-display text-4xl font-semibold tabular-nums">{Math.round(item.crowdPct)}%</p>
+                <p className="font-display text-lg font-semibold uppercase break-words">{item.crowdLabel}</p>
+                {item.errorCopy ? (
+                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-ink-muted">
+                    {item.errorCopy}
+                  </p>
+                ) : null}
+                {item.accuracy != null ? (
+                  <p className="text-sm font-semibold text-ink-muted">Accuracy {item.accuracy}</p>
+                ) : null}
+              </>
+            ) : (
+              <p className="text-sm text-ink-muted">
+                Most common line:{" "}
+                <span className="font-semibold text-ink">{item.crowdLabel}</span>
+                {item.crowdPct > 0 ? ` (${Math.round(item.crowdPct)}%)` : ""}
               </p>
-            ) : null}
-            {item.accuracy != null ? (
-              <p className="text-sm font-semibold text-ink-muted">Accuracy {item.accuracy}</p>
-            ) : null}
+            )}
           </li>
         ))}
       </ul>
@@ -98,7 +110,7 @@ export function DailyRoundRevealShow({
           How well did you read the room?
         </p>
         <p className="font-display text-2xl font-semibold">
-          {summary.strongReadCount} of {reveals.length} strong reads
+          {summary.strongReadCount} of {summary.scoredQuestionCount} strong reads
         </p>
         <p className="text-sm font-semibold text-ink-muted">
           Average Accuracy {summary.averageAccuracy}

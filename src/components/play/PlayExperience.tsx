@@ -9,6 +9,9 @@ import { MarshmallowMascot } from "@/components/MarshmallowMascot";
 import { PlayModeBadge } from "@/components/play/PlayModeBadge";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { BinaryPredictor, defaultPercentsFor, MultiPredictor } from "@/components/play/Predictors";
+import { TheSwitchStep } from "@/components/play/TheSwitchStep";
+import { TheLineStep } from "@/components/play/TheLineStep";
+import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
 import { RevealReadyGate } from "@/components/play/RevealReadyGate";
 import { RevealShow } from "@/components/play/RevealExperience";
 import {
@@ -21,8 +24,9 @@ import {
 } from "@/components/play/PlayStates";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { isValidSealDistribution } from "@/domain/play/allocations";
+import { needsSwitchStep } from "@/domain/play/switch";
 import { isPlayableNextHref } from "@/domain/play/next";
-import { saveDraftPlayAction, sealPlayAction } from "@/server/actions/play";
+import { saveDraftPlayAction, saveSwitchResponseAction, sealLinePlayAction, sealPlayAction } from "@/server/actions/play";
 import { trackEvent } from "@/server/actions/analytics";
 import type { PlayMarshmallow } from "@/server/dal/play";
 import { cn } from "@/lib/utils";
@@ -34,6 +38,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
     defaultPercentsFor(marshmallow.choices, marshmallow.allocations),
   );
   const [error, setError] = useState<string | null>(null);
+  const [switchStayed, setSwitchStayed] = useState<boolean | null>(marshmallow.switchStayed);
   const [sealing, setSealing] = useState(false);
   const [justSealed, setJustSealed] = useState(false);
   const [remainingMs, setRemainingMs] = useState(
@@ -96,6 +101,55 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
       return;
     }
     void trackEvent(ANALYTICS_EVENTS.answerSelected, { choice: id }, marshmallow.id);
+  }
+
+  async function respondToSwitch(stayed: boolean) {
+    setError(null);
+    const result = await saveSwitchResponseAction({
+      marshmallowId: marshmallow.id,
+      switchStayed: stayed,
+    });
+    if (result.closed) {
+      router.refresh();
+      setError(result.error ?? "This Marshmallow just closed.");
+      return;
+    }
+    if (!result.ok) {
+      setError(result.error ?? "Could not save.");
+      return;
+    }
+    setSwitchStayed(stayed);
+  }
+
+  async function sealLine(choice: string) {
+    setChoiceId(choice);
+    setError(null);
+    setSealing(true);
+    const result = await sealLinePlayAction({
+      marshmallowId: marshmallow.id,
+      ownChoiceId: choice,
+    });
+    if (result.closed) {
+      setSealing(false);
+      router.refresh();
+      setError(result.error ?? "This Marshmallow just closed.");
+      return;
+    }
+    if (!result.ok && !result.sealed) {
+      setSealing(false);
+      setError(result.error ?? "Could not lock.");
+      return;
+    }
+    void trackEvent(
+      ANALYTICS_EVENTS.predictionSealed,
+      { n: 0, play_mode: marshmallow.play_mode, line: true },
+      marshmallow.id,
+    );
+    setJustSealed(true);
+    window.setTimeout(() => {
+      setSealing(false);
+      router.refresh();
+    }, 700);
   }
 
   function onPercents(next: number[]) {
@@ -279,7 +333,9 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
               {isQuick ? "Call locked" : marshmallow.dailyRound ? "Question locked" : "Sealed"}
             </p>
             <p className="font-display text-2xl font-semibold">
-              You picked {selected?.label ?? "your answer"}.
+              {marshmallow.isLine
+                ? `Your line: ${selected?.label ?? "your threshold"}.`
+                : `You picked ${selected?.label ?? "your answer"}.`}
             </p>
             {isQuick && selectedPct != null ? (
               <p className="text-base text-ink-muted">
@@ -308,15 +364,19 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
                 </Link>
               </>
             ) : marshmallow.dailyRound && marshmallow.dailyRound.allSealed ? (
-              <>
-                <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-                  Daily sealed
-                </p>
-                <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
-                  5 calls locked · Come back for the reveal
-                </p>
-                <PrimaryButton href="/home">HOME</PrimaryButton>
-              </>
+              marshmallow.dailyRound.todaysRead ? (
+                <TodaysReadCard read={marshmallow.dailyRound.todaysRead} showHomeButton={false} />
+              ) : (
+                <>
+                  <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+                    Daily sealed
+                  </p>
+                  <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
+                    5 calls locked · Come back for the reveal
+                  </p>
+                  <PrimaryButton href="/home">HOME</PrimaryButton>
+                </>
+              )
             ) : playAnother ? (
               <>
                 <PrimaryButton href={marshmallow.nextHref}>PLAY ANOTHER</PrimaryButton>
@@ -345,7 +405,41 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
     );
   }
 
-  const showPredict = choiceId != null;
+  const showSwitch = needsSwitchStep({
+    switchPrompt: marshmallow.switchPrompt,
+    ownChoiceId: choiceId,
+    switchStayed,
+  });
+  const showPredict = choiceId != null && !showSwitch && !marshmallow.isLine;
+
+  if (marshmallow.isLine && !marshmallow.sealed && !justSealed) {
+    return (
+      <div className="flex flex-1 flex-col gap-6 pb-8">
+        <div className="pt-4">
+          <PlayModeBadge mode={marshmallow.play_mode} />
+          {marshmallow.dailyRound && marshmallow.roundPosition ? (
+            <p className="mt-2 text-xs font-semibold tracking-[0.16em] text-ink-muted uppercase">
+              Question {marshmallow.roundPosition} of {marshmallow.dailyRound.questions.length}
+            </p>
+          ) : null}
+        </div>
+        <h1 className="font-display text-[clamp(1.65rem,7.5vw,2.15rem)] leading-[1.08] font-semibold tracking-tight break-words">
+          {marshmallow.question}
+        </h1>
+        <TheLineStep
+          choices={marshmallow.choices}
+          selectedId={choiceId}
+          disabled={pending || sealing}
+          onSelect={(id) => void sealLine(id)}
+        />
+        {error ? (
+          <p role="alert" className="text-center text-sm text-toasted">
+            {error}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 pb-8">
@@ -360,7 +454,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
       <h1 className="font-display text-[clamp(1.65rem,7.5vw,2.15rem)] leading-[1.08] font-semibold tracking-tight break-words">
         {marshmallow.question}
       </h1>
-      {!showPredict ? (
+      {!showPredict && !showSwitch ? (
         <>
           <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
             Make your call
@@ -378,6 +472,15 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
             ))}
           </div>
         </>
+      ) : showSwitch && selected && marshmallow.switchPrompt ? (
+        <TheSwitchStep
+          switchPrompt={marshmallow.switchPrompt}
+          originalChoice={selected}
+          choices={marshmallow.choices}
+          disabled={pending || sealing}
+          onStay={() => void respondToSwitch(true)}
+          onSwitch={() => void respondToSwitch(false)}
+        />
       ) : (
         <div className="flex flex-col gap-5">
           <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
@@ -386,7 +489,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
           {marshmallow.choices.length === 2 ? (
             <BinaryPredictor
               choices={marshmallow.choices}
-              selectedId={choiceId}
+              selectedId={choiceId!}
               percents={percents}
               onChange={onPercents}
               disabled={sealing}

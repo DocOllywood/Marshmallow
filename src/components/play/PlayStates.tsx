@@ -1,4 +1,5 @@
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
+import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
 import { CountdownDisplay } from "@/components/CountdownDisplay";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { playModeTimingCopy, type PlayMode } from "@/domain/play/mode";
@@ -197,6 +198,10 @@ export function WaitingCopy({
     closesAt,
     waitingForSample,
   });
+
+  if (dailyRound?.allSealed && !dailyRound.allRevealed && dailyRound.todaysRead) {
+    return <TodaysReadCard read={dailyRound.todaysRead} />;
+  }
 
   if (dailyRound?.allSealed) {
     return (

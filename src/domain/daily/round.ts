@@ -1,5 +1,6 @@
 import { revealContextCopy } from "@/domain/scoring/copy";
 import { formatRevealSummary } from "@/domain/scoring/presentation";
+import type { TodaysRead } from "@/domain/daily/todays-read";
 
 export const DAILY_ROUND_SIZE = 5;
 
@@ -26,12 +27,14 @@ export type DailyRoundProgress = {
   anyRevealOpened: boolean;
   currentPlayId: string | null;
   revealHref: string;
+  todaysRead: TodaysRead | null;
 };
 
 export type DailyRoundQuestionReveal = {
   id: string;
   question: string;
   position: number;
+  isLine: boolean;
   ownChoiceLabel: string | null;
   predictedPct: number | null;
   crowdPct: number;
@@ -42,6 +45,7 @@ export type DailyRoundQuestionReveal = {
 
 export type DailyRoundSummary = {
   strongReadCount: number;
+  scoredQuestionCount: number;
   averageAccuracy: number;
   contextCopy: string | null;
   crowdsenseRating: number | null;
@@ -82,6 +86,7 @@ export function buildDailyRoundProgress(input: {
     anyRevealOpened,
     currentPlayId,
     revealHref: `/daily/${input.roundId}/reveal`,
+    todaysRead: null,
   };
 }
 
@@ -152,6 +157,7 @@ export function dailyRoundSummary(
 
   return {
     strongReadCount,
+    scoredQuestionCount: scored.length,
     averageAccuracy,
     contextCopy,
     crowdsenseRating,

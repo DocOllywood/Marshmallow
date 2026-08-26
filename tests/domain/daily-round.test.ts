@@ -67,13 +67,14 @@ describe("daily round domain", () => {
   it("summarizes round accuracy from official question scores", () => {
     const summary = dailyRoundSummary(
       [
-        { id: "q1", question: "Q1", position: 1, ownChoiceLabel: "Yes", predictedPct: 60, crowdPct: 62, crowdLabel: "Yes", errorCopy: "Only 2 points off", accuracy: 92 },
-        { id: "q2", question: "Q2", position: 2, ownChoiceLabel: "No", predictedPct: 40, crowdPct: 38, crowdLabel: "No", errorCopy: "Only 2 points off", accuracy: 88 },
+        { id: "q1", question: "Q1", position: 1, isLine: false, ownChoiceLabel: "Yes", predictedPct: 60, crowdPct: 62, crowdLabel: "Yes", errorCopy: "Only 2 points off", accuracy: 92 },
+        { id: "q2", question: "Q2", position: 2, isLine: false, ownChoiceLabel: "No", predictedPct: 40, crowdPct: 38, crowdLabel: "No", errorCopy: "Only 2 points off", accuracy: 88 },
       ],
       812,
       6,
     );
     expect(summary.strongReadCount).toBe(2);
+    expect(summary.scoredQuestionCount).toBe(2);
     expect(summary.averageAccuracy).toBe(90);
     expect(summary.crowdsenseRating).toBe(812);
     expect(summary.crowdsenseDelta).toBe(6);

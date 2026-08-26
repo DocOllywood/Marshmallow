@@ -33,6 +33,10 @@ const base: PlayMarshmallow = {
   spoilerContext: null,
   imageUrl: null,
   expiresAt: null,
+  switchPrompt: null,
+  switchStayed: null,
+  switchOriginalChoiceId: null,
+  isLine: false,
   choices: [
     { id: "alex", label: "Alex", sort_order: 0 },
     { id: "jordan", label: "Jordan", sort_order: 1 },

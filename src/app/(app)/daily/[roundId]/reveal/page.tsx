@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
+import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
 import {
   DailyRoundRevealGate,
   DailyRoundRevealShow,
@@ -23,15 +24,19 @@ export default async function DailyRoundRevealPage({
   if (!progress.allRevealed) {
     return (
       <main className="flex flex-1 flex-col">
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-2 py-10 text-center">
-          <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">Daily sealed</p>
-          <h1 className="font-display text-[1.85rem] leading-[1.08] font-semibold tracking-tight break-words">
-            {progress.title}
-          </h1>
-          <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
-            5 calls locked · Come back for the reveal
-          </p>
-        </div>
+        {progress.todaysRead ? (
+          <TodaysReadCard read={progress.todaysRead} />
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 px-2 py-10 text-center">
+            <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">Daily sealed</p>
+            <h1 className="font-display text-[1.85rem] leading-[1.08] font-semibold tracking-tight break-words">
+              {progress.title}
+            </h1>
+            <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
+              5 calls locked · Come back for the reveal
+            </p>
+          </div>
+        )}
       </main>
     );
   }

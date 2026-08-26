@@ -32,7 +32,7 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
   const { data, error } = await supabase
     .from("marshmallows")
     .select(
-      "id, question, status, opens_at, closes_at, reveals_at, hard_reveals_at, is_daily, play_mode, topic_id, daily_round_id, round_position, entity_label, spoiler_context, image_url, expires_at, topics(name, image_url), marshmallow_choices(id, label, sort_order)",
+      "id, question, status, opens_at, closes_at, reveals_at, hard_reveals_at, is_daily, play_mode, topic_id, daily_round_id, round_position, entity_label, spoiler_context, image_url, expires_at, switch_prompt, is_line, topics(name, image_url), marshmallow_choices(id, label, sort_order)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -48,7 +48,7 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     await Promise.all([
       supabase
         .from("entries")
-        .select("id, own_choice_id, sealed_at, entry_allocations(choice_id, predicted_pct)")
+        .select("id, own_choice_id, sealed_at, switch_stayed, switch_original_choice_id, entry_allocations(choice_id, predicted_pct)")
         .eq("marshmallow_id", id)
         .maybeSingle(),
       supabase
@@ -147,6 +147,10 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     spoilerContext: data.spoiler_context,
     imageUrl: data.image_url ?? topic?.image_url ?? null,
     expiresAt: data.expires_at,
+    switchPrompt: data.switch_prompt,
+    switchStayed: entry?.switch_stayed ?? null,
+    switchOriginalChoiceId: entry?.switch_original_choice_id ?? null,
+    isLine: data.is_line,
     choices,
     ownChoiceId: entry?.own_choice_id ?? null,
     sealed,
