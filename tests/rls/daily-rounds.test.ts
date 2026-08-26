@@ -8,8 +8,9 @@ const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const password = "test-pass-daily-rounds-1";
 
-const TODAY_ROUND_ID = "40000000-0000-4000-8000-000000000001";
-const TODAY_Q1_ID = "31000000-0000-4000-8000-000000000001";
+const TODAY_ROUND_ID = "40000000-0000-4000-8000-000000000004";
+const TODAY_Q1_ID = "31000000-0000-4000-8000-000000000010";
+const LEGACY_ROUND_ID = "40000000-0000-4000-8000-000000000001";
 const LEGACY_DAILY_ID = "30000000-0000-4000-8000-0000000000d1";
 const REVEALED_ID = "10000000-0000-4000-8000-000000000004";
 
@@ -89,7 +90,7 @@ describe("Daily Rounds (hosted)", () => {
     expect(error).toBeNull();
     expect(data?.id).toBe(TODAY_ROUND_ID);
     expect(data?.status).toBe("open");
-    expect(data?.title).toBe("Can love survive complete honesty?");
+    expect(data?.title).toBe("When does honesty become cruelty?");
   });
 
   it("blocks ordinary users from mutating daily_rounds", async () => {
@@ -113,7 +114,7 @@ describe("Daily Rounds (hosted)", () => {
       .select("title")
       .eq("id", TODAY_ROUND_ID)
       .single();
-    expect(roundAfterUpdate?.title).toBe("Can love survive complete honesty?");
+    expect(roundAfterUpdate?.title).toBe("When does honesty become cruelty?");
 
     const { data: deleteRows, error: deleteError } = await user
       .from("daily_rounds")
@@ -122,6 +123,13 @@ describe("Daily Rounds (hosted)", () => {
       .select("id");
     expect(deleteError).toBeNull();
     expect(deleteRows ?? []).toHaveLength(0);
+
+    const { data: legacyRound } = await user
+      .from("daily_rounds")
+      .select("id, title")
+      .eq("id", LEGACY_ROUND_ID)
+      .single();
+    expect(legacyRound?.title).toBe("Can love survive complete honesty?");
   });
 
   it("seeds today's round with exactly five ordered questions", async () => {
