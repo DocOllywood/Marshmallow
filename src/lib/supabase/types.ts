@@ -638,6 +638,7 @@ export type Database = {
           round_date: string
           status: Database["public"]["Enums"]["marshmallow_status"]
           subtitle: string | null
+          tension_id: string | null
           title: string
           topic_id: string | null
           updated_at: string
@@ -648,6 +649,7 @@ export type Database = {
           round_date: string
           status?: Database["public"]["Enums"]["marshmallow_status"]
           subtitle?: string | null
+          tension_id?: string | null
           title: string
           topic_id?: string | null
           updated_at?: string
@@ -658,11 +660,19 @@ export type Database = {
           round_date?: string
           status?: Database["public"]["Enums"]["marshmallow_status"]
           subtitle?: string | null
+          tension_id?: string | null
           title?: string
           topic_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "daily_rounds_tension_id_fkey"
+            columns: ["tension_id"]
+            isOneToOne: false
+            referencedRelation: "human_tensions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "daily_rounds_topic_id_fkey"
             columns: ["topic_id"]
@@ -671,6 +681,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      human_tensions: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          display_label: string
+          id: string
+          left_label: string
+          right_label: string
+          slug: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          display_label: string
+          id?: string
+          left_label: string
+          right_label: string
+          slug: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          display_label?: string
+          id?: string
+          left_label?: string
+          right_label?: string
+          slug?: string
+        }
+        Relationships: []
       }
       marshmallows: {
         Row: {

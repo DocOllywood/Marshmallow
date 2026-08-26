@@ -10,10 +10,58 @@ import {
   type DailyRoundSummary,
 } from "@/domain/daily/round";
 import { buildTodaysRead, type TodaysReadQuestion } from "@/domain/daily/todays-read";
+import { mapHumanTension, parseTensionSide, type HumanTension } from "@/domain/daily/tension";
 import type { PlayChoice } from "@/domain/play/types";
 import { crowdsenseDelta, crowdsenseFromScores } from "@/domain/crowdsense/rating";
 
 export type { DailyRoundProgress, DailyRoundQuestionReveal, DailyRoundSummary };
+
+type RoundRow = {
+  id: string;
+  round_date: string;
+  title: string;
+  subtitle: string | null;
+  topic_id: string | null;
+  status: string;
+  tension_id: string | null;
+  human_tensions: {
+    id: string;
+    slug: string;
+    left_label: string;
+    right_label: string;
+    display_label: string;
+  } | null;
+};
+
+const ROUND_SELECT =
+  "id, round_date, title, subtitle, topic_id, status, tension_id, human_tensions (id, slug, left_label, right_label, display_label)";
+
+function mapRoundTension(round: RoundRow): HumanTension | null {
+  if (!round.human_tensions) {
+    return null;
+  }
+  return mapHumanTension(round.human_tensions);
+}
+
+async function loadTomorrowTension(
+  roundDate: string,
+): Promise<HumanTension | null> {
+  const supabase = await createSupabaseServerClient();
+  const tomorrow = new Date(`${roundDate}T12:00:00.000Z`);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  const tomorrowDate = tomorrow.toISOString().slice(0, 10);
+
+  const { data } = await supabase
+    .from("daily_rounds")
+    .select(ROUND_SELECT)
+    .eq("round_date", tomorrowDate)
+    .maybeSingle();
+
+  if (!data) {
+    return null;
+  }
+  return mapRoundTension(data as RoundRow);
+}
 
 export async function getTodayDailyRoundProgress(
   topicNameById: ReadonlyMap<string, string>,
@@ -23,7 +71,7 @@ export async function getTodayDailyRoundProgress(
 
   const { data: round, error: roundError } = await supabase
     .from("daily_rounds")
-    .select("id, round_date, title, subtitle, topic_id, status")
+    .select(ROUND_SELECT)
     .eq("round_date", today)
     .maybeSingle();
 
@@ -34,31 +82,20 @@ export async function getTodayDailyRoundProgress(
     return null;
   }
 
-  return loadDailyRoundProgress(round.id, topicNameById, round);
+  return loadDailyRoundProgress(round.id, topicNameById, round as RoundRow);
 }
 
 async function loadDailyRoundProgress(
   roundId: string,
   topicNameById: ReadonlyMap<string, string>,
-  roundRow?: {
-    id: string;
-    round_date: string;
-    title: string;
-    subtitle: string | null;
-    topic_id: string | null;
-    status: string;
-  },
+  roundRow?: RoundRow,
 ): Promise<DailyRoundProgress | null> {
   const supabase = await createSupabaseServerClient();
 
   const round =
     roundRow ??
     (
-      await supabase
-        .from("daily_rounds")
-        .select("id, round_date, title, subtitle, topic_id, status")
-        .eq("id", roundId)
-        .maybeSingle()
+      await supabase.from("daily_rounds").select(ROUND_SELECT).eq("id", roundId).maybeSingle()
     ).data;
 
   if (!round) {
@@ -89,12 +126,14 @@ async function loadDailyRoundProgress(
     (entries ?? []).filter((row) => row.sealed_at != null).map((row) => row.marshmallow_id),
   );
   const openedIds = new Set((opens ?? []).map((row) => row.marshmallow_id));
+  const tension = mapRoundTension(round as RoundRow);
 
   const progress = buildDailyRoundProgress({
     roundId: round.id,
     title: round.title,
     subtitle: round.subtitle,
     topicName: round.topic_id ? (topicNameById.get(round.topic_id) ?? null) : null,
+    tension,
     roundDate: round.round_date,
     questions: (questions ?? []).map((row) => ({
       id: row.id,
@@ -109,9 +148,10 @@ async function loadDailyRoundProgress(
   });
 
   if (progress.allSealed && !progress.allRevealed) {
+    const tomorrowTension = await loadTomorrowTension(round.round_date);
     return {
       ...progress,
-      todaysRead: await loadTodaysRead(ids, questions ?? []),
+      todaysRead: await loadTodaysRead(ids, questions ?? [], tension, tomorrowTension),
     };
   }
 
@@ -121,6 +161,8 @@ async function loadDailyRoundProgress(
 async function loadTodaysRead(
   marshmallowIds: string[],
   questions: readonly { id: string; question: string; round_position: number | null }[],
+  tension: HumanTension | null,
+  tomorrowTension: HumanTension | null,
 ): Promise<ReturnType<typeof buildTodaysRead>> {
   if (marshmallowIds.length === 0) {
     return null;
@@ -139,12 +181,12 @@ async function loadTodaysRead(
       .in("id", marshmallowIds),
     supabase
       .from("marshmallow_choices")
-      .select("id, marshmallow_id, label")
+      .select("id, marshmallow_id, label, metadata")
       .in("marshmallow_id", marshmallowIds),
   ]);
 
-  const choiceLabelById = new Map(
-    (choices ?? []).map((row) => [row.id, row.label] as const),
+  const choiceById = new Map(
+    (choices ?? []).map((row) => [row.id, row] as const),
   );
   const marshmallowById = new Map((marshmallows ?? []).map((row) => [row.id, row]));
   const entryByMarshmallowId = new Map(
@@ -156,19 +198,19 @@ async function loadTodaysRead(
     .map((question) => {
       const row = marshmallowById.get(question.id);
       const entry = entryByMarshmallowId.get(question.id);
+      const choice = entry?.own_choice_id ? choiceById.get(entry.own_choice_id) : null;
       return {
         position: question.round_position ?? 0,
         question: row?.question ?? question.question,
-        choiceLabel: entry?.own_choice_id
-          ? (choiceLabelById.get(entry.own_choice_id) ?? null)
-          : null,
+        choiceLabel: choice?.label ?? null,
+        tensionSide: choice ? parseTensionSide(choice.metadata) : null,
         hasSwitch: Boolean(row?.switch_prompt?.trim()),
         switchStayed: entry?.switch_stayed ?? null,
         isLine: row?.is_line ?? false,
       };
     });
 
-  return buildTodaysRead(readQuestions);
+  return buildTodaysRead(readQuestions, tension, tomorrowTension);
 }
 
 export async function getDailyRoundProgressByMarshmallowId(
@@ -249,11 +291,15 @@ export async function getDailyRoundReveal(
     const leader = [...(resultRows ?? [])].sort(
       (a, b) => Number(b.vote_pct) - Number(a.vote_pct),
     )[0];
-    const crowdPct = Number(leader?.vote_pct ?? 0);
-    const crowdLabel =
-      sortedChoices.find((choice) => choice.id === leader?.choice_id)?.label ?? "";
-    const { errorCopy } = isLine
-      ? { errorCopy: null }
+    const ownChoiceResult = (resultRows ?? []).find(
+      (row) => row.choice_id === entry?.own_choice_id,
+    );
+    const crowdPct = Number(ownChoiceResult?.vote_pct ?? 0);
+    const crowdLabel = ownChoice?.label ?? "";
+    const crowdModeLabel =
+      sortedChoices.find((choice) => choice.id === leader?.choice_id)?.label ?? null;
+    const { errorCopy, gap } = isLine
+      ? { errorCopy: null, gap: null }
       : questionRevealSummary(predictedPct, crowdPct);
     const accuracy = isLine
       ? null
@@ -268,8 +314,10 @@ export async function getDailyRoundReveal(
       predictedPct,
       crowdPct,
       crowdLabel,
+      crowdModeLabel,
       errorCopy,
       accuracy,
+      gap,
     });
   }
 

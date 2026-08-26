@@ -1,8 +1,12 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { HomeFeedView } from "@/components/home/HomeFeed";
 import type { HomeFeed, HomeFeedCard } from "@/server/dal/home";
+
+vi.mock("@/server/actions/analytics", () => ({
+  trackEvent: vi.fn(async () => undefined),
+}));
 
 afterEach(() => cleanup());
 
@@ -102,6 +106,7 @@ describe("HomeFeedView", () => {
         title: "Can love survive complete honesty?",
         subtitle: "5 questions about love, honesty, and trust.",
         topicName: "Love",
+        tension: null,
         roundDate: "2026-08-25",
         questions: [
           {
@@ -137,9 +142,41 @@ describe("HomeFeedView", () => {
 
     expect(screen.getByText("The Daily")).toBeTruthy();
     expect(screen.getByText(/Can love survive complete honesty/i)).toBeTruthy();
-    expect(screen.getByText(/5 questions about love/i)).toBeTruthy();
     expect(screen.getByRole("link", { name: "CONTINUE THE DAILY" })).toBeTruthy();
-    expect(screen.getByText(/1 of 2 locked/i)).toBeTruthy();
+  });
+
+  it("renders tension on daily rounds that have one", () => {
+    const feed: HomeFeed = {
+      ...emptyFeed,
+      dailyRound: {
+        roundId: "40000000-0000-4000-8000-000000000004",
+        title: "When does honesty become cruelty?",
+        subtitle: null,
+        topicName: "Love",
+        tension: {
+          id: "50000000-0000-4000-8000-000000000001",
+          slug: "honesty-kindness",
+          leftLabel: "HONESTY",
+          rightLabel: "KINDNESS",
+          displayLabel: "HONESTY vs. KINDNESS",
+        },
+        roundDate: "2026-08-28",
+        questions: [],
+        sealedCount: 0,
+        allSealed: false,
+        allRevealed: false,
+        anyRevealOpened: false,
+        currentPlayId: "31000000-0000-4000-8000-000000000010",
+        revealHref: "/daily/40000000-0000-4000-8000-000000000004/reveal",
+        todaysRead: null,
+      },
+    };
+
+    render(<HomeFeedView feed={feed} firstName="Alex" />);
+
+    expect(screen.getByText(/Today's tension/i)).toBeTruthy();
+    expect(screen.getByText("HONESTY")).toBeTruthy();
+    expect(screen.getByText("KINDNESS")).toBeTruthy();
   });
 
   it("shows today's read when the daily round is fully sealed", () => {
@@ -150,6 +187,7 @@ describe("HomeFeedView", () => {
         title: "Can love survive complete honesty?",
         subtitle: "5 questions about love, honesty, and trust.",
         topicName: "Love",
+        tension: null,
         roundDate: "2026-08-25",
         questions: [],
         sealedCount: 5,
@@ -160,9 +198,11 @@ describe("HomeFeedView", () => {
         revealHref: "/daily/40000000-0000-4000-8000-000000000001/reveal",
         todaysRead: {
           headline: "You held your ground when the circumstances changed.",
+          bodyLines: [],
           lineCopy: "A month before you'd consider it a betrayal.",
-          heldCount: 4,
-          shiftedCount: 1,
+          switchCopy: null,
+          tomorrowTease: null,
+          isLegacy: true,
         },
       },
     };

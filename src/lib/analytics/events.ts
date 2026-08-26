@@ -26,6 +26,15 @@ export const ANALYTICS_EVENTS = {
   shareSignupStarted: "share_signup_started",
   shareSignupCompleted: "share_signup_completed",
   notificationClicked: "notification_clicked",
+  dailyViewed: "daily_viewed",
+  dailyStarted: "daily_started",
+  dailyQuestionLocked: "daily_question_locked",
+  dailyCompleted: "daily_completed",
+  todaysReadViewed: "todays_read_viewed",
+  dailyRevealAvailable: "daily_reveal_available",
+  dailyRevealOpened: "daily_reveal_opened",
+  gapViewed: "gap_viewed",
+  nextDailyReturn: "next_daily_return",
 } as const;
 
 export type AnalyticsEventName =

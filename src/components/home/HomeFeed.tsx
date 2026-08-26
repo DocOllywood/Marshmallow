@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
+import { TensionDisplay } from "@/components/daily/TensionDisplay";
 import { EmptyState } from "@/components/EmptyState";
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import type { DailyRoundProgress } from "@/domain/daily/round";
 import { dailyHomeState } from "@/domain/daily/round";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { trackEvent } from "@/server/actions/analytics";
 import { heroHomeQuick, isWaitingForSample, moreHomeQuick } from "@/domain/play/sample";
 import {
   formatShortCountdown,
@@ -196,13 +199,25 @@ function QuickHero({ hero, more }: { hero: HomeFeedCard; more: HomeFeedCard[] })
 function DailyRoundSection({ round }: { round: DailyRoundProgress }) {
   const state = dailyHomeState(round);
   const playHref = round.currentPlayId ? `/m/${round.currentPlayId}` : "/home";
+  const viewed = useRef(false);
+
+  useEffect(() => {
+    if (viewed.current) return;
+    viewed.current = true;
+    void trackEvent(
+      ANALYTICS_EVENTS.dailyViewed,
+      { state, has_tension: round.tension != null },
+      round.roundId,
+    );
+  }, [round.roundId, round.tension, state]);
 
   return (
     <section className="flex flex-col gap-4 border-l-2 border-primary/30 pl-4">
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-3">
         <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">The Daily</p>
+        {round.tension ? <TensionDisplay tension={round.tension} /> : null}
         <WorldTag topicName={round.topicName} />
-        <p className="font-display text-[clamp(1.4rem,5.8vw,1.75rem)] leading-[1.1] font-semibold tracking-tight break-words">
+        <p className="font-display text-[clamp(1.2rem,5vw,1.55rem)] leading-[1.1] font-semibold tracking-tight break-words">
           {round.title}
         </p>
         {round.subtitle ? (
@@ -223,7 +238,7 @@ function DailyRoundSection({ round }: { round: DailyRoundProgress }) {
       ) : null}
       {state === "sealed" ? (
         round.todaysRead ? (
-          <TodaysReadCard read={round.todaysRead} showHomeButton={false} />
+          <TodaysReadCard read={round.todaysRead} showHomeButton={false} roundId={round.roundId} />
         ) : (
           <>
             <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">

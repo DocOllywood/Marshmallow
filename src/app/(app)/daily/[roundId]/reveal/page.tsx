@@ -25,7 +25,7 @@ export default async function DailyRoundRevealPage({
     return (
       <main className="flex flex-1 flex-col">
         {progress.todaysRead ? (
-          <TodaysReadCard read={progress.todaysRead} />
+          <TodaysReadCard read={progress.todaysRead} roundId={roundId} />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-2 py-10 text-center">
             <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">Daily sealed</p>
@@ -59,6 +59,7 @@ export default async function DailyRoundRevealPage({
       <DailyRoundRevealShow
         reveals={payload.reveals}
         summary={payload.summary}
+        roundId={roundId}
       />
     </main>
   );

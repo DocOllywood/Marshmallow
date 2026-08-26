@@ -1,6 +1,8 @@
 import { revealContextCopy } from "@/domain/scoring/copy";
 import { formatRevealSummary } from "@/domain/scoring/presentation";
+import { computeGap, type GapResult } from "@/domain/scoring/gap";
 import type { TodaysRead } from "@/domain/daily/todays-read";
+import type { HumanTension } from "@/domain/daily/tension";
 
 export const DAILY_ROUND_SIZE = 5;
 
@@ -19,6 +21,7 @@ export type DailyRoundProgress = {
   title: string;
   subtitle: string | null;
   topicName: string | null;
+  tension: HumanTension | null;
   roundDate: string;
   questions: DailyRoundQuestion[];
   sealedCount: number;
@@ -39,8 +42,10 @@ export type DailyRoundQuestionReveal = {
   predictedPct: number | null;
   crowdPct: number;
   crowdLabel: string;
+  crowdModeLabel: string | null;
   errorCopy: string | null;
   accuracy: number | null;
+  gap: GapResult | null;
 };
 
 export type DailyRoundSummary = {
@@ -57,6 +62,7 @@ export function buildDailyRoundProgress(input: {
   title: string;
   subtitle: string | null;
   topicName: string | null;
+  tension: HumanTension | null;
   roundDate: string;
   questions: DailyRoundQuestion[];
   openedRevealIds: ReadonlySet<string>;
@@ -78,6 +84,7 @@ export function buildDailyRoundProgress(input: {
     title: input.title,
     subtitle: input.subtitle,
     topicName: input.topicName,
+    tension: input.tension,
     roundDate: input.roundDate,
     questions: sorted,
     sealedCount,
@@ -168,10 +175,14 @@ export function dailyRoundSummary(
 export function questionRevealSummary(
   predictedPct: number | null,
   crowdPct: number,
-): { errorCopy: string | null; errorPoints: number | null } {
+): { errorCopy: string | null; errorPoints: number | null; gap: GapResult | null } {
   if (predictedPct == null) {
-    return { errorCopy: null, errorPoints: null };
+    return { errorCopy: null, errorPoints: null, gap: null };
   }
   const summary = formatRevealSummary(predictedPct, crowdPct);
-  return { errorCopy: summary.errorCopy, errorPoints: summary.errorPoints };
+  return {
+    errorCopy: summary.errorCopy,
+    errorPoints: summary.errorPoints,
+    gap: computeGap(predictedPct, crowdPct),
+  };
 }

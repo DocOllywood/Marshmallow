@@ -23,6 +23,7 @@ describe("daily round domain", () => {
       title: "Can love survive complete honesty?",
       subtitle: "5 questions about love, honesty, and trust.",
       topicName: "Love",
+      tension: null,
       roundDate: "2026-08-25",
       questions: baseQuestions.map((question, index) =>
         index < 2 ? { ...question, sealed: true } : question,
@@ -42,6 +43,7 @@ describe("daily round domain", () => {
       title: "Theme",
       subtitle: null,
       topicName: "Love",
+      tension: null,
       roundDate: "2026-08-25",
       questions: baseQuestions.map((question) => ({ ...question, sealed: true, status: "closed" })),
       openedRevealIds: new Set(),
@@ -53,6 +55,7 @@ describe("daily round domain", () => {
       title: "Theme",
       subtitle: null,
       topicName: "Love",
+      tension: null,
       roundDate: "2026-08-25",
       questions: baseQuestions.map((question) => ({
         ...question,
@@ -67,8 +70,8 @@ describe("daily round domain", () => {
   it("summarizes round accuracy from official question scores", () => {
     const summary = dailyRoundSummary(
       [
-        { id: "q1", question: "Q1", position: 1, isLine: false, ownChoiceLabel: "Yes", predictedPct: 60, crowdPct: 62, crowdLabel: "Yes", errorCopy: "Only 2 points off", accuracy: 92 },
-        { id: "q2", question: "Q2", position: 2, isLine: false, ownChoiceLabel: "No", predictedPct: 40, crowdPct: 38, crowdLabel: "No", errorCopy: "Only 2 points off", accuracy: 88 },
+        { id: "q1", question: "Q1", position: 1, isLine: false, ownChoiceLabel: "Yes", predictedPct: 60, crowdPct: 62, crowdLabel: "Yes", crowdModeLabel: "Yes", errorCopy: "Only 2 points off", accuracy: 92, gap: null },
+        { id: "q2", question: "Q2", position: 2, isLine: false, ownChoiceLabel: "No", predictedPct: 40, crowdPct: 38, crowdLabel: "No", crowdModeLabel: "No", errorCopy: "Only 2 points off", accuracy: 88, gap: null },
       ],
       812,
       6,

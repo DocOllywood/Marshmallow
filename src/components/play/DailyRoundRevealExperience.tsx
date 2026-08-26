@@ -1,15 +1,19 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { GapDisplay } from "@/components/daily/GapDisplay";
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import type {
   DailyRoundQuestionReveal,
   DailyRoundSummary,
 } from "@/domain/daily/round";
 import { openDailyRoundRevealAction } from "@/server/actions/play";
+import { trackEvent } from "@/server/actions/analytics";
 
 export function DailyRoundRevealGate({
   roundId,
@@ -21,9 +25,17 @@ export function DailyRoundRevealGate({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const tracked = useRef(false);
+
+  useEffect(() => {
+    if (tracked.current) return;
+    tracked.current = true;
+    void trackEvent(ANALYTICS_EVENTS.dailyRevealAvailable, { round_id: roundId }, roundId);
+  }, [roundId]);
 
   async function open() {
     setPending(true);
+    void trackEvent(ANALYTICS_EVENTS.dailyRevealOpened, { round_id: roundId }, roundId);
     const result = await openDailyRoundRevealAction(roundId);
     if (!result.ok) {
       setPending(false);
@@ -50,19 +62,49 @@ export function DailyRoundRevealGate({
   );
 }
 
+function QuestionGap({ item }: { item: DailyRoundQuestionReveal }) {
+  const tracked = useRef(false);
+
+  useEffect(() => {
+    if (!item.gap || tracked.current) return;
+    tracked.current = true;
+    void trackEvent(
+      ANALYTICS_EVENTS.gapViewed,
+      { gap_points: item.gap.gapPoints, position: item.position },
+      item.id,
+    );
+  }, [item.gap, item.id, item.position]);
+
+  if (!item.gap) {
+    return null;
+  }
+
+  return <GapDisplay gap={item.gap} />;
+}
+
 export function DailyRoundRevealShow({
   reveals,
   summary,
+  roundId,
 }: {
   reveals: DailyRoundQuestionReveal[];
   summary: DailyRoundSummary;
+  roundId?: string;
 }) {
+  const tracked = useRef(false);
+
+  useEffect(() => {
+    if (tracked.current) return;
+    tracked.current = true;
+    void trackEvent(ANALYTICS_EVENTS.dailyRevealOpened, { viewed: true, round_id: roundId ?? null }, roundId);
+  }, [roundId]);
+
   return (
     <div className="flex flex-1 flex-col gap-8 pb-10 pt-6">
       <div className="flex flex-col items-center gap-3 text-center">
         <MarshmallowMascot state="celebrating" size="lg" />
         <p className="text-xs font-semibold tracking-[0.18em] text-ink-muted uppercase">
-          The crowd is in
+          Marshmallow players weighed in
         </p>
       </div>
 
@@ -78,16 +120,20 @@ export function DailyRoundRevealShow({
               <p className="text-sm text-ink-muted">
                 {item.isLine ? "Your line" : "You picked"}{" "}
                 <span className="font-semibold text-ink">{item.ownChoiceLabel}</span>
-                {!item.isLine && item.predictedPct != null ? ` · You called ${item.predictedPct}%` : null}
               </p>
             ) : null}
             {!item.isLine ? (
               <>
-                <p className="font-display text-4xl font-semibold tabular-nums">{Math.round(item.crowdPct)}%</p>
-                <p className="font-display text-lg font-semibold uppercase break-words">{item.crowdLabel}</p>
+                <QuestionGap item={item} />
+                {item.crowdModeLabel && item.crowdModeLabel !== item.crowdLabel ? (
+                  <p className="text-sm text-ink-muted">
+                    Most Marshmallow players chose{" "}
+                    <span className="font-semibold text-ink">{item.crowdModeLabel}</span>
+                  </p>
+                ) : null}
                 {item.errorCopy ? (
-                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-ink-muted">
-                    {item.errorCopy}
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
+                    Accuracy note: {item.errorCopy}
                   </p>
                 ) : null}
                 {item.accuracy != null ? (
@@ -96,8 +142,8 @@ export function DailyRoundRevealShow({
               </>
             ) : (
               <p className="text-sm text-ink-muted">
-                Most common line:{" "}
-                <span className="font-semibold text-ink">{item.crowdLabel}</span>
+                Most common line among Marshmallow players:{" "}
+                <span className="font-semibold text-ink">{item.crowdModeLabel ?? item.crowdLabel}</span>
                 {item.crowdPct > 0 ? ` (${Math.round(item.crowdPct)}%)` : ""}
               </p>
             )}
@@ -107,7 +153,7 @@ export function DailyRoundRevealShow({
 
       <section className="flex flex-col gap-3 text-center">
         <p className="text-xs font-semibold tracking-[0.18em] text-ink-muted uppercase">
-          How well did you read the room?
+          How well did you read Marshmallow players?
         </p>
         <p className="font-display text-2xl font-semibold">
           {summary.strongReadCount} of {summary.scoredQuestionCount} strong reads
@@ -129,7 +175,12 @@ export function DailyRoundRevealShow({
           </p>
         ) : null}
         <p className="text-sm text-ink-muted">Tomorrow, another round about being human.</p>
-        <PrimaryButton href="/home">PLAY ANOTHER</PrimaryButton>
+        <PrimaryButton
+          href="/home"
+          onClick={() => void trackEvent(ANALYTICS_EVENTS.nextDailyReturn, { round_id: roundId ?? null }, roundId)}
+        >
+          PLAY ANOTHER
+        </PrimaryButton>
       </section>
     </div>
   );

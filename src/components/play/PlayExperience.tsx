@@ -12,6 +12,7 @@ import { BinaryPredictor, defaultPercentsFor, MultiPredictor } from "@/component
 import { TheSwitchStep } from "@/components/play/TheSwitchStep";
 import { TheLineStep } from "@/components/play/TheLineStep";
 import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
+import { TensionDisplay } from "@/components/daily/TensionDisplay";
 import { RevealReadyGate } from "@/components/play/RevealReadyGate";
 import { RevealShow } from "@/components/play/RevealExperience";
 import {
@@ -46,6 +47,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
   );
   const [pending, startTransition] = useTransition();
   const predictedOnce = useRef(false);
+  const dailyStarted = useRef(false);
   const draftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const changeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTrackedMix = useRef<string | null>(null);
@@ -83,6 +85,20 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
     const id = window.setInterval(() => router.refresh(), 4000);
     return () => window.clearInterval(id);
   }, [marshmallow.screen, router]);
+
+  useEffect(() => {
+    if (marshmallow.play_mode !== "daily" || !marshmallow.dailyRound || dailyStarted.current) {
+      return;
+    }
+    if (marshmallow.dailyRound.sealedCount === 0 && marshmallow.roundPosition === 1) {
+      dailyStarted.current = true;
+      void trackEvent(
+        ANALYTICS_EVENTS.dailyStarted,
+        { round_id: marshmallow.dailyRound.roundId },
+        marshmallow.dailyRound.roundId,
+      );
+    }
+  }, [marshmallow.dailyRound, marshmallow.play_mode, marshmallow.roundPosition]);
 
   async function selectChoice(id: string) {
     setChoiceId(id);
@@ -145,6 +161,24 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
       { n: 0, play_mode: marshmallow.play_mode, line: true },
       marshmallow.id,
     );
+    if (marshmallow.dailyRound) {
+      void trackEvent(
+        ANALYTICS_EVENTS.dailyQuestionLocked,
+        {
+          position: marshmallow.roundPosition ?? 0,
+          line: true,
+          round_id: marshmallow.dailyRound.roundId,
+        },
+        marshmallow.id,
+      );
+      if (marshmallow.roundPosition === 5) {
+        void trackEvent(
+          ANALYTICS_EVENTS.dailyCompleted,
+          { round_id: marshmallow.dailyRound.roundId },
+          marshmallow.dailyRound.roundId,
+        );
+      }
+    }
     setJustSealed(true);
     window.setTimeout(() => {
       setSealing(false);
@@ -235,6 +269,23 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
       { n: percents.length, play_mode: marshmallow.play_mode },
       marshmallow.id,
     );
+    if (marshmallow.dailyRound) {
+      void trackEvent(
+        ANALYTICS_EVENTS.dailyQuestionLocked,
+        {
+          position: marshmallow.roundPosition ?? 0,
+          round_id: marshmallow.dailyRound.roundId,
+        },
+        marshmallow.id,
+      );
+      if (marshmallow.roundPosition === 5) {
+        void trackEvent(
+          ANALYTICS_EVENTS.dailyCompleted,
+          { round_id: marshmallow.dailyRound.roundId },
+          marshmallow.dailyRound.roundId,
+        );
+      }
+    }
     setJustSealed(true);
     window.setTimeout(() => {
       setSealing(false);
@@ -365,7 +416,11 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
               </>
             ) : marshmallow.dailyRound && marshmallow.dailyRound.allSealed ? (
               marshmallow.dailyRound.todaysRead ? (
-                <TodaysReadCard read={marshmallow.dailyRound.todaysRead} showHomeButton={false} />
+                <TodaysReadCard
+                  read={marshmallow.dailyRound.todaysRead}
+                  showHomeButton={false}
+                  roundId={marshmallow.dailyRound.roundId}
+                />
               ) : (
                 <>
                   <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
@@ -415,14 +470,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
   if (marshmallow.isLine && !marshmallow.sealed && !justSealed) {
     return (
       <div className="flex flex-1 flex-col gap-6 pb-8">
-        <div className="pt-4">
-          <PlayModeBadge mode={marshmallow.play_mode} />
-          {marshmallow.dailyRound && marshmallow.roundPosition ? (
-            <p className="mt-2 text-xs font-semibold tracking-[0.16em] text-ink-muted uppercase">
-              Question {marshmallow.roundPosition} of {marshmallow.dailyRound.questions.length}
-            </p>
-          ) : null}
-        </div>
+        <DailyPlayHeader marshmallow={marshmallow} />
         <h1 className="font-display text-[clamp(1.65rem,7.5vw,2.15rem)] leading-[1.08] font-semibold tracking-tight break-words">
           {marshmallow.question}
         </h1>
@@ -443,14 +491,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
 
   return (
     <div className="flex flex-1 flex-col gap-6 pb-8">
-      <div className="pt-4">
-        <PlayModeBadge mode={marshmallow.play_mode} />
-        {marshmallow.dailyRound && marshmallow.roundPosition ? (
-          <p className="mt-2 text-xs font-semibold tracking-[0.16em] text-ink-muted uppercase">
-            Question {marshmallow.roundPosition} of {marshmallow.dailyRound.questions.length}
-          </p>
-        ) : null}
-      </div>
+      <DailyPlayHeader marshmallow={marshmallow} />
       <h1 className="font-display text-[clamp(1.65rem,7.5vw,2.15rem)] leading-[1.08] font-semibold tracking-tight break-words">
         {marshmallow.question}
       </h1>
@@ -513,6 +554,22 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
       {error ? (
         <p role="alert" className="text-center text-sm text-toasted">
           {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function DailyPlayHeader({ marshmallow }: { marshmallow: PlayMarshmallow }) {
+  return (
+    <div className="flex flex-col gap-4 pt-4">
+      <PlayModeBadge mode={marshmallow.play_mode} />
+      {marshmallow.dailyRound?.tension ? (
+        <TensionDisplay tension={marshmallow.dailyRound.tension} />
+      ) : null}
+      {marshmallow.dailyRound && marshmallow.roundPosition ? (
+        <p className="text-xs font-semibold tracking-[0.16em] text-ink-muted uppercase">
+          Question {marshmallow.roundPosition} of {marshmallow.dailyRound.questions.length}
         </p>
       ) : null}
     </div>
