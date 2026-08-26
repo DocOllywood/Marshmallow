@@ -11,6 +11,7 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { safeInternalPath } from "@/lib/http/safe-path";
 import { getSiteUrl } from "@/server/urls";
+import { getOwnProfile, needsOnboarding } from "@/server/dal/auth";
 import { cookies } from "next/headers";
 import { RETURN_PATH_COOKIE, SHARE_ATTR_COOKIE } from "@/server/dal/notify-share";
 
@@ -18,6 +19,33 @@ export type AuthActionState = { error: string } | null;
 
 function firstIssue(error: { issues: { message: string }[] }): string {
   return error.issues[0]?.message ?? "Invalid input";
+}
+
+function guestDestination(profile: Awaited<ReturnType<typeof getOwnProfile>>): string {
+  if (profile && !needsOnboarding(profile)) {
+    return "/home";
+  }
+  return "/onboarding";
+}
+
+export async function startGuestPlayAction(
+  _prev: AuthActionState = null, // eslint-disable-line @typescript-eslint/no-unused-vars
+): Promise<AuthActionState> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect(guestDestination(await getOwnProfile()));
+  }
+
+  const { error } = await supabase.auth.signInAnonymously();
+  if (error) {
+    return { error: error.message };
+  }
+
+  redirect("/onboarding");
 }
 
 export async function signUpAction(

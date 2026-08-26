@@ -1,5 +1,6 @@
 import { MarshmallowLogo } from "@/components/MarshmallowLogo";
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
+import { PlayMarshmallowButton } from "@/components/auth/PlayMarshmallowButton";
 import { PrimaryButton } from "@/components/PrimaryButton";
 
 export default function LandingPage() {
@@ -26,14 +27,16 @@ export default function LandingPage() {
         </p>
       </div>
       <div className="flex flex-col gap-3">
-        <PrimaryButton href="/signup">PLAY MARSHMALLOW</PrimaryButton>
+        <PlayMarshmallowButton />
         <PrimaryButton
           href="/login"
           className="border-2 border-ink bg-transparent text-ink hover:opacity-80"
         >
-          Log in
+          Already have an account? Log in
         </PrimaryButton>
         <p className="text-center text-xs text-ink-muted">
+          <a href="/signup">Create an account</a>
+          {" · "}
           <a href="/privacy">Privacy</a>
           {" · "}
           <a href="/terms">Terms</a>

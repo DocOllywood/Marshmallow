@@ -67,6 +67,8 @@ In **Supabase Dashboard → Authentication → URL configuration**:
 
 **Email provider (MVP):** enable Email; **Confirm email: OFF** (matches current app assumptions).
 
+**Guest play (Beta 1):** enable **Anonymous sign-ins** under Authentication → Providers. See `docs/BETA_GUEST_PLAY.md`. No migration — dashboard toggle only.
+
 Apply pending migrations to the linked project before first production smoke test:
 
 ```bash
