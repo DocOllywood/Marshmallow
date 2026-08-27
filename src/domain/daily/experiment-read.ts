@@ -62,10 +62,10 @@ export function buildExperimentTodaysRead(
   let bodyLines: string[];
 
   if (trajectory.heldThroughout) {
-    headline = "YOU NEVER MOVED.";
+    headline = "YOU HELD THE SAME LINE FROM BOTH SIDES.";
     bodyLines = [
       "Remorse didn't move you.",
-      "The consequences didn't move you.",
+      "The cost of telling didn't move you.",
       "Changing perspective didn't move you.",
       "Your answer stayed on the same side throughout.",
     ];

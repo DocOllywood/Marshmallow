@@ -407,6 +407,8 @@ export async function getDailyRoundReveal(
       ? buildExperimentCrowdTrajectory({
           stages: crowdStageInputs,
           tension: progress.tension,
+          referenceSide:
+            (crowdStageInputs[0]?.rightPct ?? 0) >= (crowdStageInputs[0]?.leftPct ?? 0) ? "right" : "left",
         })
       : null;
 

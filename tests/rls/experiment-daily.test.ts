@@ -394,6 +394,20 @@ describe("Experiment Daily engine (hosted)", () => {
     expect(scoresAfterUser ?? 0).toBe(0);
   });
 
+  it("opens reveal for pick-only experiment rows without scores", async () => {
+    if (!engineReady || !pickOnlyId || !pickOnlyEntryId) {
+      return;
+    }
+
+    await finalizeFixture(pickOnlyId);
+
+    const { data: opened, error } = await user.rpc("open_reveal", {
+      p_marshmallow_id: pickOnlyId,
+    });
+    expect(error).toBeNull();
+    expect(opened?.base_points).toBe(0);
+  });
+
   it("scored experiment flip stage requires allocations and creates one accuracy", async () => {
     if (!engineReady || !scoredId || scoredChoices.length < 2) {
       return;

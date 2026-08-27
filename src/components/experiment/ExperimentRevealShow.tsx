@@ -39,7 +39,7 @@ export function ExperimentRevealShow({
   }, [roundId]);
 
   return (
-    <div className="flex flex-1 flex-col gap-10 pb-10 pt-6">
+    <div className="flex flex-1 flex-col gap-10 pb-28 pt-6">
       {crowdTrajectory ? (
         <section className="flex flex-col gap-4">
           <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">The crowd</p>
@@ -90,20 +90,22 @@ export function ExperimentRevealShow({
 
       {flipReveal ? (
         <section className="flex flex-col gap-4 border-t border-border/60 pt-8 text-center">
-          <p className="text-xs font-semibold tracking-[0.18em] text-ink-muted uppercase">Your prediction</p>
-          <p className="font-display text-3xl font-semibold tabular-nums">
-            {flipReveal.predictedPct != null ? `${flipReveal.predictedPct}%` : "—"}
-          </p>
-          <p className="text-xs font-semibold tracking-[0.18em] text-ink-muted uppercase">
-            Marshmallow players
-          </p>
-          <p className="font-display text-3xl font-semibold tabular-nums">{Math.round(flipReveal.crowdPct)}%</p>
           {flipReveal.gap ? (
-            <div className="flex flex-col items-center gap-2 pt-2">
-              <p className="text-xs font-semibold tracking-[0.18em] text-ink-muted uppercase">The gap</p>
-              <GapDisplay gap={flipReveal.gap} />
-            </div>
-          ) : null}
+            <GapDisplay gap={flipReveal.gap} />
+          ) : (
+            <>
+              <p className="text-xs font-semibold tracking-[0.18em] text-ink-muted uppercase">Your prediction</p>
+              <p className="font-display text-3xl font-semibold tabular-nums">
+                {flipReveal.predictedPct != null ? `${flipReveal.predictedPct}%` : "—"}
+              </p>
+              <p className="text-xs font-semibold tracking-[0.18em] text-ink-muted uppercase">
+                Marshmallow players
+              </p>
+              <p className="font-display text-3xl font-semibold tabular-nums">
+                {Math.round(flipReveal.crowdPct)}%
+              </p>
+            </>
+          )}
           {flipReveal.accuracy != null ? (
             <p className="text-sm font-semibold text-ink-muted">Accuracy {flipReveal.accuracy}</p>
           ) : null}

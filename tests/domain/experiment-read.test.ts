@@ -29,7 +29,7 @@ function trajectoryFromSides(sides: Array<"left" | "right">, pressureType: strin
 describe("experiment today's read", () => {
   it("describes never moved", () => {
     const read = buildExperimentTodaysRead(trajectoryFromSides(["right", "right", "right", "right"]), null);
-    expect(read.headline).toBe("YOU NEVER MOVED.");
+    expect(read.headline).toBe("YOU HELD THE SAME LINE FROM BOTH SIDES.");
     expect(read.bodyLines).toContain("Remorse didn't move you.");
     expect(read.bodyLines).toContain("Your answer stayed on the same side throughout.");
     expect(read.lineCopy).toBe("5 minutes");
@@ -101,7 +101,7 @@ const loyaltyJustice: HumanTension = {
 describe("loyalty vs justice editorial paths", () => {
   it("path A — never moved on justice", () => {
     const read = buildExperimentTodaysRead(trajectoryFromSides(["right", "right", "right", "right"]), null);
-    expect(read.headline).toBe("YOU NEVER MOVED.");
+    expect(read.headline).toBe("YOU HELD THE SAME LINE FROM BOTH SIDES.");
   });
 
   it("path B — held until collateral harm", () => {

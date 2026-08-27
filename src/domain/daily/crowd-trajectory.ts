@@ -100,8 +100,6 @@ export function crowdSidePctFromResults(input: {
 }
 
 export function describeCrowdMovement(trajectory: ExperimentCrowdTrajectory): string | null {
-  if (!trajectory.crowdFirstMovementStageLabel) {
-    return null;
-  }
-  return `THE CROWD MOVED AT ${trajectory.crowdFirstMovementStageLabel}.`;
+  void trajectory;
+  return null;
 }

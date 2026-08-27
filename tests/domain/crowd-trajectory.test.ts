@@ -33,7 +33,7 @@ describe("experiment crowd trajectory", () => {
       crowdPct: 68,
     });
     expect(trajectory?.crowdFirstMovementStage).toBe("consequence");
-    expect(describeCrowdMovement(trajectory!)).toBe("THE CROWD MOVED AT CONSEQUENCE.");
+    expect(describeCrowdMovement(trajectory!)).toBeNull();
   });
 
   it("aggregates side percentages from result rows", () => {

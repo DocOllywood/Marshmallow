@@ -295,7 +295,7 @@ describe("experiment today's read and wait", () => {
     render(
       <ExperimentTodaysReadCard
         read={{
-          headline: "YOU NEVER MOVED.",
+          headline: "YOU HELD THE SAME LINE FROM BOTH SIDES.",
           bodyLines: [
             "Remorse didn't move you.",
             "The consequences didn't move you.",
@@ -313,7 +313,7 @@ describe("experiment today's read and wait", () => {
     );
 
     expect(screen.getByText(/Today's read/i)).toBeTruthy();
-    expect(screen.getByText("YOU NEVER MOVED.")).toBeTruthy();
+    expect(screen.getByText("YOU HELD THE SAME LINE FROM BOTH SIDES.")).toBeTruthy();
     expect(screen.getByText(/Outside the experiment/i)).toBeTruthy();
     expect(screen.getByText(/Your calls are locked/i)).toBeTruthy();
     expect(screen.getByText(/The crowd is still deciding/i)).toBeTruthy();
@@ -465,10 +465,10 @@ describe("experiment reveal — crowd trajectory and your path", () => {
 
     expect(screen.getByText(/^The crowd$/i)).toBeTruthy();
     expect(screen.getByText(/68% JUSTICE/i)).toBeTruthy();
-    expect(screen.getByText(/THE CROWD MOVED AT PRESSURE/i)).toBeTruthy();
+    expect(screen.queryByText(/THE CROWD MOVED AT/i)).toBeNull();
     expect(screen.getByText(/Your path/i)).toBeTruthy();
     expect(screen.getAllByText(/YOU MOVED/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Your prediction/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/You predicted/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Marshmallow players/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Accuracy 86/i)).toBeTruthy();
     expect(screen.getByText(/CrowdSense 812/i)).toBeTruthy();
