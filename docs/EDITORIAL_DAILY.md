@@ -310,7 +310,7 @@ Canonical sides follow `human_tensions.left_label` (left) and `human_tensions.ri
 
 **LOYALTY vs. JUSTICE** · *How much does loyalty excuse?*
 
-- Round: `40000000-0000-4000-8000-000000000006` (draft, not public Home)
+- Round: `40000000-0000-4000-8000-000000000006` (promoted public Daily as of 2026-08-27 UTC)
 - Q1: `31000000-0000-4000-8000-000000000020`
 - Direct QA: `/m/31000000-0000-4000-8000-000000000020`
 

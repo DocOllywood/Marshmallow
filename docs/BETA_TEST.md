@@ -1,5 +1,21 @@
 # Marshmallow beta test
 
+## Core product thesis (Beta 1 — frozen)
+
+**MARSHMALLOW — SEE WHERE YOUR BELIEFS BEND.**
+
+Every day, one human dilemma gets harder.
+
+The Beta question is: **Will users voluntarily return** because they want to discover:
+
+- where other players moved,
+- whether their own rule was unusual,
+- and what tomorrow's dilemma will challenge?
+
+Today's shared Daily is the **belief-bending experiment** (LOYALTY vs. JUSTICE · *How much does loyalty excuse?*). Do not add features or new experiment rounds during Beta 1 freeze.
+
+---
+
 Manual walkthrough for a synchronized 10–20 tester session. Database time is authoritative. Do not write result rows by hand.
 
 Finish `docs/LAUNCH_CHECKLIST.md` first (env, Confirm Email OFF, admin user, cron, email off). Question ideas: `docs/BETA_CONTENT.md`.

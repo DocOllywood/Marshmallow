@@ -408,14 +408,16 @@ describe("Part 7 — Loyalty vs Justice live multi-user QA", () => {
     expect(crossLeak?.length ?? 0).toBe(0);
   });
 
-  it("confirms experiment round remains draft and off today", async () => {
+  it("confirms experiment round is promoted as today's public Daily", async () => {
+    const today = new Date().toISOString().slice(0, 10);
     const { data: round } = await admin
       .from("daily_rounds")
-      .select("status, round_date, metadata")
+      .select("status, round_date, metadata, title")
       .eq("id", ROUND_ID)
       .single();
-    expect(round?.status).toBe("draft");
-    expect(round?.round_date).not.toBe(new Date().toISOString().slice(0, 10));
+    expect(round?.status).toBe("open");
+    expect(round?.round_date).toBe(today);
+    expect(round?.title).toBe("How much does loyalty excuse?");
     expect((round?.metadata as { experiment?: { version: number } })?.experiment?.version).toBe(1);
   });
 });
