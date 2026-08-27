@@ -67,6 +67,11 @@ const base: PlayMarshmallow = {
     crowdsenseRating: 824,
     crowdsenseDelta: 4,
   },
+  requiresPrediction: true,
+  experimentStage: null,
+  isExperimentDaily: false,
+  experimentPriorChoiceLabel: null,
+  experimentPriorTensionSide: null,
 };
 
 describe("reveal UI", () => {

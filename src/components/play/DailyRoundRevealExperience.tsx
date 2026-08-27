@@ -156,7 +156,7 @@ export function DailyRoundRevealShow({
           How well did you read Marshmallow players?
         </p>
         <p className="font-display text-2xl font-semibold">
-          {summary.strongReadCount} of {summary.scoredQuestionCount} strong reads
+          {summary.strongReadLabel}
         </p>
         <p className="text-sm font-semibold text-ink-muted">
           Average Accuracy {summary.averageAccuracy}

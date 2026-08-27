@@ -12,6 +12,7 @@ import { BinaryPredictor, defaultPercentsFor, MultiPredictor } from "@/component
 import { TheSwitchStep } from "@/components/play/TheSwitchStep";
 import { TheLineStep } from "@/components/play/TheLineStep";
 import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
+import { ExperimentPlayExperience } from "@/components/experiment/ExperimentPlayExperience";
 import { TensionDisplay } from "@/components/daily/TensionDisplay";
 import { RevealReadyGate } from "@/components/play/RevealReadyGate";
 import { RevealShow } from "@/components/play/RevealExperience";
@@ -27,12 +28,20 @@ import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { isValidSealDistribution } from "@/domain/play/allocations";
 import { needsSwitchStep } from "@/domain/play/switch";
 import { isPlayableNextHref } from "@/domain/play/next";
-import { saveDraftPlayAction, saveSwitchResponseAction, sealLinePlayAction, sealPlayAction } from "@/server/actions/play";
+import { saveDraftPlayAction, saveSwitchResponseAction, sealLinePlayAction, sealPickOnlyPlayAction, sealPlayAction } from "@/server/actions/play";
 import { trackEvent } from "@/server/actions/analytics";
 import type { PlayMarshmallow } from "@/server/dal/play";
 import { cn } from "@/lib/utils";
 
 export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }) {
+  if (marshmallow.isExperimentDaily && marshmallow.dailyRound) {
+    return <ExperimentPlayExperience marshmallow={marshmallow} />;
+  }
+
+  return <LegacyPlayExperience marshmallow={marshmallow} />;
+}
+
+function LegacyPlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }) {
   const router = useRouter();
   const [choiceId, setChoiceId] = useState(marshmallow.ownChoiceId);
   const [percents, setPercents] = useState(() =>
@@ -234,6 +243,49 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
         marshmallow.id,
       );
     }, 2000);
+  }
+
+  async function sealPickOnly() {
+    if (!choiceId) {
+      return;
+    }
+    setSealing(true);
+    const result = await sealPickOnlyPlayAction({
+      marshmallowId: marshmallow.id,
+      ownChoiceId: choiceId,
+    });
+    if (result.closed) {
+      setSealing(false);
+      router.refresh();
+      setError(result.error ?? "This Marshmallow just closed.");
+      return;
+    }
+    if (!result.ok && !result.sealed) {
+      setSealing(false);
+      setError(result.error ?? "Could not seal.");
+      return;
+    }
+    void trackEvent(
+      ANALYTICS_EVENTS.predictionSealed,
+      { n: 0, play_mode: marshmallow.play_mode, pick_only: true },
+      marshmallow.id,
+    );
+    if (marshmallow.dailyRound) {
+      void trackEvent(
+        ANALYTICS_EVENTS.dailyQuestionLocked,
+        {
+          position: marshmallow.roundPosition ?? 0,
+          round_id: marshmallow.dailyRound.roundId,
+          pick_only: true,
+        },
+        marshmallow.id,
+      );
+    }
+    setJustSealed(true);
+    window.setTimeout(() => {
+      setSealing(false);
+      router.refresh();
+    }, 700);
   }
 
   async function seal() {
@@ -461,12 +513,22 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
     );
   }
 
-  const showSwitch = needsSwitchStep({
-    switchPrompt: marshmallow.switchPrompt,
-    ownChoiceId: choiceId,
-    switchStayed,
-  });
-  const showPredict = choiceId != null && !showSwitch && !marshmallow.isLine;
+  const showSwitch =
+    !marshmallow.isExperimentDaily &&
+    needsSwitchStep({
+      switchPrompt: marshmallow.switchPrompt,
+      ownChoiceId: choiceId,
+      switchStayed,
+    });
+  const showPredict =
+    choiceId != null && !showSwitch && !marshmallow.isLine && marshmallow.requiresPrediction;
+  const showPickOnlySeal =
+    choiceId != null &&
+    !showSwitch &&
+    !marshmallow.isLine &&
+    !marshmallow.requiresPrediction &&
+    !marshmallow.sealed &&
+    !justSealed;
 
   if (marshmallow.isLine && !marshmallow.sealed && !justSealed) {
     return (
@@ -513,6 +575,11 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
               </ChoiceButton>
             ))}
           </div>
+          {showPickOnlySeal ? (
+            <PrimaryButton onClick={() => void sealPickOnly()} disabled={sealing || pending}>
+              {sealing ? "Locking…" : "LOCK IT IN"}
+            </PrimaryButton>
+          ) : null}
         </>
       ) : showSwitch && selected && marshmallow.switchPrompt ? (
         <TheSwitchStep

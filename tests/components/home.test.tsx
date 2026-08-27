@@ -136,6 +136,7 @@ describe("HomeFeedView", () => {
         currentPlayId: "31000000-0000-4000-8000-000000000002",
         revealHref: "/daily/40000000-0000-4000-8000-000000000001/reveal",
         todaysRead: null,
+        isExperimentDaily: false,
       },
     };
 
@@ -219,6 +220,7 @@ describe("HomeFeedView", () => {
         currentPlayId: "31000000-0000-4000-8000-000000000010",
         revealHref: "/daily/40000000-0000-4000-8000-000000000004/reveal",
         todaysRead: null,
+        isExperimentDaily: false,
       },
     };
 
@@ -255,6 +257,7 @@ describe("HomeFeedView", () => {
         currentPlayId: "31000000-0000-4000-8000-000000000010",
         revealHref: "/daily/40000000-0000-4000-8000-000000000004/reveal",
         todaysRead: null,
+        isExperimentDaily: false,
       },
     };
 
@@ -288,6 +291,7 @@ describe("HomeFeedView", () => {
           tomorrowTease: null,
           isLegacy: true,
         },
+        isExperimentDaily: false,
       },
     };
 
@@ -297,6 +301,44 @@ describe("HomeFeedView", () => {
     expect(screen.getByText(/Your calls are locked/i)).toBeTruthy();
     expect(screen.getByText(/The crowd is still deciding/i)).toBeTruthy();
     expect(screen.getByText(/Come back tonight/i)).toBeTruthy();
+  });
+
+  it("renders experiment daily home separately from legacy daily", () => {
+    const feed: HomeFeed = {
+      ...emptyFeed,
+      dailyRound: {
+        roundId: "40000000-0000-4000-8000-000000000010",
+        title: "How much does loyalty excuse?",
+        subtitle: null,
+        topicName: "Love",
+        tension: {
+          id: "50000000-0000-4000-8000-000000000001",
+          slug: "loyalty-justice",
+          leftLabel: "LOYALTY",
+          rightLabel: "JUSTICE",
+          displayLabel: "LOYALTY vs. JUSTICE",
+        },
+        roundDate: "2026-08-28",
+        questions: [],
+        sealedCount: 0,
+        allSealed: false,
+        allRevealed: false,
+        anyRevealOpened: false,
+        currentPlayId: "31000000-0000-4000-8000-000000000010",
+        revealHref: "/daily/40000000-0000-4000-8000-000000000010/reveal",
+        todaysRead: null,
+        isExperimentDaily: true,
+      },
+    };
+
+    render(<HomeFeedView feed={feed} firstName="Alex" />);
+
+    expect(screen.getByText(/The daily experiment/i)).toBeTruthy();
+    expect(screen.getByText("LOYALTY vs. JUSTICE")).toBeTruthy();
+    expect(screen.getByText(/One situation/i)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "BEGIN" })).toBeTruthy();
+    expect(screen.queryByText("The Daily")).toBeNull();
+    expect(screen.queryByText(/5 dilemmas/i)).toBeNull();
   });
 
   it("stacks Cooking with humanized wait beneath the question", () => {

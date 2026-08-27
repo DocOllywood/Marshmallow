@@ -1,5 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 
+import { ExperimentTodaysReadCard } from "@/components/experiment/ExperimentTodaysReadCard";
+import { ExperimentRevealReadyGate } from "@/components/experiment/ExperimentRevealReadyGate";
+import { ExperimentRevealShow } from "@/components/experiment/ExperimentRevealShow";
 import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
 import {
   DailyRoundRevealGate,
@@ -25,11 +28,19 @@ export default async function DailyRoundRevealPage({
     return (
       <main className="flex flex-1 flex-col">
         {progress.todaysRead ? (
-          <TodaysReadCard
-            read={progress.todaysRead}
-            roundId={roundId}
-            tensionSlug={progress.tension?.slug}
-          />
+          progress.isExperimentDaily ? (
+            <ExperimentTodaysReadCard
+              read={progress.todaysRead}
+              roundId={roundId}
+              tensionSlug={progress.tension?.slug}
+            />
+          ) : (
+            <TodaysReadCard
+              read={progress.todaysRead}
+              roundId={roundId}
+              tensionSlug={progress.tension?.slug}
+            />
+          )
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-2 py-10 text-center">
             <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">Daily sealed</p>
@@ -37,7 +48,9 @@ export default async function DailyRoundRevealPage({
               {progress.title}
             </h1>
             <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
-              5 calls locked · Come back for the reveal
+              {progress.isExperimentDaily
+                ? "Come back tonight to see where everyone else moved."
+                : "5 calls locked · Come back for the reveal"}
             </p>
           </div>
         )}
@@ -48,7 +61,15 @@ export default async function DailyRoundRevealPage({
   if (!progress.anyRevealOpened) {
     return (
       <main className="flex flex-1 flex-col">
-        <DailyRoundRevealGate roundId={roundId} title={progress.title} />
+        {progress.isExperimentDaily ? (
+          <ExperimentRevealReadyGate
+            roundId={roundId}
+            title={progress.title}
+            revealHref={progress.revealHref}
+          />
+        ) : (
+          <DailyRoundRevealGate roundId={roundId} title={progress.title} />
+        )}
       </main>
     );
   }
@@ -59,12 +80,22 @@ export default async function DailyRoundRevealPage({
   }
 
   return (
-    <main className="flex flex-1 flex-col">
-      <DailyRoundRevealShow
-        reveals={payload.reveals}
-        summary={payload.summary}
-        roundId={roundId}
-      />
+    <main className="flex flex-1 flex-col px-2">
+      {progress.isExperimentDaily ? (
+        <ExperimentRevealShow
+          reveals={payload.reveals}
+          summary={payload.summary}
+          crowdTrajectory={payload.crowdTrajectory}
+          userPath={payload.userPath}
+          roundId={roundId}
+        />
+      ) : (
+        <DailyRoundRevealShow
+          reveals={payload.reveals}
+          summary={payload.summary}
+          roundId={roundId}
+        />
+      )}
     </main>
   );
 }

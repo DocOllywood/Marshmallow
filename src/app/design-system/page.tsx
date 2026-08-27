@@ -17,6 +17,13 @@ import {
   SealedPrototype,
   WaitingPrototype,
 } from "@/components/design-system/prototypes";
+import { ExperimentMovementFeedback } from "@/components/experiment/ExperimentMovementFeedback";
+import { ExperimentStageHeader } from "@/components/experiment/ExperimentStageHeader";
+import { ExperimentTodaysReadCard } from "@/components/experiment/ExperimentTodaysReadCard";
+import { ExperimentRevealShow } from "@/components/experiment/ExperimentRevealShow";
+import { buildExperimentCrowdTrajectory } from "@/domain/daily/crowd-trajectory";
+import { buildUserPathPoints } from "@/domain/daily/experiment-play";
+import type { ExperimentTrajectory } from "@/domain/daily/trajectory";
 
 export const metadata = {
   title: "Design system",
@@ -90,6 +97,162 @@ export default function DesignSystemPage() {
 
         <Section title="Reveal">
           <RevealPrototype />
+        </Section>
+
+        <Section title="Experiment daily">
+          <ExperimentStageHeader
+            tension={{
+              id: "t1",
+              slug: "loyalty-justice",
+              leftLabel: "LOYALTY",
+              rightLabel: "JUSTICE",
+              displayLabel: "LOYALTY vs. JUSTICE",
+            }}
+            position={2}
+            stage="pressure"
+          />
+          <div className="flex flex-col items-center gap-4 py-4">
+            <ExperimentMovementFeedback feedback="held" />
+            <ExperimentMovementFeedback feedback="moved" />
+          </div>
+          <ExperimentTodaysReadCard
+            read={{
+              headline: "YOU NEVER MOVED.",
+              bodyLines: [
+                "Remorse didn't move you.",
+                "The consequences didn't move you.",
+                "Changing perspective didn't move you.",
+                "Your answer stayed on the same side throughout.",
+              ],
+              lineCopy: "A month before you'd consider it a betrayal.",
+              switchCopy: null,
+              tomorrowTease: null,
+              isLegacy: false,
+              isExperiment: true,
+            }}
+            showHomeButton={false}
+            tensionSlug="loyalty-justice"
+          />
+          {(() => {
+            const tension = {
+              id: "t1",
+              slug: "loyalty-justice",
+              leftLabel: "LOYALTY",
+              rightLabel: "JUSTICE",
+              displayLabel: "LOYALTY vs. JUSTICE",
+            };
+            const crowdTrajectory = buildExperimentCrowdTrajectory({
+              tension,
+              stages: [
+                { stage: "instinct", position: 1, leftPct: 32, rightPct: 68 },
+                { stage: "pressure", position: 2, leftPct: 39, rightPct: 61 },
+                { stage: "consequence", position: 3, leftPct: 53, rightPct: 47 },
+                { stage: "flip", position: 4, leftPct: 28, rightPct: 72 },
+              ],
+              referenceSide: "right",
+            });
+            const trajectory: ExperimentTrajectory = {
+              initialSide: "right",
+              finalSide: "right",
+              heldThroughout: false,
+              moved: true,
+              firstMovementStage: "consequence",
+              firstMovementPressureType: null,
+              movementCount: 2,
+              returnedToOriginalPosition: true,
+              stageChoices: [
+                {
+                  stage: "instinct",
+                  position: 1,
+                  side: "right",
+                  choiceLabel: "JUSTICE",
+                  pressureType: null,
+                },
+                {
+                  stage: "pressure",
+                  position: 2,
+                  side: "right",
+                  choiceLabel: "JUSTICE",
+                  pressureType: null,
+                },
+                {
+                  stage: "consequence",
+                  position: 3,
+                  side: "left",
+                  choiceLabel: "LOYALTY",
+                  pressureType: null,
+                },
+                {
+                  stage: "flip",
+                  position: 4,
+                  side: "right",
+                  choiceLabel: "JUSTICE",
+                  pressureType: null,
+                },
+                {
+                  stage: "line",
+                  position: 5,
+                  side: null,
+                  choiceLabel: "A month",
+                  pressureType: null,
+                },
+              ],
+              lineChoice: "A month",
+            };
+            const userPath = buildUserPathPoints(trajectory, tension);
+            return (
+              <ExperimentRevealShow
+                reveals={[
+                  {
+                    id: "q4",
+                    position: 4,
+                    isLine: false,
+                    question: "Flip",
+                    ownChoiceLabel: "Yes",
+                    predictedPct: 58,
+                    crowdPct: 72,
+                    crowdLabel: "Yes",
+                    crowdModeLabel: null,
+                    errorCopy: null,
+                    gap: {
+                      gapPoints: 14,
+                      predictedPct: 58,
+                      crowdPct: 72,
+                      tierCopy: "Solid read.",
+                      directionCopy: null,
+                    },
+                    accuracy: 86,
+                  },
+                  {
+                    id: "q5",
+                    position: 5,
+                    isLine: true,
+                    question: "Where is the line?",
+                    ownChoiceLabel: "A month",
+                    predictedPct: null,
+                    crowdPct: 34,
+                    crowdLabel: "A month",
+                    crowdModeLabel: "A month",
+                    errorCopy: null,
+                    gap: null,
+                    accuracy: null,
+                  },
+                ]}
+                summary={{
+                  strongReadCount: 1,
+                  scoredQuestionCount: 1,
+                  averageAccuracy: 86,
+                  contextCopy: null,
+                  crowdsenseRating: 812,
+                  crowdsenseDelta: 3,
+                  isExperimentDaily: true,
+                  strongReadLabel: "Strong read",
+                }}
+                crowdTrajectory={crowdTrajectory}
+                userPath={userPath}
+              />
+            );
+          })()}
         </Section>
 
         <Section title="Score">

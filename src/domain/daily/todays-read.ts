@@ -1,3 +1,10 @@
+import { buildExperimentTodaysRead } from "@/domain/daily/experiment-read";
+import { isExperimentDailyRound } from "@/domain/daily/experiment";
+import type { ExperimentStage } from "@/domain/daily/experiment";
+import {
+  buildExperimentTrajectory,
+  type TrajectoryInputStage,
+} from "@/domain/daily/trajectory";
 import type { HumanTension, TensionSide } from "@/domain/daily/tension";
 
 export type TodaysReadQuestion = {
@@ -8,6 +15,8 @@ export type TodaysReadQuestion = {
   hasSwitch: boolean;
   switchStayed: boolean | null;
   isLine: boolean;
+  experimentStage?: ExperimentStage | null;
+  pressureType?: string | null;
 };
 
 export type TodaysRead = {
@@ -17,6 +26,7 @@ export type TodaysRead = {
   switchCopy: string | null;
   tomorrowTease: string | null;
   isLegacy: boolean;
+  isExperiment?: boolean;
 };
 
 type Lean = "left" | "right" | "split";
@@ -37,10 +47,28 @@ export function buildTodaysRead(
   questions: readonly TodaysReadQuestion[],
   tension: HumanTension | null,
   tomorrowTension: HumanTension | null,
+  roundMetadata: unknown = null,
 ): TodaysRead | null {
   const answered = questions.filter((item) => item.choiceLabel != null);
   if (answered.length === 0) {
     return null;
+  }
+
+  const tomorrowTease = tomorrowTension?.displayLabel ?? null;
+
+  if (isExperimentDailyRound(roundMetadata)) {
+    const trajectoryInputs: TrajectoryInputStage[] = answered.map((item) => ({
+      stage: item.experimentStage ?? inferStageFromPosition(item.position, item.isLine),
+      position: item.position,
+      choiceLabel: item.choiceLabel,
+      tensionSide: item.tensionSide,
+      pressureType: item.pressureType ?? null,
+      isLine: item.isLine,
+    }));
+    const trajectory = buildExperimentTrajectory(trajectoryInputs);
+    if (trajectory) {
+      return buildExperimentTodaysRead(trajectory, tomorrowTease);
+    }
   }
 
   const sideQuestions = answered.filter(
@@ -53,8 +81,6 @@ export function buildTodaysRead(
     lineQuestion?.choiceLabel != null
       ? formatLineReadCopy(lineQuestion.question, lineQuestion.choiceLabel)
       : null;
-
-  const tomorrowTease = tomorrowTension?.displayLabel ?? null;
 
   if (!tension || sideQuestions.length === 0) {
     return {
@@ -193,4 +219,16 @@ function legacyBodyLines(switchQuestion: TodaysReadQuestion | undefined): string
     return ["When the circumstances changed, you kept the same call."];
   }
   return ["When the consequence shifted, you changed your call."];
+}
+
+function inferStageFromPosition(
+  position: number,
+  isLine: boolean,
+): TrajectoryInputStage["stage"] {
+  if (isLine || position === 5) return "line";
+  if (position === 1) return "instinct";
+  if (position === 2) return "pressure";
+  if (position === 3) return "consequence";
+  if (position === 4) return "flip";
+  return "instinct";
 }

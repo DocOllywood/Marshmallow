@@ -20,6 +20,9 @@ function mapPlayError(message: string): PlayActionResult {
   if (message.includes("entry_sealed")) {
     return { ok: true, sealed: true };
   }
+  if (message.includes("allocations_not_allowed")) {
+    return { ok: false, error: "This question does not take a prediction." };
+  }
   if (message.includes("allocations_invalid") || message.includes("own_choice_mismatch")) {
     return { ok: false, error: "That prediction isn't valid. Adjust the mix to 100%." };
   }
@@ -53,6 +56,25 @@ export async function saveDraftPlayAction(input: {
   revalidatePath(`/m/${input.marshmallowId}`);
   revalidatePath("/home");
   return { ok: true };
+}
+
+export async function sealPickOnlyPlayAction(input: {
+  marshmallowId: string;
+  ownChoiceId: string;
+}): Promise<PlayActionResult> {
+  await requireOnboarded();
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("seal_entry", {
+    p_marshmallow_id: input.marshmallowId,
+    p_own_choice_id: input.ownChoiceId,
+    p_allocations: [],
+  });
+  if (error) {
+    return mapPlayError(error.message);
+  }
+  revalidatePath(`/m/${input.marshmallowId}`);
+  revalidatePath("/home");
+  return { ok: true, sealed: true };
 }
 
 export async function sealPlayAction(input: {

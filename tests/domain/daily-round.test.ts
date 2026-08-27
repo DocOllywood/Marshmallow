@@ -81,6 +81,20 @@ describe("daily round domain", () => {
     expect(summary.averageAccuracy).toBe(90);
     expect(summary.crowdsenseRating).toBe(812);
     expect(summary.crowdsenseDelta).toBe(6);
+    expect(summary.strongReadLabel).toBe("2 of 2 strong reads");
+  });
+
+  it("uses experiment-aware summary copy for one scored prediction", () => {
+    const summary = dailyRoundSummary(
+      [
+        { id: "q4", question: "Q4", position: 4, isLine: false, ownChoiceLabel: "Yes", predictedPct: 60, crowdPct: 62, crowdLabel: "Yes", crowdModeLabel: "Yes", errorCopy: "Only 2 points off", accuracy: 92, gap: null },
+      ],
+      812,
+      6,
+      { isExperimentDaily: true },
+    );
+    expect(summary.scoredQuestionCount).toBe(1);
+    expect(summary.strongReadLabel).toBe("Strong read on today's experiment");
   });
 
   it("uses five questions per round", () => {

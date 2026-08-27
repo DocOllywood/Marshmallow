@@ -1,6 +1,8 @@
 import type { PlayScreen } from "@/domain/play/view";
 import type { DailyRoundProgress } from "@/domain/daily/round";
+import type { ExperimentStage } from "@/domain/daily/experiment";
 import type { Database } from "@/lib/supabase/types";
+import type { TensionSide } from "@/domain/daily/tension";
 
 type Status = Database["public"]["Enums"]["marshmallow_status"];
 
@@ -8,6 +10,7 @@ export type PlayChoice = {
   id: string;
   label: string;
   sort_order: number;
+  tensionSide?: TensionSide | null;
 };
 
 export type PlayAllocation = {
@@ -68,4 +71,9 @@ export type PlayMarshmallow = {
   dailyRound?: DailyRoundProgress | null;
   roundPosition?: number | null;
   dailyNextHref?: string | null;
+  requiresPrediction: boolean;
+  experimentStage: ExperimentStage | null;
+  isExperimentDaily: boolean;
+  experimentPriorChoiceLabel: string | null;
+  experimentPriorTensionSide: TensionSide | null;
 };

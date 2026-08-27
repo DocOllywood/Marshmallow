@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
+import { ExperimentDailyHomeSection } from "@/components/experiment/ExperimentDailyHomeSection";
 import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
 import { EmptyState } from "@/components/EmptyState";
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
@@ -126,7 +127,13 @@ export function HomeFeedView({
 
       {heroQuick ? <QuickHero hero={heroQuick} more={moreQuick} /> : null}
 
-      {feed.dailyRound ? <DailyRoundSection round={feed.dailyRound} /> : null}
+      {feed.dailyRound ? (
+        feed.dailyRound.isExperimentDaily ? (
+          <ExperimentDailyHomeSection round={feed.dailyRound} />
+        ) : (
+          <DailyRoundSection round={feed.dailyRound} />
+        )
+      ) : null}
 
       {feed.liveNow.length > 0 ? <LiveSection cards={feed.liveNow} /> : null}
 

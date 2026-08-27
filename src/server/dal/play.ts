@@ -10,6 +10,11 @@ import type { PlayAllocation, PlayChoice, PlayMarshmallow, RevealChoiceRow, Reve
 import { crowdsenseDelta, crowdsenseFromScores } from "@/domain/crowdsense/rating";
 import { listActiveTopics, listOwnTopicPrefIds } from "@/server/dal/topics";
 import { getDailyRoundProgressByMarshmallowId } from "@/server/dal/daily-round";
+import {
+  marshmallowRequiresPrediction,
+  resolveMarshmallowExperimentMetadata,
+} from "@/domain/daily/experiment";
+import { parseTensionSide, type TensionSide } from "@/domain/daily/tension";
 
 export type { PlayAllocation, PlayChoice, PlayMarshmallow, RevealChoiceRow, RevealPayload };
 export type { PlayScreen };
@@ -32,7 +37,7 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
   const { data, error } = await supabase
     .from("marshmallows")
     .select(
-      "id, question, status, opens_at, closes_at, reveals_at, hard_reveals_at, is_daily, play_mode, topic_id, daily_round_id, round_position, entity_label, spoiler_context, image_url, expires_at, switch_prompt, is_line, topics(name, image_url), marshmallow_choices(id, label, sort_order)",
+      "id, question, status, opens_at, closes_at, reveals_at, hard_reveals_at, is_daily, play_mode, topic_id, daily_round_id, round_position, entity_label, spoiler_context, image_url, expires_at, switch_prompt, is_line, metadata, topics(name, image_url), marshmallow_choices(id, label, sort_order, metadata)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -67,9 +72,14 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     throw new Error(openError.message);
   }
 
-  const choices = [...(data.marshmallow_choices ?? [])].sort(
-    (a, b) => a.sort_order - b.sort_order,
-  );
+  const choices = [...(data.marshmallow_choices ?? [])]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((choice) => ({
+      id: choice.id,
+      label: choice.label,
+      sort_order: choice.sort_order,
+      tensionSide: parseTensionSide(choice.metadata),
+    }));
   const topic = Array.isArray(data.topics) ? data.topics[0] : data.topics;
   const allocations = entry?.entry_allocations ?? [];
   const sealed = entry?.sealed_at != null;
@@ -86,6 +96,44 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     : null;
   const dailyNextId =
     dailyRound && playMode === "daily" ? nextDailyQuestionId(dailyRound, id) : null;
+
+  let roundMetadata: unknown = null;
+  if (data.daily_round_id) {
+    const { data: roundRow } = await supabase
+      .from("daily_rounds")
+      .select("metadata")
+      .eq("id", data.daily_round_id)
+      .maybeSingle();
+    roundMetadata = roundRow?.metadata ?? null;
+  }
+
+  const experimentMeta = resolveMarshmallowExperimentMetadata({
+    metadata: data.metadata,
+    roundMetadata,
+    roundPosition: data.round_position,
+    isLine: data.is_line,
+  });
+  const requiresPrediction = experimentMeta
+    ? experimentMeta.requiresPrediction
+    : marshmallowRequiresPrediction(data.metadata);
+  const isExperimentDaily = dailyRound?.isExperimentDaily ?? false;
+
+  let experimentPriorChoiceLabel: string | null = null;
+  let experimentPriorTensionSide: TensionSide | null = null;
+  if (
+    isExperimentDaily &&
+    data.daily_round_id &&
+    data.round_position != null &&
+    data.round_position > 1
+  ) {
+    const prior = await loadExperimentPriorChoice(
+      supabase,
+      data.daily_round_id,
+      data.round_position - 1,
+    );
+    experimentPriorChoiceLabel = prior.label;
+    experimentPriorTensionSide = prior.tensionSide;
+  }
 
   let screen = resolvePlayScreen({
     status: data.status,
@@ -164,12 +212,56 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     dailyRound,
     roundPosition: data.round_position,
     dailyNextHref: dailyNextId ? `/m/${dailyNextId}` : dailyRound?.revealHref ?? null,
+    requiresPrediction,
+    experimentStage: experimentMeta?.stage ?? null,
+    isExperimentDaily,
+    experimentPriorChoiceLabel,
+    experimentPriorTensionSide,
   };
 
   if (!mayLoadResults) {
     assertNoAggregates(payload);
   }
   return payload;
+}
+
+async function loadExperimentPriorChoice(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  dailyRoundId: string,
+  priorPosition: number,
+): Promise<{ label: string | null; tensionSide: TensionSide | null }> {
+  const { data: priorMarshmallow } = await supabase
+    .from("marshmallows")
+    .select("id")
+    .eq("daily_round_id", dailyRoundId)
+    .eq("round_position", priorPosition)
+    .maybeSingle();
+
+  if (!priorMarshmallow?.id) {
+    return { label: null, tensionSide: null };
+  }
+
+  const { data: entry } = await supabase
+    .from("entries")
+    .select("own_choice_id")
+    .eq("marshmallow_id", priorMarshmallow.id)
+    .not("sealed_at", "is", null)
+    .maybeSingle();
+
+  if (!entry?.own_choice_id) {
+    return { label: null, tensionSide: null };
+  }
+
+  const { data: choice } = await supabase
+    .from("marshmallow_choices")
+    .select("label, metadata")
+    .eq("id", entry.own_choice_id)
+    .maybeSingle();
+
+  return {
+    label: choice?.label ?? null,
+    tensionSide: choice ? parseTensionSide(choice.metadata) : null,
+  };
 }
 
 async function loadRevealPayload(input: {

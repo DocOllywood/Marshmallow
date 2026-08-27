@@ -18,7 +18,7 @@ export function ChoiceButton({
       type={type}
       aria-pressed={selected}
       className={cn(
-        "flex min-h-16 w-full items-center justify-center rounded-2xl border-2 px-4 text-lg font-semibold tracking-wide uppercase touch-manipulation transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
+        "flex min-h-16 w-full items-center justify-center rounded-2xl border-2 px-4 text-center text-lg font-semibold leading-snug tracking-wide break-words uppercase touch-manipulation transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
         selected
           ? "border-ink bg-surface-elevated text-ink"
           : "border-border bg-surface text-ink hover:border-ink/40",

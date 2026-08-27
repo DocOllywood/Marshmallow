@@ -42,8 +42,8 @@ describe("OnboardingFlow", () => {
     render(<OnboardingFlow username="tester" displayName="Tester" />);
     fireEvent.click(screen.getByRole("button", { name: /^Continue$/i }));
 
-    expect(screen.getByText(/other Marshmallow players chose/i)).toBeTruthy();
-    expect(screen.getByText(/Come back and see how well you read the room/i)).toBeTruthy();
+    expect(screen.getByText(/Make your instinctive choice/i)).toBeTruthy();
+    expect(screen.getByText(/discover where everyone else moved/i)).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: /^Got it$/i }));
 

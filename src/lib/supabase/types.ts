@@ -635,6 +635,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          metadata: Json
           round_date: string
           status: Database["public"]["Enums"]["marshmallow_status"]
           subtitle: string | null
@@ -646,6 +647,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          metadata?: Json
           round_date: string
           status?: Database["public"]["Enums"]["marshmallow_status"]
           subtitle?: string | null
@@ -657,6 +659,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          metadata?: Json
           round_date?: string
           status?: Database["public"]["Enums"]["marshmallow_status"]
           subtitle?: string | null
@@ -742,6 +745,7 @@ export type Database = {
           status: Database["public"]["Enums"]["marshmallow_status"]
           switch_prompt: string | null
           is_line: boolean
+          metadata: Json
           topic_id: string | null
           updated_at: string
         }
@@ -771,6 +775,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["marshmallow_status"]
           switch_prompt?: string | null
           is_line?: boolean
+          metadata?: Json
           topic_id?: string | null
           updated_at?: string
         }
@@ -800,6 +805,7 @@ export type Database = {
           spoiler_context?: string | null
           status?: Database["public"]["Enums"]["marshmallow_status"]
           switch_prompt?: string | null
+          metadata?: Json
           topic_id?: string | null
           updated_at?: string
         }

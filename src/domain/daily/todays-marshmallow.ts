@@ -24,6 +24,8 @@ const BY_TENSION_SLUG: Record<string, string> = {
   "status-authenticity":
     "Skip one performance today. Be ordinary with someone who matters.",
   "truth-peace": "Say one true thing gently today — only where it helps more than it hurts.",
+  "loyalty-justice":
+    "Notice one rule today that's easier to demand from someone else than from yourself. Don't fix it. Just catch it.",
 };
 
 export const TODAYS_MARSHMALLOW_FALLBACK =

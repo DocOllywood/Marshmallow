@@ -31,6 +31,7 @@ export type DailyRoundProgress = {
   currentPlayId: string | null;
   revealHref: string;
   todaysRead: TodaysRead | null;
+  isExperimentDaily: boolean;
 };
 
 export type DailyRoundQuestionReveal = {
@@ -55,6 +56,8 @@ export type DailyRoundSummary = {
   contextCopy: string | null;
   crowdsenseRating: number | null;
   crowdsenseDelta: number | null;
+  isExperimentDaily: boolean;
+  strongReadLabel: string;
 };
 
 export function buildDailyRoundProgress(input: {
@@ -66,6 +69,7 @@ export function buildDailyRoundProgress(input: {
   roundDate: string;
   questions: DailyRoundQuestion[];
   openedRevealIds: ReadonlySet<string>;
+  isExperimentDaily?: boolean;
 }): DailyRoundProgress {
   const sorted = [...input.questions].sort((a, b) => a.position - b.position);
   const sealedCount = sorted.filter((q) => q.sealed).length;
@@ -94,6 +98,7 @@ export function buildDailyRoundProgress(input: {
     currentPlayId,
     revealHref: `/daily/${input.roundId}/reveal`,
     todaysRead: null,
+    isExperimentDaily: input.isExperimentDaily ?? false,
   };
 }
 
@@ -136,7 +141,9 @@ export function dailyRoundSummary(
   reveals: readonly DailyRoundQuestionReveal[],
   crowdsenseRating: number | null,
   crowdsenseDelta: number | null,
+  options: { isExperimentDaily?: boolean } = {},
 ): DailyRoundSummary {
+  const isExperimentDaily = options.isExperimentDaily ?? false;
   const scored = reveals.filter((item) => item.accuracy != null);
   const strongReadCount = scored.filter((item) => (item.accuracy ?? 0) >= 85).length;
   const averageAccuracy =
@@ -162,6 +169,14 @@ export function dailyRoundSummary(
       strongReadCount >= Math.ceil(scored.length / 2) ? "with" : "minority",
   });
 
+  const strongReadLabel = isExperimentDaily
+    ? scored.length === 1
+      ? strongReadCount === 1
+        ? "Strong read on today's experiment"
+        : "Read the room on today's experiment"
+      : `${strongReadCount} of ${scored.length} strong reads`
+    : `${strongReadCount} of ${scored.length} strong reads`;
+
   return {
     strongReadCount,
     scoredQuestionCount: scored.length,
@@ -169,6 +184,8 @@ export function dailyRoundSummary(
     contextCopy,
     crowdsenseRating,
     crowdsenseDelta,
+    isExperimentDaily,
+    strongReadLabel,
   };
 }
 

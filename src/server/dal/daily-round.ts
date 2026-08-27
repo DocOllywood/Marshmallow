@@ -10,11 +10,23 @@ import {
   type DailyRoundSummary,
 } from "@/domain/daily/round";
 import { buildTodaysRead, type TodaysReadQuestion } from "@/domain/daily/todays-read";
+import {
+  isExperimentDailyRound,
+  resolveMarshmallowExperimentMetadata,
+} from "@/domain/daily/experiment";
+import {
+  buildExperimentCrowdTrajectory,
+  crowdSidePctFromResults,
+  type ExperimentCrowdTrajectory,
+} from "@/domain/daily/crowd-trajectory";
+import type { ExperimentStage } from "@/domain/daily/experiment";
+import { buildUserPathPoints, type UserPathPoint } from "@/domain/daily/experiment-play";
+import { buildExperimentTrajectory } from "@/domain/daily/trajectory";
 import { mapHumanTension, parseTensionSide, type HumanTension } from "@/domain/daily/tension";
 import type { PlayChoice } from "@/domain/play/types";
 import { crowdsenseDelta, crowdsenseFromScores } from "@/domain/crowdsense/rating";
 
-export type { DailyRoundProgress, DailyRoundQuestionReveal, DailyRoundSummary };
+export type { DailyRoundProgress, DailyRoundQuestionReveal, DailyRoundSummary, ExperimentCrowdTrajectory, UserPathPoint };
 
 type RoundRow = {
   id: string;
@@ -31,10 +43,11 @@ type RoundRow = {
     right_label: string;
     display_label: string;
   } | null;
+  metadata?: unknown;
 };
 
 const ROUND_SELECT =
-  "id, round_date, title, subtitle, topic_id, status, tension_id, human_tensions (id, slug, left_label, right_label, display_label)";
+  "id, round_date, title, subtitle, topic_id, status, tension_id, metadata, human_tensions (id, slug, left_label, right_label, display_label)";
 
 function mapRoundTension(round: RoundRow): HumanTension | null {
   if (!round.human_tensions) {
@@ -127,6 +140,7 @@ async function loadDailyRoundProgress(
   );
   const openedIds = new Set((opens ?? []).map((row) => row.marshmallow_id));
   const tension = mapRoundTension(round as RoundRow);
+  const isExperimentDaily = isExperimentDailyRound((round as RoundRow).metadata);
 
   const progress = buildDailyRoundProgress({
     roundId: round.id,
@@ -145,13 +159,20 @@ async function loadDailyRoundProgress(
       revealsAt: row.reveals_at,
     })),
     openedRevealIds: openedIds,
+    isExperimentDaily,
   });
 
   if (progress.allSealed && !progress.allRevealed) {
     const tomorrowTension = await loadTomorrowTension(round.round_date);
     return {
       ...progress,
-      todaysRead: await loadTodaysRead(ids, questions ?? [], tension, tomorrowTension),
+      todaysRead: await loadTodaysRead(
+        ids,
+        questions ?? [],
+        tension,
+        tomorrowTension,
+        (round as RoundRow).metadata,
+      ),
     };
   }
 
@@ -163,6 +184,7 @@ async function loadTodaysRead(
   questions: readonly { id: string; question: string; round_position: number | null }[],
   tension: HumanTension | null,
   tomorrowTension: HumanTension | null,
+  roundMetadata: unknown,
 ): Promise<ReturnType<typeof buildTodaysRead>> {
   if (marshmallowIds.length === 0) {
     return null;
@@ -177,7 +199,7 @@ async function loadTodaysRead(
       .not("sealed_at", "is", null),
     supabase
       .from("marshmallows")
-      .select("id, question, switch_prompt, is_line, round_position")
+      .select("id, question, switch_prompt, is_line, round_position, metadata")
       .in("id", marshmallowIds),
     supabase
       .from("marshmallow_choices")
@@ -199,6 +221,12 @@ async function loadTodaysRead(
       const row = marshmallowById.get(question.id);
       const entry = entryByMarshmallowId.get(question.id);
       const choice = entry?.own_choice_id ? choiceById.get(entry.own_choice_id) : null;
+      const experiment = resolveMarshmallowExperimentMetadata({
+        metadata: row?.metadata,
+        roundMetadata,
+        roundPosition: question.round_position,
+        isLine: row?.is_line ?? false,
+      });
       return {
         position: question.round_position ?? 0,
         question: row?.question ?? question.question,
@@ -207,10 +235,12 @@ async function loadTodaysRead(
         hasSwitch: Boolean(row?.switch_prompt?.trim()),
         switchStayed: entry?.switch_stayed ?? null,
         isLine: row?.is_line ?? false,
+        experimentStage: experiment?.stage ?? null,
+        pressureType: experiment?.pressureType ?? null,
       };
     });
 
-  return buildTodaysRead(readQuestions, tension, tomorrowTension);
+  return buildTodaysRead(readQuestions, tension, tomorrowTension, roundMetadata);
 }
 
 export async function getDailyRoundProgressByMarshmallowId(
@@ -240,6 +270,8 @@ export async function getDailyRoundReveal(
   progress: DailyRoundProgress;
   reveals: DailyRoundQuestionReveal[];
   summary: DailyRoundSummary;
+  crowdTrajectory: ExperimentCrowdTrajectory | null;
+  userPath: UserPathPoint[];
 } | null> {
   const supabase = await createSupabaseServerClient();
   const { data: topics } = await supabase.from("topics").select("id, name");
@@ -256,6 +288,7 @@ export async function getDailyRoundReveal(
     { data: scores },
     { data: allScoresBefore },
     { data: marshmallowRows },
+    { data: roundRow },
   ] = await Promise.all([
     supabase
       .from("entries")
@@ -263,14 +296,21 @@ export async function getDailyRoundReveal(
       .in("marshmallow_id", ids),
     supabase
       .from("marshmallow_choices")
-      .select("id, marshmallow_id, label, sort_order")
+      .select("id, marshmallow_id, label, sort_order, metadata")
       .in("marshmallow_id", ids),
     supabase.from("scores").select("marshmallow_id, accuracy").in("marshmallow_id", ids),
     supabase.from("scores").select("accuracy, marshmallow_id"),
-    supabase.from("marshmallows").select("id, is_line").in("id", ids),
+    supabase.from("marshmallows").select("id, is_line, round_position, metadata").in("id", ids),
+    supabase.from("daily_rounds").select("metadata").eq("id", roundId).maybeSingle(),
   ]);
 
   const reveals: DailyRoundQuestionReveal[] = [];
+  const crowdStageInputs: {
+    stage: ExperimentStage;
+    position: number;
+    leftPct: number;
+    rightPct: number;
+  }[] = [];
 
   for (const question of progress.questions) {
     const marshmallowRow = (marshmallowRows ?? []).find((row) => row.id === question.id);
@@ -305,6 +345,39 @@ export async function getDailyRoundReveal(
       ? null
       : (scores ?? []).find((row) => row.marshmallow_id === question.id)?.accuracy ?? null;
 
+    if (
+      progress.isExperimentDaily &&
+      progress.tension &&
+      !isLine &&
+      marshmallowRow
+    ) {
+      const experiment = resolveMarshmallowExperimentMetadata({
+        metadata: marshmallowRow.metadata,
+        roundMetadata: roundRow?.metadata,
+        roundPosition: question.position,
+        isLine,
+      });
+      if (experiment && experiment.stage !== "line") {
+        const questionChoicesWithMeta = (choices ?? []).filter(
+          (row) => row.marshmallow_id === question.id,
+        );
+        crowdStageInputs.push({
+          stage: experiment.stage,
+          position: question.position,
+          leftPct: crowdSidePctFromResults({
+            choices: questionChoicesWithMeta,
+            results: resultRows ?? [],
+            side: "left",
+          }),
+          rightPct: crowdSidePctFromResults({
+            choices: questionChoicesWithMeta,
+            results: resultRows ?? [],
+            side: "right",
+          }),
+        });
+      }
+    }
+
     reveals.push({
       id: question.id,
       question: question.question,
@@ -329,10 +402,51 @@ export async function getDailyRoundReveal(
   const crowdsenseAfter = crowdsenseFromScores(after);
   const crowdsenseBefore = crowdsenseFromScores(before);
 
+  const crowdTrajectory =
+    progress.isExperimentDaily && progress.tension
+      ? buildExperimentCrowdTrajectory({
+          stages: crowdStageInputs,
+          tension: progress.tension,
+        })
+      : null;
+
+  let userPath: UserPathPoint[] = [];
+  if (progress.isExperimentDaily && progress.tension) {
+    const trajectoryInputs = progress.questions
+      .map((question) => {
+        const marshmallowRow = (marshmallowRows ?? []).find((row) => row.id === question.id);
+        const entry = (entries ?? []).find((row) => row.marshmallow_id === question.id);
+        const choice = (choices ?? []).find((row) => row.id === entry?.own_choice_id);
+        const experiment = resolveMarshmallowExperimentMetadata({
+          metadata: marshmallowRow?.metadata,
+          roundMetadata: roundRow?.metadata,
+          roundPosition: question.position,
+          isLine: marshmallowRow?.is_line ?? false,
+        });
+        return {
+          stage: experiment?.stage ?? "instinct",
+          position: question.position,
+          choiceLabel: choice?.label ?? null,
+          tensionSide: choice ? parseTensionSide(choice.metadata) : null,
+          pressureType: experiment?.pressureType ?? null,
+          isLine: marshmallowRow?.is_line ?? false,
+        };
+      })
+      .filter((item) => item.choiceLabel != null);
+    const trajectory = buildExperimentTrajectory(trajectoryInputs);
+    if (trajectory) {
+      userPath = buildUserPathPoints(trajectory, progress.tension);
+    }
+  }
+
   return {
     progress,
     reveals,
-    summary: dailyRoundSummary(reveals, crowdsenseAfter.rating, crowdsenseDelta(crowdsenseBefore, crowdsenseAfter)),
+    summary: dailyRoundSummary(reveals, crowdsenseAfter.rating, crowdsenseDelta(crowdsenseBefore, crowdsenseAfter), {
+      isExperimentDaily: progress.isExperimentDaily,
+    }),
+    crowdTrajectory,
+    userPath,
   };
 }
 

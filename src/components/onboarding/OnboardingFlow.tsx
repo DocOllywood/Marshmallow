@@ -109,17 +109,17 @@ function HowToPlay({
         How Marshmallow works
       </h1>
       <ol className="mt-6 flex flex-col gap-4">
-        <HowStep state="thinking" title="PICK" body="What would you do?" />
+        <HowStep state="thinking" title="CALL" body="Make your instinctive choice." />
         <HowStep
           state="thinking"
-          title="PREDICT"
-          body="What do you think other Marshmallow players chose?"
+          title="PRESSURE"
+          body="See what happens when circumstances change."
         />
-        <HowStep state="sealed" title="LOCK" body="Make your call before seeing the crowd." />
+        <HowStep state="sealed" title="FLIP" body="See the situation from the other side." />
         <HowStep
           state="toasted"
           title="REVEAL"
-          body="Come back and see how well you read the room."
+          body="Come back and discover where everyone else moved."
         />
       </ol>
       <div className="mt-auto flex flex-col gap-3 pt-8">
