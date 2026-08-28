@@ -13,6 +13,7 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
   const state = dailyHomeState(round);
   const playHref = round.currentPlayId ? `/m/${round.currentPlayId}` : "/home";
   const viewed = useRef(false);
+  const isPrice = round.experimentArchetype === "price";
 
   useEffect(() => {
     if (viewed.current) return;
@@ -30,9 +31,13 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
         <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
           The daily experiment
         </p>
-        <p className="text-[10px] font-semibold tracking-[0.2em] text-ink-muted/80 uppercase">
-          Today everyone is playing
-        </p>
+        {isPrice ? (
+          <p className="text-xs font-semibold tracking-[0.22em] text-ink uppercase">The price</p>
+        ) : (
+          <p className="text-[10px] font-semibold tracking-[0.2em] text-ink-muted/80 uppercase">
+            Today everyone is playing
+          </p>
+        )}
         {round.tension ? (
           <p className="text-xs font-semibold tracking-[0.2em] text-ink uppercase">
             {round.tension.displayLabel}
@@ -42,9 +47,18 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
           {round.title}
         </p>
         <div className="space-y-1 text-sm leading-6 text-ink-muted">
-          <p>One situation.</p>
-          <p>Five changes.</p>
-          <p>See where your answer moves.</p>
+          {isPrice ? (
+            <>
+              <p>Every principle has a cost.</p>
+              <p>See whether yours does.</p>
+            </>
+          ) : (
+            <>
+              <p>One situation.</p>
+              <p>Five changes.</p>
+              <p>See where your answer moves.</p>
+            </>
+          )}
         </div>
       </div>
 

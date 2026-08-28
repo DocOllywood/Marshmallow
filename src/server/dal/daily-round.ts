@@ -13,6 +13,7 @@ import { buildTodaysRead, type TodaysReadQuestion } from "@/domain/daily/todays-
 import {
   isExperimentDailyRound,
   parseExperimentArchetype,
+  parsePriceReferenceSide,
   resolveMarshmallowExperimentMetadata,
 } from "@/domain/daily/experiment";
 import {
@@ -20,6 +21,10 @@ import {
   crowdSidePctFromResults,
   type ExperimentCrowdTrajectory,
 } from "@/domain/daily/crowd-trajectory";
+import {
+  buildPriceCrowdHeldTrajectory,
+  type PriceCrowdHeldTrajectory,
+} from "@/domain/daily/price";
 import type { ExperimentStage } from "@/domain/daily/experiment";
 import { buildUserPathPoints, type UserPathPoint } from "@/domain/daily/experiment-play";
 import { buildExperimentTrajectory } from "@/domain/daily/trajectory";
@@ -28,7 +33,7 @@ import { crowdsenseDelta, crowdsenseFromScores } from "@/domain/crowdsense/ratin
 import type { PlayChoice } from "@/domain/play/types";
 import { getBlindMirrorComparisonForRound } from "@/server/dal/blind-mirror";
 
-export type { DailyRoundProgress, DailyRoundQuestionReveal, DailyRoundSummary, ExperimentCrowdTrajectory, UserPathPoint };
+export type { DailyRoundProgress, DailyRoundQuestionReveal, DailyRoundSummary, ExperimentCrowdTrajectory, UserPathPoint, PriceCrowdHeldTrajectory };
 
 type RoundRow = {
   id: string;
@@ -246,6 +251,9 @@ async function loadTodaysRead(
         isLine: row?.is_line ?? false,
         experimentStage: experiment?.stage ?? null,
         pressureType: experiment?.pressureType ?? null,
+        costType: experiment?.costType ?? null,
+        costLevel: experiment?.costLevel ?? null,
+        costLabel: experiment?.costLabel ?? null,
       };
     });
 
@@ -280,6 +288,7 @@ export async function getDailyRoundReveal(
   reveals: DailyRoundQuestionReveal[];
   summary: DailyRoundSummary;
   crowdTrajectory: ExperimentCrowdTrajectory | null;
+  priceCrowdHeldTrajectory: PriceCrowdHeldTrajectory | null;
   userPath: UserPathPoint[];
 } | null> {
   const supabase = await createSupabaseServerClient();
@@ -319,6 +328,7 @@ export async function getDailyRoundReveal(
     position: number;
     leftPct: number;
     rightPct: number;
+    costLabel: string | null;
   }[] = [];
 
   for (const question of progress.questions) {
@@ -383,6 +393,7 @@ export async function getDailyRoundReveal(
             results: resultRows ?? [],
             side: "right",
           }),
+          costLabel: experiment.costLabel,
         });
       }
     }
@@ -411,8 +422,10 @@ export async function getDailyRoundReveal(
   const crowdsenseAfter = crowdsenseFromScores(after);
   const crowdsenseBefore = crowdsenseFromScores(before);
 
+  const isPriceArchetype = progress.experimentArchetype === "price";
+
   const crowdTrajectory =
-    progress.isExperimentDaily && progress.tension
+    progress.isExperimentDaily && progress.tension && !isPriceArchetype
       ? buildExperimentCrowdTrajectory({
           stages: crowdStageInputs,
           tension: progress.tension,
@@ -421,6 +434,22 @@ export async function getDailyRoundReveal(
               ? "right"
               : "left",
         })
+      : null;
+
+  const priceCrowdHeldTrajectory =
+    isPriceArchetype && progress.tension
+      ? (() => {
+          const referenceSide = parsePriceReferenceSide(roundRow?.metadata);
+          if (!referenceSide) {
+            return null;
+          }
+          return buildPriceCrowdHeldTrajectory({
+            stages: crowdStageInputs.filter(
+              (stage) => stage.stage !== "flip" && stage.stage !== "line",
+            ),
+            referenceSide,
+          });
+        })()
       : null;
 
   let userPath: UserPathPoint[] = [];
@@ -442,6 +471,9 @@ export async function getDailyRoundReveal(
           choiceLabel: choice?.label ?? null,
           tensionSide: choice ? parseTensionSide(choice.metadata) : null,
           pressureType: experiment?.pressureType ?? null,
+          costType: experiment?.costType ?? null,
+          costLevel: experiment?.costLevel ?? null,
+          costLabel: experiment?.costLabel ?? null,
           isLine: marshmallowRow?.is_line ?? false,
         };
       })
@@ -459,6 +491,7 @@ export async function getDailyRoundReveal(
       isExperimentDaily: progress.isExperimentDaily,
     }),
     crowdTrajectory,
+    priceCrowdHeldTrajectory,
     userPath,
   };
 }

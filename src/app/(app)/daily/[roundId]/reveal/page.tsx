@@ -87,8 +87,10 @@ export default async function DailyRoundRevealPage({
           reveals={payload.reveals}
           summary={payload.summary}
           crowdTrajectory={payload.crowdTrajectory}
+          priceCrowdHeldTrajectory={payload.priceCrowdHeldTrajectory}
           userPath={payload.userPath}
           roundId={roundId}
+          isPriceExperiment={progress.experimentArchetype === "price"}
         />
       ) : (
         <DailyRoundRevealShow

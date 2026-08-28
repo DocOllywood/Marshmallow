@@ -18,6 +18,7 @@ import {
   compareExperimentMovement,
   type ExperimentMovementFeedback as MovementFeedback,
 } from "@/domain/daily/experiment-play";
+import { priceStageMicrocopy } from "@/domain/daily/price";
 import { parseTensionSide } from "@/domain/daily/tension";
 import {
   saveDraftPlayAction,
@@ -51,6 +52,8 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
 
   const tension = marshmallow.dailyRound?.tension ?? null;
   const position = marshmallow.roundPosition ?? 1;
+  const isPrice = marshmallow.dailyRound?.experimentArchetype === "price";
+  const priceMicrocopy = isPrice ? priceStageMicrocopy(stage) : null;
 
   useEffect(() => {
     if (!marshmallow.dailyRound || dailyStarted.current) return;
@@ -296,7 +299,7 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
   if (stage === "line" || marshmallow.isLine) {
     return (
       <div className="flex flex-1 flex-col gap-8 pb-8">
-        <ExperimentStageHeader tension={tension} position={position} stage="line" />
+        <ExperimentStageHeader tension={tension} position={position} stage="line" archetype={isPrice ? "price" : "default"} />
         <h1 className="font-display text-[clamp(1.5rem,6.5vw,2rem)] leading-[1.1] font-semibold tracking-tight break-words">
           {marshmallow.question}
         </h1>
@@ -320,7 +323,7 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
   if (stage === "flip" && flipPhase === "predict" && choiceId) {
     return (
       <div className="flex flex-1 flex-col gap-8 pb-8">
-        <ExperimentStageHeader tension={tension} position={position} stage="flip" spacious />
+        <ExperimentStageHeader tension={tension} position={position} stage="flip" spacious archetype={isPrice ? "price" : "default"} />
         <div className="flex flex-col gap-4">
           <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">Read the room</p>
           <p className="font-display text-[clamp(1.25rem,5vw,1.65rem)] leading-snug font-semibold tracking-tight">
@@ -367,11 +370,12 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
         position={position}
         stage={stage}
         spacious={stage === "flip"}
+        archetype={isPrice ? "price" : "default"}
       />
 
       {stage === "flip" ? (
         <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">
-          Now change sides.
+          {isPrice ? "Now you're the person paying the price." : "Now change sides."}
         </p>
       ) : null}
 
@@ -384,15 +388,21 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
         </div>
       ) : null}
 
-      {stage === "pressure" ? (
+      {stage === "pressure" && !isPrice ? (
         <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">
           Same secret. One new fact.
         </p>
       ) : null}
 
-      {stage === "consequence" ? (
+      {stage === "consequence" && !isPrice ? (
         <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">
           Now add the consequence.
+        </p>
+      ) : null}
+
+      {priceMicrocopy && stage !== "flip" ? (
+        <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">
+          {priceMicrocopy}
         </p>
       ) : null}
 
@@ -401,7 +411,9 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
       </h1>
 
       {stage === "instinct" ? (
-        <p className="text-sm text-ink-muted">Go with your first instinct.</p>
+        <p className="text-sm text-ink-muted">
+          {isPrice ? "What do you do?" : "Go with your first instinct."}
+        </p>
       ) : null}
 
       <div className="flex flex-col gap-3">

@@ -249,6 +249,7 @@ export default function DesignSystemPage() {
                   strongReadLabel: "Strong read",
                 }}
                 crowdTrajectory={crowdTrajectory}
+                priceCrowdHeldTrajectory={null}
                 userPath={userPath}
               />
             );

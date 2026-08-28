@@ -132,6 +132,29 @@ describe("experiment daily home", () => {
     expect(screen.getByText(/Five changes/i)).toBeTruthy();
     expect(screen.getByRole("link", { name: "BEGIN" })).toBeTruthy();
   });
+
+  it("shows price-specific home copy for price archetype rounds", () => {
+    render(
+      <ExperimentDailyHomeSection
+        round={{
+          ...dailyRoundBase,
+          experimentArchetype: "price",
+          title: "Would you sell what you promised to keep?",
+          tension: {
+            ...tension,
+            slug: "desire-commitment",
+            leftLabel: "COMMITMENT",
+            rightLabel: "DESIRE",
+            displayLabel: "DESIRE vs. COMMITMENT",
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText(/^The price$/i)).toBeTruthy();
+    expect(screen.getByText(/Every principle has a cost/i)).toBeTruthy();
+    expect(screen.queryByText(/Today everyone is playing/i)).toBeNull();
+  });
 });
 
 describe("experiment stage header", () => {
@@ -140,6 +163,18 @@ describe("experiment stage header", () => {
     expect(screen.getByText("LOYALTY vs. JUSTICE")).toBeTruthy();
     expect(screen.getByText("01 OF 05")).toBeTruthy();
     expect(screen.getByText("INSTINCT")).toBeTruthy();
+  });
+
+  it("renders price stage presentation labels", () => {
+    render(
+      <ExperimentStageHeader
+        tension={tension}
+        position={2}
+        stage="pressure"
+        archetype="price"
+      />,
+    );
+    expect(screen.getByText("THE COST")).toBeTruthy();
   });
 });
 
@@ -461,6 +496,7 @@ describe("experiment reveal — crowd trajectory and your path", () => {
           strongReadLabel: "Strong read",
         }}
         crowdTrajectory={crowdTrajectory}
+        priceCrowdHeldTrajectory={null}
         userPath={userPath}
       />,
     );
@@ -476,6 +512,83 @@ describe("experiment reveal — crowd trajectory and your path", () => {
     expect(screen.getByText(/CrowdSense 812/i)).toBeTruthy();
     expect(screen.getByText(/Where players drew the line/i)).toBeTruthy();
     expect(screen.getByText(/Your line:/i)).toBeTruthy();
+  });
+
+  it("shows price reveal with path first, held crowd, and line section", () => {
+    render(
+      <ExperimentRevealShow
+        reveals={[
+          {
+            id: "q5",
+            position: 5,
+            isLine: true,
+            question: "At what price would you sell the guitar?",
+            ownChoiceLabel: "$10,000",
+            predictedPct: null,
+            crowdPct: 34,
+            crowdLabel: "$10,000",
+            crowdModeLabel: "$10,000",
+            errorCopy: null,
+            gap: null,
+            accuracy: null,
+          },
+        ]}
+        summary={{
+          strongReadCount: 0,
+          scoredQuestionCount: 0,
+          averageAccuracy: 0,
+          contextCopy: null,
+          crowdsenseRating: null,
+          crowdsenseDelta: null,
+          isExperimentDaily: true,
+          strongReadLabel: "Read the room on today's experiment",
+        }}
+        crowdTrajectory={null}
+        priceCrowdHeldTrajectory={{
+          referenceSide: "left",
+          points: [
+            {
+              stage: "instinct",
+              position: 1,
+              stageLabel: "INSTINCT",
+              costLabel: "Before any offer",
+              heldPct: 78,
+            },
+            {
+              stage: "pressure",
+              position: 2,
+              stageLabel: "THE COST",
+              costLabel: "$1,000",
+              heldPct: 71,
+            },
+            {
+              stage: "consequence",
+              position: 3,
+              stageLabel: "THE PRICE RISES",
+              costLabel: "$10,000",
+              heldPct: 46,
+            },
+          ],
+        }}
+        userPath={[
+          {
+            stage: "instinct",
+            stageLabel: "INSTINCT",
+            sideLabel: "COMMITMENT",
+            annotation: null,
+          },
+        ]}
+        isPriceExperiment
+      />,
+    );
+
+    expect(screen.getByText(/Your path/i)).toBeTruthy();
+    expect(screen.getByText(/The crowd/i)).toBeTruthy();
+    expect(screen.getByText("$1,000")).toBeTruthy();
+    expect(screen.getByText("71% held")).toBeTruthy();
+    expect(screen.getByText(/Your line/i)).toBeTruthy();
+    expect(screen.getAllByText("$10,000").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/Marshmallow players' line/i)).toBeTruthy();
   });
 });
 

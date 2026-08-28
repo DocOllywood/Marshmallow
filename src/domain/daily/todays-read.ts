@@ -1,6 +1,8 @@
 import { buildExperimentTodaysRead } from "@/domain/daily/experiment-read";
-import { isExperimentDailyRound } from "@/domain/daily/experiment";
+import { isExperimentDailyRound, isPriceExperiment } from "@/domain/daily/experiment";
 import type { ExperimentStage } from "@/domain/daily/experiment";
+import { buildPriceTodaysRead } from "@/domain/daily/price-read";
+import { buildPriceTrajectory } from "@/domain/daily/price";
 import {
   buildExperimentTrajectory,
   type TrajectoryInputStage,
@@ -17,6 +19,9 @@ export type TodaysReadQuestion = {
   isLine: boolean;
   experimentStage?: ExperimentStage | null;
   pressureType?: string | null;
+  costType?: string | null;
+  costLevel?: number | null;
+  costLabel?: string | null;
 };
 
 export type TodaysRead = {
@@ -63,10 +68,17 @@ export function buildTodaysRead(
       choiceLabel: item.choiceLabel,
       tensionSide: item.tensionSide,
       pressureType: item.pressureType ?? null,
+      costType: item.costType ?? null,
+      costLevel: item.costLevel ?? null,
+      costLabel: item.costLabel ?? null,
       isLine: item.isLine,
     }));
     const trajectory = buildExperimentTrajectory(trajectoryInputs);
     if (trajectory) {
+      if (isPriceExperiment(roundMetadata)) {
+        const priceTrajectory = buildPriceTrajectory(trajectory, trajectoryInputs);
+        return buildPriceTodaysRead(priceTrajectory, tomorrowTease);
+      }
       return buildExperimentTodaysRead(trajectory, tomorrowTease);
     }
   }

@@ -8,11 +8,15 @@ export type MarshmallowExperimentMetadata = {
   stage: ExperimentStage;
   pressureType: string | null;
   requiresPrediction: boolean;
+  costType: string | null;
+  costLevel: number | null;
+  costLabel: string | null;
 };
 
 export type DailyRoundExperimentMetadata = {
   version: typeof EXPERIMENT_VERSION;
   archetype: ExperimentArchetype;
+  priceReferenceSide: "left" | "right" | null;
 };
 
 const STAGES_BY_POSITION: Record<number, ExperimentStage> = {
@@ -34,6 +38,7 @@ export function parseDailyRoundExperimentMetadata(
     return {
       version: EXPERIMENT_VERSION,
       archetype: parseExperimentArchetype(metadata),
+      priceReferenceSide: parsePriceReferenceSide(metadata),
     };
   }
   return null;
@@ -49,6 +54,15 @@ export function parseExperimentArchetype(metadata: unknown): ExperimentArchetype
 
 export function isPriceExperiment(metadata: unknown): boolean {
   return parseExperimentArchetype(metadata) === "price";
+}
+
+export function parsePriceReferenceSide(metadata: unknown): "left" | "right" | null {
+  if (!isPriceExperiment(metadata) || !metadata || typeof metadata !== "object") {
+    return null;
+  }
+  const side = (metadata as { experiment?: { price_reference_side?: unknown } }).experiment
+    ?.price_reference_side;
+  return side === "left" || side === "right" ? side : null;
 }
 
 export function isExperimentDailyRound(metadata: unknown): boolean {
@@ -73,6 +87,12 @@ export function parseMarshmallowExperimentMetadata(
       ) {
         const pressureType =
           typeof experiment.pressure_type === "string" ? experiment.pressure_type : null;
+        const costType =
+          typeof experiment.cost_type === "string" ? experiment.cost_type : null;
+        const costLevel =
+          typeof experiment.cost_level === "number" ? experiment.cost_level : null;
+        const costLabel =
+          typeof experiment.cost_label === "string" ? experiment.cost_label : null;
         const requiresPrediction =
           typeof experiment.requires_prediction === "boolean"
             ? experiment.requires_prediction
@@ -81,6 +101,9 @@ export function parseMarshmallowExperimentMetadata(
           stage,
           pressureType,
           requiresPrediction: isLine ? false : requiresPrediction,
+          costType,
+          costLevel,
+          costLabel,
         };
       }
     }
@@ -130,6 +153,9 @@ export function resolveMarshmallowExperimentMetadata(input: {
     stage,
     pressureType: null,
     requiresPrediction: stage === "flip",
+    costType: null,
+    costLevel: null,
+    costLabel: null,
   };
 }
 

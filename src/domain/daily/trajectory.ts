@@ -28,6 +28,9 @@ export type TrajectoryInputStage = {
   choiceLabel: string | null;
   tensionSide: TensionSide | null;
   pressureType: string | null;
+  costType?: string | null;
+  costLevel?: number | null;
+  costLabel?: string | null;
   isLine: boolean;
 };
 

@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   EXPERIMENT_VERSION,
   isExperimentDailyRound,
+  isPriceExperiment,
   marshmallowRequiresPrediction,
   parseDailyRoundExperimentMetadata,
+  parseExperimentArchetype,
   parseMarshmallowExperimentMetadata,
   resolveMarshmallowExperimentMetadata,
 } from "@/domain/daily/experiment";
@@ -34,6 +36,9 @@ describe("experiment detection", () => {
       stage: "pressure",
       pressureType: "mercy",
       requiresPrediction: false,
+      costType: null,
+      costLevel: null,
+      costLabel: null,
     });
   });
 
@@ -61,6 +66,9 @@ describe("experiment detection", () => {
       stage: "consequence",
       pressureType: null,
       requiresPrediction: false,
+      costType: null,
+      costLevel: null,
+      costLabel: null,
     });
   });
 
@@ -78,6 +86,15 @@ describe("experiment detection", () => {
   it("parses daily round metadata", () => {
     expect(parseDailyRoundExperimentMetadata({ experiment: { version: 1 } })).toEqual({
       version: 1,
+      archetype: "default",
+      priceReferenceSide: null,
     });
+  });
+
+  it("detects price archetype metadata", () => {
+    expect(parseExperimentArchetype({ experiment: { version: 1, archetype: "price" } })).toBe(
+      "price",
+    );
+    expect(isPriceExperiment({ experiment: { version: 1, archetype: "price" } })).toBe(true);
   });
 });

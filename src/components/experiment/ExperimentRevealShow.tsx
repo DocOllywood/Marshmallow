@@ -9,20 +9,25 @@ import type { DailyRoundQuestionReveal, DailyRoundSummary } from "@/domain/daily
 import type { ExperimentCrowdTrajectory } from "@/domain/daily/crowd-trajectory";
 import { describeCrowdMovement } from "@/domain/daily/crowd-trajectory";
 import type { UserPathPoint } from "@/domain/daily/experiment-play";
+import type { PriceCrowdHeldTrajectory } from "@/domain/daily/price";
 import { trackEvent } from "@/server/actions/analytics";
 
 export function ExperimentRevealShow({
   reveals,
   summary,
   crowdTrajectory,
+  priceCrowdHeldTrajectory,
   userPath,
   roundId,
+  isPriceExperiment = false,
 }: {
   reveals: DailyRoundQuestionReveal[];
   summary: DailyRoundSummary;
   crowdTrajectory: ExperimentCrowdTrajectory | null;
+  priceCrowdHeldTrajectory: PriceCrowdHeldTrajectory | null;
   userPath: UserPathPoint[];
   roundId?: string;
+  isPriceExperiment?: boolean;
 }) {
   const tracked = useRef(false);
   const flipReveal = reveals.find((item) => item.position === 4 && !item.isLine);
@@ -38,55 +43,126 @@ export function ExperimentRevealShow({
     );
   }, [roundId]);
 
-  return (
-    <div className="flex flex-1 flex-col gap-10 pb-28 pt-6">
-      {crowdTrajectory ? (
-        <section className="flex flex-col gap-4">
-          <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">The crowd</p>
-          <ul className="flex flex-col gap-3">
-            {crowdTrajectory.points.map((point) => (
-              <li key={point.stage} className="flex items-baseline justify-between gap-4">
+  const crowdSection = crowdTrajectory ? (
+    <section className="flex flex-col gap-4">
+      <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">The crowd</p>
+      <ul className="flex flex-col gap-3">
+        {crowdTrajectory.points.map((point) => (
+          <li key={point.stage} className="flex items-baseline justify-between gap-4">
+            <span className="text-[11px] font-semibold tracking-[0.18em] text-ink-muted uppercase">
+              {point.stageLabel}
+            </span>
+            <span className="min-w-0 shrink font-display text-base font-semibold tabular-nums text-ink">
+              {point.crowdPct}% {point.sideLabel}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {describeCrowdMovement(crowdTrajectory) ? (
+        <p className="pt-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+          {describeCrowdMovement(crowdTrajectory)}
+        </p>
+      ) : null}
+    </section>
+  ) : null;
+
+  const priceCrowdSection = priceCrowdHeldTrajectory ? (
+    <section className="flex flex-col gap-4">
+      <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">The crowd</p>
+      <ul className="flex flex-col gap-3">
+        {priceCrowdHeldTrajectory.points.map((point) => (
+          <li key={point.stage} className="flex items-baseline justify-between gap-4">
+            <span className="font-display text-base font-semibold tabular-nums text-ink">
+              {point.costLabel}
+            </span>
+            <span className="min-w-0 shrink text-sm font-semibold tabular-nums text-ink-muted">
+              {point.heldPct}% held
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ) : null;
+
+  const pathSection =
+    userPath.length > 0 ? (
+      <section
+        className={`flex flex-col gap-4 ${!isPriceExperiment && crowdTrajectory ? "border-t border-border/60 pt-8" : ""}`}
+      >
+        <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">Your path</p>
+        <ul className="flex flex-col gap-3">
+          {userPath.map((point) => (
+            <li key={point.stage} className="flex flex-col gap-0.5">
+              <div className="flex items-baseline justify-between gap-4">
                 <span className="text-[11px] font-semibold tracking-[0.18em] text-ink-muted uppercase">
                   {point.stageLabel}
                 </span>
-                <span className="min-w-0 shrink font-display text-base font-semibold tabular-nums text-ink">
-                  {point.crowdPct}% {point.sideLabel}
+                <span className="font-display text-base font-semibold uppercase text-ink">
+                  {point.sideLabel}
                 </span>
-              </li>
-            ))}
-          </ul>
-          {describeCrowdMovement(crowdTrajectory) ? (
-            <p className="pt-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-              {describeCrowdMovement(crowdTrajectory)}
+              </div>
+              {point.annotation ? (
+                <span className="text-right text-[10px] font-semibold tracking-[0.16em] text-primary uppercase">
+                  {point.annotation}
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      </section>
+    ) : null;
+
+  const lineSection = lineReveal ? (
+    <section className="flex flex-col gap-3 border-t border-border/60 pt-8">
+      <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">
+        {isPriceExperiment ? "Your line" : "Where players drew the line"}
+      </p>
+      {isPriceExperiment ? (
+        <>
+          {lineReveal.ownChoiceLabel ? (
+            <p className="font-display text-xl font-semibold text-ink">{lineReveal.ownChoiceLabel}</p>
+          ) : null}
+          <p className="pt-2 text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">
+            Marshmallow players&apos; line
+          </p>
+          <p className="font-display text-lg font-semibold text-ink">
+            {lineReveal.crowdModeLabel ?? lineReveal.crowdLabel}
+            {lineReveal.crowdPct > 0 ? ` (${Math.round(lineReveal.crowdPct)}%)` : ""}
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-ink-muted">{lineReveal.question}</p>
+          {lineReveal.ownChoiceLabel ? (
+            <p className="text-sm text-ink">
+              Your line: <span className="font-semibold">{lineReveal.ownChoiceLabel}</span>
             </p>
           ) : null}
-        </section>
-      ) : null}
+          <p className="text-sm text-ink-muted">
+            Most common among Marshmallow players:{" "}
+            <span className="font-semibold text-ink">
+              {lineReveal.crowdModeLabel ?? lineReveal.crowdLabel}
+            </span>
+            {lineReveal.crowdPct > 0 ? ` (${Math.round(lineReveal.crowdPct)}%)` : ""}
+          </p>
+        </>
+      )}
+    </section>
+  ) : null;
 
-      {userPath.length > 0 ? (
-        <section className="flex flex-col gap-4 border-t border-border/60 pt-8">
-          <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">Your path</p>
-          <ul className="flex flex-col gap-3">
-            {userPath.map((point) => (
-              <li key={point.stage} className="flex flex-col gap-0.5">
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="text-[11px] font-semibold tracking-[0.18em] text-ink-muted uppercase">
-                    {point.stageLabel}
-                  </span>
-                  <span className="font-display text-base font-semibold uppercase text-ink">
-                    {point.sideLabel}
-                  </span>
-                </div>
-                {point.annotation ? (
-                  <span className="text-right text-[10px] font-semibold tracking-[0.16em] text-primary uppercase">
-                    {point.annotation}
-                  </span>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+  return (
+    <div className="flex flex-1 flex-col gap-10 pb-28 pt-6">
+      {isPriceExperiment ? (
+        <>
+          {pathSection}
+          {priceCrowdSection}
+        </>
+      ) : (
+        <>
+          {crowdSection}
+          {pathSection}
+        </>
+      )}
 
       {flipReveal ? (
         <section className="flex flex-col gap-4 border-t border-border/60 pt-8 text-center">
@@ -120,26 +196,7 @@ export function ExperimentRevealShow({
         </section>
       ) : null}
 
-      {lineReveal ? (
-        <section className="flex flex-col gap-3 border-t border-border/60 pt-8">
-          <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">
-            Where players drew the line
-          </p>
-          <p className="text-sm text-ink-muted">{lineReveal.question}</p>
-          {lineReveal.ownChoiceLabel ? (
-            <p className="text-sm text-ink">
-              Your line: <span className="font-semibold">{lineReveal.ownChoiceLabel}</span>
-            </p>
-          ) : null}
-          <p className="text-sm text-ink-muted">
-            Most common among Marshmallow players:{" "}
-            <span className="font-semibold text-ink">
-              {lineReveal.crowdModeLabel ?? lineReveal.crowdLabel}
-            </span>
-            {lineReveal.crowdPct > 0 ? ` (${Math.round(lineReveal.crowdPct)}%)` : ""}
-          </p>
-        </section>
-      ) : null}
+      {isPriceExperiment ? lineSection : lineReveal ? lineSection : null}
 
       <PrimaryButton href="/home">HOME</PrimaryButton>
     </div>
