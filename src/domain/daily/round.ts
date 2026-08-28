@@ -3,6 +3,8 @@ import { formatRevealSummary } from "@/domain/scoring/presentation";
 import { computeGap, type GapResult } from "@/domain/scoring/gap";
 import type { TodaysRead } from "@/domain/daily/todays-read";
 import type { HumanTension } from "@/domain/daily/tension";
+import type { ExperimentArchetype } from "@/domain/daily/experiment";
+import type { BlindMirrorComparison } from "@/domain/daily/blind-mirror";
 
 export const DAILY_ROUND_SIZE = 5;
 
@@ -32,6 +34,8 @@ export type DailyRoundProgress = {
   revealHref: string;
   todaysRead: TodaysRead | null;
   isExperimentDaily: boolean;
+  experimentArchetype: ExperimentArchetype;
+  blindMirror: BlindMirrorComparison | null;
 };
 
 export type DailyRoundQuestionReveal = {
@@ -70,6 +74,7 @@ export function buildDailyRoundProgress(input: {
   questions: DailyRoundQuestion[];
   openedRevealIds: ReadonlySet<string>;
   isExperimentDaily?: boolean;
+  experimentArchetype?: ExperimentArchetype;
 }): DailyRoundProgress {
   const sorted = [...input.questions].sort((a, b) => a.position - b.position);
   const sealedCount = sorted.filter((q) => q.sealed).length;
@@ -99,6 +104,8 @@ export function buildDailyRoundProgress(input: {
     revealHref: `/daily/${input.roundId}/reveal`,
     todaysRead: null,
     isExperimentDaily: input.isExperimentDaily ?? false,
+    experimentArchetype: input.experimentArchetype ?? "default",
+    blindMirror: null,
   };
 }
 

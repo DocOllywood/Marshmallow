@@ -636,6 +636,7 @@ export type Database = {
           created_at: string
           id: string
           metadata: Json
+          principle_id: string | null
           round_date: string
           status: Database["public"]["Enums"]["marshmallow_status"]
           subtitle: string | null
@@ -648,6 +649,7 @@ export type Database = {
           created_at?: string
           id?: string
           metadata?: Json
+          principle_id?: string | null
           round_date: string
           status?: Database["public"]["Enums"]["marshmallow_status"]
           subtitle?: string | null
@@ -660,6 +662,7 @@ export type Database = {
           created_at?: string
           id?: string
           metadata?: Json
+          principle_id?: string | null
           round_date?: string
           status?: Database["public"]["Enums"]["marshmallow_status"]
           subtitle?: string | null
@@ -669,6 +672,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "daily_rounds_principle_id_fkey"
+            columns: ["principle_id"]
+            isOneToOne: false
+            referencedRelation: "belief_principles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "daily_rounds_tension_id_fkey"
             columns: ["tension_id"]
@@ -684,6 +694,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      belief_principles: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string
+          id: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name: string
+          id?: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          id?: string
+          slug?: string
+        }
+        Relationships: []
       }
       human_tensions: {
         Row: {

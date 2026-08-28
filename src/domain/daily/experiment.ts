@@ -1,5 +1,7 @@
 export const EXPERIMENT_VERSION = 1 as const;
 
+export type ExperimentArchetype = "default" | "price";
+
 export type ExperimentStage = "instinct" | "pressure" | "consequence" | "flip" | "line";
 
 export type MarshmallowExperimentMetadata = {
@@ -10,6 +12,7 @@ export type MarshmallowExperimentMetadata = {
 
 export type DailyRoundExperimentMetadata = {
   version: typeof EXPERIMENT_VERSION;
+  archetype: ExperimentArchetype;
 };
 
 const STAGES_BY_POSITION: Record<number, ExperimentStage> = {
@@ -28,9 +31,24 @@ export function parseDailyRoundExperimentMetadata(
   }
   const version = (metadata as { experiment?: { version?: unknown } }).experiment?.version;
   if (version === EXPERIMENT_VERSION) {
-    return { version: EXPERIMENT_VERSION };
+    return {
+      version: EXPERIMENT_VERSION,
+      archetype: parseExperimentArchetype(metadata),
+    };
   }
   return null;
+}
+
+export function parseExperimentArchetype(metadata: unknown): ExperimentArchetype {
+  if (!metadata || typeof metadata !== "object") {
+    return "default";
+  }
+  const archetype = (metadata as { experiment?: { archetype?: unknown } }).experiment?.archetype;
+  return archetype === "price" ? "price" : "default";
+}
+
+export function isPriceExperiment(metadata: unknown): boolean {
+  return parseExperimentArchetype(metadata) === "price";
 }
 
 export function isExperimentDailyRound(metadata: unknown): boolean {

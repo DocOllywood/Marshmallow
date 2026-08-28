@@ -12,6 +12,7 @@ import {
 import { buildTodaysRead, type TodaysReadQuestion } from "@/domain/daily/todays-read";
 import {
   isExperimentDailyRound,
+  parseExperimentArchetype,
   resolveMarshmallowExperimentMetadata,
 } from "@/domain/daily/experiment";
 import {
@@ -23,8 +24,9 @@ import type { ExperimentStage } from "@/domain/daily/experiment";
 import { buildUserPathPoints, type UserPathPoint } from "@/domain/daily/experiment-play";
 import { buildExperimentTrajectory } from "@/domain/daily/trajectory";
 import { mapHumanTension, parseTensionSide, type HumanTension } from "@/domain/daily/tension";
-import type { PlayChoice } from "@/domain/play/types";
 import { crowdsenseDelta, crowdsenseFromScores } from "@/domain/crowdsense/rating";
+import type { PlayChoice } from "@/domain/play/types";
+import { getBlindMirrorComparisonForRound } from "@/server/dal/blind-mirror";
 
 export type { DailyRoundProgress, DailyRoundQuestionReveal, DailyRoundSummary, ExperimentCrowdTrajectory, UserPathPoint };
 
@@ -141,6 +143,7 @@ async function loadDailyRoundProgress(
   const openedIds = new Set((opens ?? []).map((row) => row.marshmallow_id));
   const tension = mapRoundTension(round as RoundRow);
   const isExperimentDaily = isExperimentDailyRound((round as RoundRow).metadata);
+  const experimentArchetype = parseExperimentArchetype((round as RoundRow).metadata);
 
   const progress = buildDailyRoundProgress({
     roundId: round.id,
@@ -160,10 +163,15 @@ async function loadDailyRoundProgress(
     })),
     openedRevealIds: openedIds,
     isExperimentDaily,
+    experimentArchetype,
   });
 
   if (progress.allSealed && !progress.allRevealed) {
     const tomorrowTension = await loadTomorrowTension(round.round_date);
+    const blindMirror =
+      progress.isExperimentDaily
+        ? await getBlindMirrorComparisonForRound(round.id)
+        : null;
     return {
       ...progress,
       todaysRead: await loadTodaysRead(
@@ -173,6 +181,7 @@ async function loadDailyRoundProgress(
         tomorrowTension,
         (round as RoundRow).metadata,
       ),
+      blindMirror,
     };
   }
 
@@ -408,7 +417,9 @@ export async function getDailyRoundReveal(
           stages: crowdStageInputs,
           tension: progress.tension,
           referenceSide:
-            (crowdStageInputs[0]?.rightPct ?? 0) >= (crowdStageInputs[0]?.leftPct ?? 0) ? "right" : "left",
+            (crowdStageInputs[0]?.rightPct ?? 0) >= (crowdStageInputs[0]?.leftPct ?? 0)
+              ? "right"
+              : "left",
         })
       : null;
 

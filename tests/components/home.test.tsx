@@ -137,6 +137,8 @@ describe("HomeFeedView", () => {
         revealHref: "/daily/40000000-0000-4000-8000-000000000001/reveal",
         todaysRead: null,
         isExperimentDaily: false,
+        experimentArchetype: "default",
+        blindMirror: null,
       },
     };
 
@@ -221,6 +223,8 @@ describe("HomeFeedView", () => {
         revealHref: "/daily/40000000-0000-4000-8000-000000000004/reveal",
         todaysRead: null,
         isExperimentDaily: false,
+        experimentArchetype: "default",
+        blindMirror: null,
       },
     };
 
@@ -258,6 +262,8 @@ describe("HomeFeedView", () => {
         revealHref: "/daily/40000000-0000-4000-8000-000000000004/reveal",
         todaysRead: null,
         isExperimentDaily: false,
+        experimentArchetype: "default",
+        blindMirror: null,
       },
     };
 
@@ -292,6 +298,8 @@ describe("HomeFeedView", () => {
           isLegacy: true,
         },
         isExperimentDaily: false,
+        experimentArchetype: "default",
+        blindMirror: null,
       },
     };
 
@@ -328,6 +336,8 @@ describe("HomeFeedView", () => {
         revealHref: "/daily/40000000-0000-4000-8000-000000000010/reveal",
         todaysRead: null,
         isExperimentDaily: true,
+        experimentArchetype: "default",
+        blindMirror: null,
       },
     };
 

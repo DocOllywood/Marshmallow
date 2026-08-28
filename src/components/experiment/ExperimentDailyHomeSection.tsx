@@ -62,6 +62,7 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
             showHomeButton={false}
             roundId={round.roundId}
             tensionSlug={round.tension?.slug}
+            blindMirror={round.blindMirror}
           />
         ) : (
           <p className="text-sm text-ink-muted">Come back tonight.</p>

@@ -71,6 +71,8 @@ const dailyRoundBase: DailyRoundProgress = {
   revealHref: "/daily/40000000-0000-4000-8000-000000000010/reveal",
   todaysRead: null,
   isExperimentDaily: true,
+  experimentArchetype: "default",
+  blindMirror: null,
 };
 
 function experimentMarshmallow(

@@ -33,6 +33,7 @@ export default async function DailyRoundRevealPage({
               read={progress.todaysRead}
               roundId={roundId}
               tensionSlug={progress.tension?.slug}
+              blindMirror={progress.blindMirror}
             />
           ) : (
             <TodaysReadCard

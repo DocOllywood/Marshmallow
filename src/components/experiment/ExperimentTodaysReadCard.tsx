@@ -3,8 +3,10 @@
 import { useEffect, useRef } from "react";
 
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { BlindMirrorCard } from "@/components/experiment/BlindMirrorCard";
 import { OutsideTheExperiment } from "@/components/experiment/OutsideTheExperiment";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import type { BlindMirrorComparison } from "@/domain/daily/blind-mirror";
 import type { TodaysRead } from "@/domain/daily/todays-read";
 import { trackEvent } from "@/server/actions/analytics";
 
@@ -14,12 +16,14 @@ export function ExperimentTodaysReadCard({
   showHomeButton = true,
   roundId,
   tensionSlug,
+  blindMirror,
 }: {
   read: TodaysRead;
   homeHref?: string;
   showHomeButton?: boolean;
   roundId?: string;
   tensionSlug?: string | null;
+  blindMirror?: BlindMirrorComparison | null;
 }) {
   const tracked = useRef(false);
 
@@ -50,6 +54,7 @@ export function ExperimentTodaysReadCard({
           <p className="font-display text-base font-semibold text-ink">{read.lineCopy}</p>
         </div>
       ) : null}
+      {blindMirror ? <BlindMirrorCard comparison={blindMirror} /> : null}
       <OutsideTheExperiment tensionSlug={tensionSlug} />
       <div className="flex flex-col gap-2 pt-2">
         <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
