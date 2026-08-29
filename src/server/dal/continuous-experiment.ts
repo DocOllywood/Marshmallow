@@ -278,15 +278,13 @@ export async function resolvePostOnboardingPlayHref(): Promise<string> {
 }
 
 export async function getLandingPlayContext(): Promise<LandingPlayContext> {
-  const topics = await listActiveTopics();
+  const topics = await listActiveTopics().catch(() => []);
   const topicName = new Map(topics.map((topic) => [topic.id, topic.name]));
   let daily: Awaited<ReturnType<typeof getTodayDailyRoundProgress>> = null;
   try {
     daily = await getTodayDailyRoundProgress(topicName);
-  } catch (error) {
-    if (!isContinuousInventoryAccessError(error)) {
-      throw error;
-    }
+  } catch {
+    daily = null;
   }
   const hasPlayableDaily =
     daily != null &&
@@ -296,10 +294,8 @@ export async function getLandingPlayContext(): Promise<LandingPlayContext> {
   let continuous: ContinuousExperimentOffer | null = null;
   try {
     continuous = await getContinuousExperimentOffer();
-  } catch (error) {
-    if (!isContinuousInventoryAccessError(error)) {
-      throw error;
-    }
+  } catch {
+    continuous = null;
   }
   const hasContinuousInventory = continuous != null;
 

@@ -136,6 +136,23 @@ describe("getLandingPlayContext integration", () => {
     });
   });
 
+  it("renders GET STARTED when topics lookup fails", async () => {
+    createSupabaseServerClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn(async () => ({ data: { user: null }, error: null })),
+      },
+      from: vi.fn(() => {
+        throw new Error("TypeError: fetch failed");
+      }),
+    });
+
+    await expect(getLandingPlayContext()).resolves.toEqual({
+      ctaLabel: "GET STARTED",
+      hasPlayableDaily: false,
+      hasContinuousInventory: false,
+    });
+  });
+
   it("does not throw when continuous marshmallows are visible but entries are forbidden", async () => {
     makeClient({
       user: { id: "anon-user" },
