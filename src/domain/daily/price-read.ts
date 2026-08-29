@@ -80,12 +80,7 @@ export function buildPriceTodaysRead(
   let bodyLines: string[];
 
   if (price.heldThroughout) {
-    const hasMonetaryStage = price.stageCosts.some((stage) =>
-      isMonetaryCostLabel(stage.costType, stage.costLabel),
-    );
-    headline = hasMonetaryStage
-      ? "YOUR CALL HELD THROUGH EVERY PRICE WE TESTED."
-      : "YOUR CALL HELD AS THE COST GOT HIGHER.";
+    headline = "YOUR CALL HELD AS THE COST GOT HIGHER.";
     bodyLines = heldThroughoutBody(price);
   } else if (price.returnedToOriginalPosition) {
     headline = "YOU MOVED, THEN RETURNED TO YOUR ORIGINAL CALL.";

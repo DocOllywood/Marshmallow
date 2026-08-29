@@ -14,7 +14,7 @@ describe("todaysMarshmallowInvitation", () => {
       "Do one small considerate thing for someone you don't know today.",
     );
     expect(todaysMarshmallowInvitation("loyalty-justice")).toBe(
-      "Notice one rule today that's easier to demand from someone else than from yourself. Don't fix it. Just catch it.",
+      "Notice one split today — money, effort, or credit — that wouldn't feel equal to everyone involved.",
     );
     expect(todaysMarshmallowInvitation("self-stranger")).toBe(
       "Make one stranger's day 1% easier.",

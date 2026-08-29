@@ -126,9 +126,9 @@ describe("launch money daily today's read tone", () => {
     };
   }
 
-  it("supports held throughout copy when a monetary stage exists", () => {
+  it("supports held throughout copy for any cost type", () => {
     const read = buildPriceTodaysRead(priceTrajectory({ heldThroughout: true }), null);
-    expect(read.headline).toMatch(/HELD THROUGH EVERY PRICE/i);
+    expect(read.headline).toBe("YOUR CALL HELD AS THE COST GOT HIGHER.");
     expect(read.bodyLines.join(" ")).not.toMatch(/greedy|selfish|loyal|materialistic/i);
   });
 

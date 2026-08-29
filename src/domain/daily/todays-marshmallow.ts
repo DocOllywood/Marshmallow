@@ -10,22 +10,27 @@ const BY_TENSION_SLUG: Record<string, string> = {
     "Start one small conversation you normally wouldn't — only if it feels welcome.",
   "generosity-fairness": "Give someone a little more than you technically owe them.",
   "loyalty-self-preservation":
-    "Show up for someone who counts on you — in one small way that fits your limits.",
+    "Notice one friendship today where money sits quietly underneath what someone can or can't do.",
   "love-freedom":
     "Give someone you love a little room today — and one quiet sign you're still there.",
   "trust-privacy":
-    "Share one small true thing with someone you trust — only if they want to hear it.",
+    "Notice one thing you wouldn't tell a stranger for any price — and one you might.",
+  "gain-privacy":
+    "Notice one thing you wouldn't tell a stranger for any price — and one you might.",
   "forgiveness-self-respect":
-    "Let one small grudge go today — or hold one boundary with kindness instead of silence.",
-  "passion-security": "Give one ordinary moment your full attention today.",
+    "Think about one favor you'd extend — and where you'd draw the line if it touched your finances.",
+  "passion-security":
+    "Notice what you'd trade an ordinary Saturday for — if someone offered you enough.",
+  "time-ambition":
+    "Think about what you'd trade an ordinary Saturday for — if someone offered enough.",
   "belonging-independence":
     "Notice how differently a sacrifice sounds depending on who is being asked to make it.",
   "desire-commitment": "Keep one small promise today that nobody asked you to make.",
   "status-authenticity":
-    "Skip one performance today. Be ordinary with someone who matters.",
+    "Listen for one pitch today where the price sounds better than the product.",
   "truth-peace": "Say one true thing gently today — only where it helps more than it hurts.",
   "loyalty-justice":
-    "Notice one rule today that's easier to demand from someone else than from yourself. Don't fix it. Just catch it.",
+    "Notice one split today — money, effort, or credit — that wouldn't feel equal to everyone involved.",
 };
 
 export const TODAYS_MARSHMALLOW_FALLBACK =
