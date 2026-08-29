@@ -112,6 +112,12 @@ describe("continuous eligibility", () => {
     expect(
       isContinuousInventoryAccessError({ message: "permission denied for table entries" }),
     ).toBe(true);
+    expect(
+      isContinuousInventoryAccessError({ message: "", code: "42501" }),
+    ).toBe(true);
+    expect(
+      isContinuousInventoryAccessError(new Error("permission denied for table marshmallows")),
+    ).toBe(true);
     expect(isContinuousInventoryAccessError(new Error("home_payload_leaked_aggregates"))).toBe(
       false,
     );

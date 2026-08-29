@@ -69,6 +69,9 @@ async function loadContinuousRoundData(): Promise<{
   ]);
 
   if (marshmallowError) {
+    if (isContinuousInventoryAccessError(marshmallowError)) {
+      return EMPTY_CONTINUOUS_ROUND_DATA;
+    }
     throw new Error(marshmallowError.message);
   }
 
@@ -290,7 +293,14 @@ export async function getLandingPlayContext(): Promise<LandingPlayContext> {
     isDailyRoundVisibleOnHome(daily) &&
     daily.questions.some((question) => question.status === "open");
 
-  const continuous = await getContinuousExperimentOffer();
+  let continuous: ContinuousExperimentOffer | null = null;
+  try {
+    continuous = await getContinuousExperimentOffer();
+  } catch (error) {
+    if (!isContinuousInventoryAccessError(error)) {
+      throw error;
+    }
+  }
   const hasContinuousInventory = continuous != null;
 
   let ctaLabel = "GET STARTED";

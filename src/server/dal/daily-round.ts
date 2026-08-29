@@ -31,6 +31,7 @@ import { buildExperimentTrajectory } from "@/domain/daily/trajectory";
 import { mapHumanTension, parseTensionSide, type HumanTension } from "@/domain/daily/tension";
 import { crowdsenseDelta, crowdsenseFromScores } from "@/domain/crowdsense/rating";
 import type { PlayChoice } from "@/domain/play/types";
+import { isContinuousInventoryAccessError } from "@/domain/play/continuous";
 import { getBlindMirrorComparisonForRound } from "@/server/dal/blind-mirror";
 
 export type { DailyRoundProgress, DailyRoundQuestionReveal, DailyRoundSummary, ExperimentCrowdTrajectory, UserPathPoint, PriceCrowdHeldTrajectory };
@@ -96,6 +97,9 @@ export async function getTodayDailyRoundProgress(
     .maybeSingle();
 
   if (roundError) {
+    if (isContinuousInventoryAccessError(roundError)) {
+      return null;
+    }
     throw new Error(roundError.message);
   }
   if (!round) {
