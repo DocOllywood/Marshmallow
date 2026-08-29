@@ -6,6 +6,17 @@ import type { ExperimentArchetype } from "@/domain/daily/experiment";
 export const PRICE_QA_CONTINUOUS_ROUND_ID = "40000000-0000-4000-8000-000000000008";
 export const PRICE_QA_Q1_MARSHMALLOW_ID = "31000000-0000-4000-8000-000000000040";
 
+/** Sentinel calendar slot — continuous inventory must never occupy a real Daily date. */
+export const PRICE_QA_CONTINUOUS_ROUND_DATE = "2099-12-31";
+
+/** Long-lived lifecycle for always-available play (migration 20260829240000). */
+export const PRICE_QA_CONTINUOUS_LIFECYCLE = {
+  opensAt: "2026-08-29T00:00:00.000Z",
+  closesAt: "2099-12-31T23:59:59.000Z",
+  revealsAt: "2099-12-31T23:59:59.000Z",
+  hardRevealsAt: "2099-12-31T23:59:59.000Z",
+} as const;
+
 export type ContinuousExperimentCatalogEntry = {
   roundId: string;
   q1MarshmallowId: string;

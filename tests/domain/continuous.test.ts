@@ -4,6 +4,8 @@ import {
   CONTINUOUS_EXPERIMENT_CATALOG,
   isContinuousCatalogRound,
   isExcludedFromContinuousInventory,
+  PRICE_QA_CONTINUOUS_LIFECYCLE,
+  PRICE_QA_CONTINUOUS_ROUND_DATE,
   PRICE_QA_CONTINUOUS_ROUND_ID,
 } from "@/domain/content/continuous-experiments";
 import { LAUNCH_MONEY_DAILY_ROUND_ID } from "@/domain/content/launch-money-daily";
@@ -39,6 +41,11 @@ describe("continuous-experiments catalog", () => {
       expect(isContinuousCatalogRound(day.roundId)).toBe(false);
     }
     expect(CONTINUOUS_EXPERIMENT_CATALOG).toHaveLength(1);
+  });
+
+  it("uses a sentinel inventory date away from the Daily calendar", () => {
+    expect(PRICE_QA_CONTINUOUS_ROUND_DATE).toBe("2099-12-31");
+    expect(PRICE_QA_CONTINUOUS_LIFECYCLE.closesAt).toContain("2099");
   });
 });
 

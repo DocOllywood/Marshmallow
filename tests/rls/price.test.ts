@@ -68,7 +68,7 @@ describe("price archetype hosted checks", () => {
     }
   });
 
-  it("keeps price draft off today's home slot", async () => {
+  it("keeps price continuous inventory off today's home slot", async () => {
     if (!admin) {
       expect(true).toBe(true);
       return;
@@ -87,7 +87,7 @@ describe("price archetype hosted checks", () => {
     }
   });
 
-  it("stores price archetype metadata on draft round only", async () => {
+  it("stores price archetype metadata on continuous inventory when promoted", async () => {
     if (!admin) {
       expect(true).toBe(true);
       return;
@@ -105,7 +105,7 @@ describe("price archetype hosted checks", () => {
       .eq("id", PRICE_ROUND_ID)
       .maybeSingle();
 
-    expect(round?.status).toBe("draft");
+    expect(["open", "draft"]).toContain(round?.status ?? "");
     expect(round?.round_date).not.toBe(new Date().toISOString().slice(0, 10));
     expect((round?.metadata as { experiment?: { archetype?: string } })?.experiment?.archetype).toBe(
       "price",
