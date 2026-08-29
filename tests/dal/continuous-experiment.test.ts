@@ -190,6 +190,24 @@ describe("continuous-experiment DAL", () => {
     });
   });
 
+  it("landing does not throw when anonymous daily round lookup is denied", async () => {
+    mockSupabase({
+      user: null,
+      marshmallows: { data: [], error: null },
+    });
+    getTodayDailyRoundProgress.mockRejectedValue(
+      new Error("permission denied for table daily_rounds"),
+    );
+
+    const landing = await getLandingPlayContext();
+
+    expect(landing).toEqual({
+      ctaLabel: "GET STARTED",
+      hasPlayableDaily: false,
+      hasContinuousInventory: false,
+    });
+  });
+
   it("onboarding falls back to /home when continuous inventory is unavailable", async () => {
     mockSupabase({
       marshmallows: { data: [], error: null },

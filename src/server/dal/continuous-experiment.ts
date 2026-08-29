@@ -277,7 +277,14 @@ export async function resolvePostOnboardingPlayHref(): Promise<string> {
 export async function getLandingPlayContext(): Promise<LandingPlayContext> {
   const topics = await listActiveTopics();
   const topicName = new Map(topics.map((topic) => [topic.id, topic.name]));
-  const daily = await getTodayDailyRoundProgress(topicName);
+  let daily: Awaited<ReturnType<typeof getTodayDailyRoundProgress>> = null;
+  try {
+    daily = await getTodayDailyRoundProgress(topicName);
+  } catch (error) {
+    if (!isContinuousInventoryAccessError(error)) {
+      throw error;
+    }
+  }
   const hasPlayableDaily =
     daily != null &&
     isDailyRoundVisibleOnHome(daily) &&
