@@ -1,7 +1,13 @@
 /** Editorial contract for launch Money Era daily — partner dream job (draft QA). */
 
 export const LAUNCH_MONEY_DAILY_ROUND_ID = "40000000-0000-4000-8000-000000000009";
+/** Pre-promotion direct-URL QA slot (hosted moves to BETA_ROUND_DATE on launch). */
 export const LAUNCH_MONEY_DAILY_ROUND_DATE = "2026-10-27";
+/** Live beta calendar date — Wed 2026-09-02 (Money Week Day 1). */
+export const LAUNCH_MONEY_DAILY_BETA_ROUND_DATE = "2026-09-02";
+export const LAUNCH_MONEY_DAILY_BETA_OPENS_AT = "2026-09-02T12:00:00.000Z";
+export const LAUNCH_MONEY_DAILY_BETA_CLOSES_AT = "2026-09-03T01:00:00.000Z";
+export const LAUNCH_MONEY_DAILY_BETA_REVEALS_AT = "2026-09-03T03:30:00.000Z";
 export const LAUNCH_MONEY_DAILY_PRINCIPLE_ID = "60000000-0000-4000-8000-000000000003";
 export const LAUNCH_MONEY_DAILY_PRINCIPLE_SLUG = "partnership-vs-independence";
 export const LAUNCH_MONEY_DAILY_TENSION_ID = "50000000-0000-4000-8000-000000000007";

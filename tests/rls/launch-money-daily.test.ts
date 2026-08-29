@@ -1,14 +1,17 @@
 /**
- * Launch Money Era daily hosted checks (draft QA round).
+ * Launch Money Era daily hosted checks (promoted beta Day 1).
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
+  LAUNCH_MONEY_DAILY_BETA_CLOSES_AT,
+  LAUNCH_MONEY_DAILY_BETA_OPENS_AT,
+  LAUNCH_MONEY_DAILY_BETA_REVEALS_AT,
+  LAUNCH_MONEY_DAILY_BETA_ROUND_DATE,
   LAUNCH_MONEY_DAILY_MARSHMALLOWS,
   LAUNCH_MONEY_DAILY_PRINCIPLE_ID,
   LAUNCH_MONEY_DAILY_Q1,
-  LAUNCH_MONEY_DAILY_ROUND_DATE,
   LAUNCH_MONEY_DAILY_ROUND_ID,
   LAUNCH_MONEY_DAILY_STAGE_SPEC,
 } from "@/domain/content/launch-money-daily";
@@ -73,7 +76,7 @@ describe("launch money daily hosted checks", () => {
     }
   });
 
-  it("keeps launch draft off today's home slot", async () => {
+  it("keeps launch beta off today's home slot until beta calendar date", async () => {
     if (!admin) {
       expect(true).toBe(true);
       return;
@@ -86,10 +89,14 @@ describe("launch money daily hosted checks", () => {
       .eq("round_date", today)
       .maybeSingle();
 
-    expect(todayRound?.id).not.toBe(LAUNCH_MONEY_DAILY_ROUND_ID);
+    if (today === LAUNCH_MONEY_DAILY_BETA_ROUND_DATE) {
+      expect(todayRound?.id).toBe(LAUNCH_MONEY_DAILY_ROUND_ID);
+    } else {
+      expect(todayRound?.id).not.toBe(LAUNCH_MONEY_DAILY_ROUND_ID);
+    }
   });
 
-  it("stores price archetype metadata and partnership-vs-independence principle", async () => {
+  it("stores promoted beta schedule and partnership-vs-independence principle", async () => {
     if (!admin) {
       expect(true).toBe(true);
       return;
@@ -107,9 +114,8 @@ describe("launch money daily hosted checks", () => {
       .eq("id", LAUNCH_MONEY_DAILY_ROUND_ID)
       .maybeSingle();
 
-    expect(round?.status).toBe("draft");
-    expect(round?.round_date).toBe(LAUNCH_MONEY_DAILY_ROUND_DATE);
-    expect(round?.round_date).not.toBe(new Date().toISOString().slice(0, 10));
+    expect(["scheduled", "open"]).toContain(round?.status);
+    expect(round?.round_date).toBe(LAUNCH_MONEY_DAILY_BETA_ROUND_DATE);
     expect((round?.metadata as { experiment?: { archetype?: string } })?.experiment?.archetype).toBe(
       "price",
     );
@@ -155,7 +161,24 @@ describe("launch money daily hosted checks", () => {
     expect(marshmallows).toHaveLength(5);
     expect(marshmallows?.map((row) => row.round_position)).toEqual([1, 2, 3, 4, 5]);
     expect(marshmallows?.map((row) => row.id)).toEqual([...LAUNCH_MONEY_DAILY_MARSHMALLOWS]);
-    expect(marshmallows?.every((row) => row.status === "open")).toBe(true);
+    expect(marshmallows?.every((row) => row.status === "scheduled" || row.status === "open")).toBe(
+      true,
+    );
+
+    const { data: lifecycle } = await admin
+      .from("marshmallows")
+      .select("round_position, opens_at, closes_at, reveals_at, hard_reveals_at")
+      .eq("daily_round_id", LAUNCH_MONEY_DAILY_ROUND_ID)
+      .order("round_position", { ascending: true });
+
+    for (const row of lifecycle ?? []) {
+      expect(new Date(row.opens_at ?? "").toISOString()).toBe(LAUNCH_MONEY_DAILY_BETA_OPENS_AT);
+      expect(new Date(row.closes_at ?? "").toISOString()).toBe(LAUNCH_MONEY_DAILY_BETA_CLOSES_AT);
+      expect(new Date(row.reveals_at ?? "").toISOString()).toBe(LAUNCH_MONEY_DAILY_BETA_REVEALS_AT);
+      expect(new Date(row.hard_reveals_at ?? "").toISOString()).toBe(
+        LAUNCH_MONEY_DAILY_BETA_REVEALS_AT,
+      );
+    }
     expect(marshmallows?.[4]?.is_line).toBe(true);
 
     for (const spec of LAUNCH_MONEY_DAILY_STAGE_SPEC) {
@@ -237,6 +260,16 @@ describe("launch money daily hosted checks", () => {
 
     const available = await launchRoundAvailable(admin);
     if (!available) {
+      expect(true).toBe(true);
+      return;
+    }
+
+    const { data: q1 } = await admin
+      .from("marshmallows")
+      .select("status")
+      .eq("id", LAUNCH_MONEY_DAILY_MARSHMALLOWS[0])
+      .maybeSingle();
+    if (q1?.status !== "open") {
       expect(true).toBe(true);
       return;
     }
