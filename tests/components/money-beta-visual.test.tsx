@@ -21,6 +21,14 @@ vi.mock("@/server/actions/play", () => ({
   openDailyRoundRevealAction: vi.fn(),
 }));
 
+vi.mock("@/server/dal/continuous-experiment", () => ({
+  getLandingPlayContext: vi.fn(async () => ({
+    ctaLabel: "PLAY TODAY'S EXPERIMENT",
+    hasPlayableDaily: false,
+    hasContinuousInventory: true,
+  })),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
@@ -110,13 +118,15 @@ function priceMarshmallow(): PlayMarshmallow {
     experimentCostType: null,
     experimentCostLabel: "Before any offer details",
     experimentArchetype: "price",
+    entrySurface: "daily",
+    continuousNextHref: null,
     question: "Would you move for their dream job?",
   };
 }
 
 describe("money beta visual journey", () => {
-  it("removes redundant all-caps MARSHMALLOW from landing hero", () => {
-    render(<LandingPage />);
+  it("removes redundant all-caps MARSHMALLOW from landing hero", async () => {
+    render(await LandingPage());
     expect(screen.getAllByText(/Marshmallow/i).length).toBeGreaterThan(0);
     expect(screen.queryByRole("heading", { name: /^MARSHMALLOW$/i })).toBeNull();
     expect(screen.getByRole("heading", { name: /what's your price/i })).toBeTruthy();

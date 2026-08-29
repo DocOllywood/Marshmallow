@@ -121,6 +121,8 @@ function experimentMarshmallow(
     experimentCostType: null,
     experimentCostLabel: null,
     experimentArchetype: "default",
+    entrySurface: "daily",
+    continuousNextHref: null,
     ...overrides,
   };
 }

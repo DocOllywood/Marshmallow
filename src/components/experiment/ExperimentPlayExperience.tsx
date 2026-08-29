@@ -68,11 +68,15 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
       dailyStarted.current = true;
       void trackEvent(
         ANALYTICS_EVENTS.dailyStarted,
-        { round_id: marshmallow.dailyRound.roundId, experiment: true },
+        {
+          round_id: marshmallow.dailyRound.roundId,
+          experiment: true,
+          entry_surface: marshmallow.entrySurface ?? "daily",
+        },
         marshmallow.dailyRound.roundId,
       );
     }
-  }, [marshmallow.dailyRound, position]);
+  }, [marshmallow.dailyRound, marshmallow.entrySurface, position]);
 
   function reactionForSide(currentSide: TensionSide | null): ExperimentStageReaction {
     return buildExperimentStageReaction({
@@ -172,7 +176,11 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
     if (position === 5) {
       void trackEvent(
         ANALYTICS_EVENTS.dailyCompleted,
-        { round_id: marshmallow.dailyRound.roundId, experiment: true },
+        {
+          round_id: marshmallow.dailyRound.roundId,
+          experiment: true,
+          entry_surface: marshmallow.entrySurface ?? "daily",
+        },
         marshmallow.dailyRound.roundId,
       );
     }
@@ -326,6 +334,17 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
           roundId={marshmallow.dailyRound.roundId}
           tensionSlug={marshmallow.dailyRound.tension?.slug}
           isPriceExperiment={marshmallow.experimentArchetype === "price"}
+          keepPlayingHref={marshmallow.continuousNextHref}
+          onKeepPlayingClick={() => {
+            void trackEvent(
+              ANALYTICS_EVENTS.nextMarshmallowClicked,
+              {
+                entry_surface: marshmallow.entrySurface ?? "daily",
+                source: "keep_playing",
+              },
+              marshmallow.dailyRound?.roundId,
+            );
+          }}
         />
       );
     }

@@ -22,7 +22,7 @@ export function ScheduledExperimentHomeSection({
         id="next-experiment-heading"
         className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase"
       >
-        The next experiment
+        The next daily
       </p>
       <MarshmallowMascot state="fluffy" size="lg" aria-hidden />
       <p className="font-display text-[clamp(1.65rem,7vw,2rem)] leading-[1.05] font-semibold tracking-tight text-money uppercase">

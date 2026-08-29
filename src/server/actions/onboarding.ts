@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { consumeReturnPath, attributeShareSignup } from "@/server/dal/notify-share";
+import { attributeShareSignup } from "@/server/dal/notify-share";
+import { resolvePostOnboardingPlayHref } from "@/server/dal/continuous-experiment";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { trackEvent } from "@/server/actions/analytics";
 import {
@@ -58,5 +59,5 @@ export async function completeOnboardingAction(
   if (attributed) {
     await trackEvent(ANALYTICS_EVENTS.shareSignupCompleted);
   }
-  redirect(await consumeReturnPath());
+  redirect(await resolvePostOnboardingPlayHref());
 }

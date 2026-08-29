@@ -11,6 +11,11 @@ import { crowdsenseDelta, crowdsenseFromScores } from "@/domain/crowdsense/ratin
 import { listActiveTopics, listOwnTopicPrefIds } from "@/server/dal/topics";
 import { getDailyRoundProgressByMarshmallowId } from "@/server/dal/daily-round";
 import {
+  getFeaturedDailyRoundIdForSurface,
+  getNextContinuousPlayHrefAfter,
+} from "@/server/dal/continuous-experiment";
+import { resolveEntrySurface } from "@/domain/play/continuous";
+import {
   marshmallowRequiresPrediction,
   resolveMarshmallowExperimentMetadata,
 } from "@/domain/daily/experiment";
@@ -173,6 +178,16 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     id,
     playMode === "quick" ? "after_quick_reveal" : "after_other_reveal",
   );
+  const featuredDailyRoundId = await getFeaturedDailyRoundIdForSurface();
+  const entrySurface = resolveEntrySurface(data.daily_round_id, featuredDailyRoundId);
+  let continuousNextHref: string | null = null;
+  if (
+    entrySurface === "continuous" &&
+    dailyRound?.allSealed &&
+    data.daily_round_id
+  ) {
+    continuousNextHref = await getNextContinuousPlayHrefAfter(data.daily_round_id);
+  }
   const mayLoadResults =
     (screen === "revealed" || screen === "revealed_spectator") &&
     !(dailyRound && playMode === "daily");
@@ -231,6 +246,8 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     experimentCostType: experimentMeta?.costType ?? null,
     experimentCostLabel: experimentMeta?.costLabel ?? null,
     experimentArchetype: dailyRound?.experimentArchetype ?? "default",
+    entrySurface,
+    continuousNextHref,
   };
 
   if (!mayLoadResults) {

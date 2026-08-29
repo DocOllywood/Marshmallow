@@ -76,6 +76,8 @@ const base: PlayMarshmallow = {
   experimentCostType: null,
   experimentCostLabel: null,
   experimentArchetype: "default",
+  entrySurface: "daily",
+  continuousNextHref: null,
 };
 
 describe("reveal UI", () => {

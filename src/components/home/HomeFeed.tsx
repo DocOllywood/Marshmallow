@@ -11,6 +11,11 @@ import { MarshmallowMascot } from "@/components/MarshmallowMascot";
 import { ScheduledExperimentHomeSection } from "@/components/home/ScheduledExperimentHomeSection";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { isDailyRoundVisibleOnHome, dailyHomeState, type DailyRoundProgress } from "@/domain/daily/round";
+import {
+  ContinuousCaughtUpSection,
+  ContinuousExperimentHomeSection,
+  type ContinuousHomeSectionVariant,
+} from "@/components/home/ContinuousExperimentHomeSection";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { trackEvent } from "@/server/actions/analytics";
 import { heroHomeQuick, isWaitingForSample, moreHomeQuick } from "@/domain/play/sample";
@@ -78,11 +83,30 @@ export function HomeFeedView({
   const hasPlayableDaily =
     feed.dailyRound != null && isDailyRoundVisibleOnHome(feed.dailyRound);
   const showScheduledExperiment = !hasPlayableDaily && feed.nextScheduledExperiment != null;
+  const dailyState = feed.dailyRound ? dailyHomeState(feed.dailyRound) : null;
+  const dailyComplete =
+    hasPlayableDaily &&
+    dailyState != null &&
+    (dailyState === "sealed" || dailyState === "ready" || dailyState === "done");
+
+  const continuousVariant: ContinuousHomeSectionVariant | null = showScheduledExperiment
+    ? "play-now"
+    : hasPlayableDaily && dailyComplete
+      ? "keep-playing"
+      : hasPlayableDaily
+        ? "more-experiments"
+        : "play-now";
+
+  const showContinuous =
+    feed.continuousExperiment != null &&
+    (!hasPlayableDaily || dailyComplete || continuousVariant === "more-experiments");
 
   const empty =
     !showScheduledExperiment &&
     !hasPlayableDaily &&
     !feed.dailyRound &&
+    !showContinuous &&
+    !feed.continuousCaughtUp &&
     feed.readyToReveal.length === 0 &&
     feed.cooking.length === 0 &&
     !heroQuick &&
@@ -124,6 +148,13 @@ export function HomeFeedView({
         <ScheduledExperimentHomeSection preview={feed.nextScheduledExperiment} />
       ) : null}
 
+      {showScheduledExperiment && showContinuous && feed.continuousExperiment ? (
+        <ContinuousExperimentHomeSection
+          offer={feed.continuousExperiment}
+          variant="play-now"
+        />
+      ) : null}
+
       {identity && showScheduledExperiment ? (
         <p className="text-[10px] leading-5 text-ink-muted/80">
           CrowdSense ·{" "}
@@ -162,6 +193,27 @@ export function HomeFeedView({
         ) : (
           <DailyRoundSection round={feed.dailyRound} />
         )
+      ) : null}
+
+      {hasPlayableDaily && showContinuous && feed.continuousExperiment && continuousVariant ? (
+        <ContinuousExperimentHomeSection
+          offer={feed.continuousExperiment}
+          variant={continuousVariant}
+        />
+      ) : null}
+
+      {!showScheduledExperiment &&
+      !hasPlayableDaily &&
+      showContinuous &&
+      feed.continuousExperiment ? (
+        <ContinuousExperimentHomeSection
+          offer={feed.continuousExperiment}
+          variant="play-now"
+        />
+      ) : null}
+
+      {!showContinuous && feed.continuousCaughtUp ? (
+        <ContinuousCaughtUpSection nextDailyOpensAt={feed.continuousCaughtUp.nextDailyOpensAt} />
       ) : null}
 
       {feed.liveNow.length > 0 ? <LiveSection cards={feed.liveNow} /> : null}

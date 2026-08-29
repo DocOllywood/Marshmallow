@@ -16,6 +16,12 @@ import { isStandaloneHomeInventory } from "@/domain/home/inventory";
 import type { ScheduledExperimentPreview } from "@/domain/daily/scheduled-preview";
 import { getTodayDailyRoundProgress } from "@/server/dal/daily-round";
 import { getNextScheduledExperimentPreview } from "@/server/dal/scheduled-experiment";
+import {
+  getContinuousCaughtUp,
+  getContinuousExperimentOffer,
+  type ContinuousCaughtUp,
+  type ContinuousExperimentOffer,
+} from "@/server/dal/continuous-experiment";
 
 type MarshmallowRow = Pick<
   Database["public"]["Tables"]["marshmallows"]["Row"],
@@ -55,6 +61,8 @@ export type HomeFeed = {
   liveNow: HomeFeedCard[];
   dailyRound: DailyRoundProgress | null;
   nextScheduledExperiment: ScheduledExperimentPreview | null;
+  continuousExperiment: ContinuousExperimentOffer | null;
+  continuousCaughtUp: ContinuousCaughtUp | null;
   cooking: HomeFeedCard[];
   waiting: HomeFeedCard[];
   openNow: HomeFeedCard[];
@@ -107,10 +115,16 @@ export async function getHomeFeed(
   const scoreByMarshmallow = new Map((scores ?? []).map((row) => [row.marshmallow_id, row]));
   const topicName = new Map(topics.map((topic) => [topic.id, topic.name]));
   const topicImage = new Map(topics.map((topic) => [topic.id, topic.image_url]));
-  const [dailyRound, nextScheduledExperiment] = await Promise.all([
+  const [dailyRound, nextScheduledExperiment, continuousExperiment] = await Promise.all([
     getTodayDailyRoundProgress(topicName),
     getNextScheduledExperimentPreview(),
+    getContinuousExperimentOffer(),
   ]);
+
+  const continuousCaughtUp =
+    continuousExperiment == null
+      ? await getContinuousCaughtUp(nextScheduledExperiment?.opensAt ?? null)
+      : null;
 
   const cards: HomeFeedCard[] = (marshmallows ?? []).map((row) => {
     const entry = entryByMarshmallow.get(row.id);
@@ -238,6 +252,8 @@ export async function getHomeFeed(
     liveNow,
     dailyRound,
     nextScheduledExperiment,
+    continuousExperiment,
+    continuousCaughtUp,
     cooking: cooking.slice(0, HOME_COOKING_VISIBLE),
     waiting: waiting.slice(0, HOME_COOKING_VISIBLE),
     openNow: [],

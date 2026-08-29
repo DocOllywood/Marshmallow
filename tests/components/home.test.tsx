@@ -62,11 +62,25 @@ const emptyFeed: HomeFeed = {
   liveNow: [],
   dailyRound: null,
   nextScheduledExperiment: null,
+  continuousExperiment: null,
+  continuousCaughtUp: null,
   cooking: [],
   waiting: [],
   openNow: [],
   recent: [],
   hasInterests: true,
+};
+
+const continuousOffer = {
+  roundId: "40000000-0000-4000-8000-000000000008",
+  title: "Would you sell what you promised to keep?",
+  subtitle: "One promise. Four offers. See where your answer moves.",
+  homeHeadline: "Would you sell what you promised to keep?",
+  homeTeaser: "One situation. Five changes. Find your line.",
+  playHref: "/m/31000000-0000-4000-8000-000000000040",
+  archetype: "price" as const,
+  sealedCount: 0,
+  inProgress: false,
 };
 
 describe("HomeFeedView", () => {
@@ -499,12 +513,135 @@ describe("HomeFeedView", () => {
       />,
     );
 
-    expect(screen.getByText(/The next experiment/i)).toBeTruthy();
+    expect(screen.getByText(/The next daily/i)).toBeTruthy();
     expect(screen.getByText(/What's your price/i)).toBeTruthy();
     expect(screen.getByText(/Come back then/i)).toBeTruthy();
     expect(screen.queryByText(/dream job/i)).toBeNull();
     expect(screen.queryByText(/Nothing is cooking yet/i)).toBeNull();
     expect(screen.getByText(/4\/5 to unlock/)).toBeTruthy();
     expect(screen.getByRole("button", { name: /Account menu for richieg/i })).toBeTruthy();
+  });
+
+  it("shows PLAY NOW when Daily is scheduled and continuous inventory exists", () => {
+    const feed: HomeFeed = {
+      ...emptyFeed,
+      nextScheduledExperiment: {
+        roundId: "40000000-0000-4000-8000-000000000009",
+        opensAt: "2026-09-02T12:00:00.000Z",
+        archetype: "price",
+      },
+      continuousExperiment: continuousOffer,
+    };
+
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
+
+    expect(screen.getByText(/The next daily/i)).toBeTruthy();
+    expect(screen.queryByText(/Play while you wait/i)).toBeNull();
+    expect(screen.getByRole("link", { name: /PLAY NOW/i })).toBeTruthy();
+  });
+
+  it("shows MORE EXPERIMENTS below an active Daily", () => {
+    const feed: HomeFeed = {
+      ...emptyFeed,
+      continuousExperiment: continuousOffer,
+      dailyRound: {
+        roundId: "40000000-0000-4000-8000-000000000009",
+        title: "Would you move for their dream job?",
+        subtitle: "One offer. Two lives.",
+        topicName: "Human Nature",
+        tension: null,
+        roundDate: "2026-09-02",
+        questions: [
+          {
+            id: "31000000-0000-4000-8000-000000000050",
+            question: "Q1",
+            position: 1,
+            sealed: false,
+            openedReveal: false,
+            status: "open",
+            revealsAt: "2026-09-03T03:30:00.000Z",
+          },
+        ],
+        sealedCount: 0,
+        allSealed: false,
+        allRevealed: false,
+        anyRevealOpened: false,
+        currentPlayId: "31000000-0000-4000-8000-000000000050",
+        revealHref: "/daily/40000000-0000-4000-8000-000000000009/reveal",
+        todaysRead: null,
+        isExperimentDaily: true,
+        experimentArchetype: "price",
+        blindMirror: null,
+      },
+    };
+
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
+
+    expect(screen.getByText(/More experiments/i)).toBeTruthy();
+    expect(screen.getByText(/BEGIN EXPERIMENT/i)).toBeTruthy();
+  });
+
+  it("shows KEEP PLAYING after Daily completion when continuous inventory exists", () => {
+    const feed: HomeFeed = {
+      ...emptyFeed,
+      continuousExperiment: { ...continuousOffer, inProgress: false },
+      dailyRound: {
+        roundId: "40000000-0000-4000-8000-000000000009",
+        title: "Would you move for their dream job?",
+        subtitle: null,
+        topicName: null,
+        tension: null,
+        roundDate: "2026-09-02",
+        questions: Array.from({ length: 5 }, (_, index) => ({
+          id: `m-${index + 1}`,
+          question: `Q${index + 1}`,
+          position: index + 1,
+          sealed: true,
+          openedReveal: false,
+          status: "closed",
+          revealsAt: "2026-09-03T03:30:00.000Z",
+        })),
+        sealedCount: 5,
+        allSealed: true,
+        allRevealed: false,
+        anyRevealOpened: false,
+        currentPlayId: null,
+        revealHref: "/daily/40000000-0000-4000-8000-000000000009/reveal",
+        todaysRead: {
+          headline: "YOU HELD.",
+          bodyLines: [],
+          lineCopy: "Never",
+          switchCopy: null,
+          tomorrowTease: null,
+          isLegacy: false,
+          isExperiment: true,
+          isPrice: true,
+        },
+        isExperimentDaily: true,
+        experimentArchetype: "price",
+        blindMirror: null,
+      },
+    };
+
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
+
+    expect(screen.getByText(/Keep playing/i)).toBeTruthy();
+  });
+
+  it("shows caught-up state when continuous inventory is exhausted", () => {
+    const feed: HomeFeed = {
+      ...emptyFeed,
+      nextScheduledExperiment: {
+        roundId: "40000000-0000-4000-8000-000000000009",
+        opensAt: "2026-09-02T12:00:00.000Z",
+        archetype: "price",
+      },
+      continuousCaughtUp: { nextDailyOpensAt: "2026-09-02T12:00:00.000Z" },
+    };
+
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
+
+    expect(screen.getByText(/You're caught up/i)).toBeTruthy();
+    expect(screen.queryByText(/^Play now$/i)).toBeNull();
   });
 });

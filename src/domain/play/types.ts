@@ -80,4 +80,6 @@ export type PlayMarshmallow = {
   experimentCostType: string | null;
   experimentCostLabel: string | null;
   experimentArchetype: "default" | "price";
+  entrySurface: "daily" | "continuous" | null;
+  continuousNextHref: string | null;
 };

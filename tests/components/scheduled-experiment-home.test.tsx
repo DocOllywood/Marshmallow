@@ -18,7 +18,7 @@ describe("ScheduledExperimentHomeSection", () => {
       />,
     );
 
-    expect(screen.getByText(/The next experiment/i)).toBeTruthy();
+    expect(screen.getByText(/The next daily/i)).toBeTruthy();
     expect(screen.getByText(/What's your price/i)).toBeTruthy();
     expect(screen.getByText(/A new experiment opens/i)).toBeTruthy();
     expect(screen.getByText(/SEP 2 · 8:00 AM ET/i)).toBeTruthy();

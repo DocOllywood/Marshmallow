@@ -17,6 +17,8 @@ export function ExperimentTodaysReadCard({
   read,
   homeHref = "/home",
   showHomeButton = true,
+  keepPlayingHref = null,
+  onKeepPlayingClick,
   roundId,
   tensionSlug,
   blindMirror,
@@ -31,6 +33,8 @@ export function ExperimentTodaysReadCard({
   blindMirror?: BlindMirrorComparison | null;
   isPriceExperiment?: boolean;
   skipAnalytics?: boolean;
+  keepPlayingHref?: string | null;
+  onKeepPlayingClick?: () => void;
 }) {
   const tracked = useRef(false);
   const priceRead = read.isPrice || isPriceExperiment;
@@ -140,11 +144,29 @@ export function ExperimentTodaysReadCard({
         </div>
       ) : null}
       {showHomeButton ? (
-        priceRead ? (
-          <MoneyPrimaryButton href={homeHref}>HOME</MoneyPrimaryButton>
-        ) : (
-          <PrimaryButton href={homeHref}>HOME</PrimaryButton>
-        )
+        <div className="flex w-full max-w-[22rem] flex-col gap-2 pt-2">
+          {keepPlayingHref ? (
+            priceRead ? (
+              <MoneyPrimaryButton href={keepPlayingHref} onClick={onKeepPlayingClick}>
+                KEEP PLAYING
+              </MoneyPrimaryButton>
+            ) : (
+              <PrimaryButton href={keepPlayingHref} onClick={onKeepPlayingClick}>
+                KEEP PLAYING
+              </PrimaryButton>
+            )
+          ) : null}
+          {priceRead ? (
+            <MoneyPrimaryButton
+              href={homeHref}
+              className={keepPlayingHref ? "border-2 border-money bg-transparent text-money hover:opacity-80" : undefined}
+            >
+              HOME
+            </MoneyPrimaryButton>
+          ) : (
+            <PrimaryButton href={homeHref}>HOME</PrimaryButton>
+          )}
+        </div>
       ) : null}
     </div>
   );

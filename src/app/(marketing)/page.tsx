@@ -3,8 +3,11 @@ import { MarshmallowMascot } from "@/components/MarshmallowMascot";
 import { PriceLadderExample } from "@/components/marketing/PriceLadderExample";
 import { PlayMarshmallowButton } from "@/components/auth/PlayMarshmallowButton";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { getLandingPlayContext } from "@/server/dal/continuous-experiment";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const landing = await getLandingPlayContext();
+
   return (
     <main className="flex flex-1 flex-col gap-10 pb-8 pt-6">
       <div className="flex items-center justify-between">
@@ -24,7 +27,7 @@ export default function LandingPage() {
           One uncomfortable money experiment every day.
         </p>
         <div className="mt-8 w-full">
-          <PlayMarshmallowButton label="PLAY TODAY'S EXPERIMENT" />
+          <PlayMarshmallowButton label={landing.ctaLabel} />
         </div>
       </div>
 
