@@ -108,11 +108,22 @@ export function resolveEntrySurface(
 
 /** Expected RLS/auth boundaries when optional continuous inventory is unavailable. */
 export function isContinuousInventoryAccessError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  const message = error.message.toLowerCase();
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" &&
+          error !== null &&
+          "message" in error &&
+          typeof (error as { message: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : null;
+
+  if (!message) return false;
+
+  const lower = message.toLowerCase();
   return (
-    message.includes("permission denied for table entries") ||
-    message.includes("permission denied for table daily_rounds") ||
-    message.includes("42501")
+    lower.includes("permission denied for table entries") ||
+    lower.includes("permission denied for table daily_rounds") ||
+    lower.includes("42501")
   );
 }

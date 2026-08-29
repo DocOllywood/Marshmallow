@@ -102,6 +102,9 @@ describe("continuous eligibility", () => {
     expect(
       isContinuousInventoryAccessError(new Error("permission denied for table daily_rounds")),
     ).toBe(true);
+    expect(
+      isContinuousInventoryAccessError({ message: "permission denied for table entries" }),
+    ).toBe(true);
     expect(isContinuousInventoryAccessError(new Error("home_payload_leaked_aggregates"))).toBe(
       false,
     );
