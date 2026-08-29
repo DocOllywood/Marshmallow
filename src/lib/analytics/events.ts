@@ -35,6 +35,12 @@ export const ANALYTICS_EVENTS = {
   dailyRevealOpened: "daily_reveal_opened",
   gapViewed: "gap_viewed",
   nextDailyReturn: "next_daily_return",
+  dareCreated: "dare_created",
+  dareLinkCopied: "dare_link_copied",
+  dareOpened: "dare_opened",
+  dareAccepted: "dare_accepted",
+  dareCompleted: "dare_completed",
+  dareComparisonViewed: "dare_comparison_viewed",
 } as const;
 
 export type AnalyticsEventName =

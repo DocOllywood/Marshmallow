@@ -4,7 +4,9 @@ import { useEffect, useRef } from "react";
 
 import { MoneyPrimaryButton } from "@/components/MoneyPrimaryButton";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { DareSomeoneCard } from "@/components/experiment/DareSomeoneCard";
 import { BlindMirrorCard } from "@/components/experiment/BlindMirrorCard";
+import { experimentDaresEnabled } from "@/lib/env/experiment-dares";
 import { OutsideTheExperiment } from "@/components/experiment/OutsideTheExperiment";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import type { BlindMirrorComparison } from "@/domain/daily/blind-mirror";
@@ -116,6 +118,9 @@ export function ExperimentTodaysReadCard({
       )}
 
       {blindMirror ? <BlindMirrorCard comparison={blindMirror} /> : null}
+      {experimentDaresEnabled() && roundId ? (
+        <DareSomeoneCard roundId={roundId} isPriceExperiment={priceRead} />
+      ) : null}
       <OutsideTheExperiment tensionSlug={tensionSlug} moneyTone={priceRead} />
       <div className="flex flex-col gap-2 pt-2">
         <p className={`text-xs font-semibold tracking-[0.18em] uppercase ${priceRead ? "text-money" : "text-ink-muted"}`}>

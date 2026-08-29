@@ -120,6 +120,13 @@ export async function sealLinePlayAction(input: {
   }
   revalidatePath(`/m/${input.marshmallowId}`);
   revalidatePath("/home");
+
+  const { experimentDaresEnabled } = await import("@/lib/env/experiment-dares");
+  if (experimentDaresEnabled()) {
+    const { completeExperimentDareForLine } = await import("@/server/dal/experiment-dare");
+    await completeExperimentDareForLine(input.marshmallowId);
+  }
+
   return { ok: true, sealed: true };
 }
 

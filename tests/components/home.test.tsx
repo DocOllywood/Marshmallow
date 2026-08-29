@@ -1,12 +1,23 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { HomeFeedView } from "@/components/home/HomeFeed";
-import type { HomeFeed, HomeFeedCard } from "@/server/dal/home";
+vi.mock("server-only", () => ({}));
 
 vi.mock("@/server/actions/analytics", () => ({
   trackEvent: vi.fn(async () => undefined),
 }));
+
+vi.mock("@/server/actions/experiment-dare", () => ({
+  createExperimentDareAction: vi.fn(async () => ({
+    ok: true,
+    token: "a".repeat(32),
+    dareId: "dare-1",
+  })),
+  trackDareLinkCopiedAction: vi.fn(async () => undefined),
+}));
+
+import { HomeFeedView } from "@/components/home/HomeFeed";
+import type { HomeFeed, HomeFeedCard } from "@/server/dal/home";
 
 vi.mock("@/components/account/AccountMenu", () => ({
   AccountMenu: ({ username }: { username: string }) => (

@@ -1163,6 +1163,51 @@ export type Database = {
           },
         ]
       }
+      experiment_dares: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_user_id: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          recipient_line_marshmallow_id: string | null
+          round_id: string
+          sender_line_marshmallow_id: string
+          sender_user_id: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          recipient_line_marshmallow_id?: string | null
+          round_id: string
+          sender_line_marshmallow_id: string
+          sender_user_id: string
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          recipient_line_marshmallow_id?: string | null
+          round_id?: string
+          sender_line_marshmallow_id?: string
+          sender_user_id?: string
+          token?: string
+        }
+        Relationships: []
+      }
       share_cards: {
         Row: {
           created_at: string
@@ -1785,6 +1830,23 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_experiment_dare: {
+        Args: { p_round_id: string }
+        Returns: {
+          accepted_at: string | null
+          accepted_by_user_id: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          recipient_line_marshmallow_id: string | null
+          round_id: string
+          sender_line_marshmallow_id: string
+          sender_user_id: string
+          token: string
+        }
+      }
       create_share_card: {
         Args: { p_marshmallow_id: string }
         Returns: {
@@ -1811,6 +1873,39 @@ export type Database = {
       current_profile_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      accept_experiment_dare: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      complete_experiment_dare_for_line: {
+        Args: { p_line_marshmallow_id: string }
+        Returns: boolean
+      }
+      get_dare_comparison: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      get_public_dare: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      get_sender_dare_for_round: {
+        Args: { p_round_id: string }
+        Returns: {
+          accepted_at: string | null
+          accepted_by_user_id: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          recipient_line_marshmallow_id: string | null
+          round_id: string
+          sender_line_marshmallow_id: string
+          sender_user_id: string
+          token: string
+        }
       }
       enqueue_reveal_ready_notifications: {
         Args: { p_marshmallow_id: string }
