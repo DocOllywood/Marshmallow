@@ -217,6 +217,9 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     isExperimentDaily,
     experimentPriorChoiceLabel,
     experimentPriorTensionSide,
+    experimentCostType: experimentMeta?.costType ?? null,
+    experimentCostLabel: experimentMeta?.costLabel ?? null,
+    experimentArchetype: dailyRound?.experimentArchetype ?? "default",
   };
 
   if (!mayLoadResults) {

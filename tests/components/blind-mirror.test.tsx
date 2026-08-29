@@ -43,13 +43,12 @@ describe("BlindMirrorCard", () => {
 
     expect(screen.getByText("Blind mirror")).toBeTruthy();
     expect(screen.getByText("You've faced this rule before.")).toBeTruthy();
-    expect(screen.getByText("YOUR CLOSEST FRIEND")).toBeTruthy();
-    expect(screen.getByText("YOUR SIBLING")).toBeTruthy();
+    expect(screen.getByText("Then")).toBeTruthy();
+    expect(screen.getByText("Now")).toBeTruthy();
     expect(screen.getByText("JUSTICE")).toBeTruthy();
     expect(screen.getByText("LOYALTY")).toBeTruthy();
-    expect(
-      screen.getByText("YOU STARTED THE SAME WAY. YOU ENDED SOMEWHERE DIFFERENT."),
-    ).toBeTruthy();
+    expect(screen.getByText(/Same rule/i)).toBeTruthy();
+    expect(screen.getByText(/Different call/i)).toBeTruthy();
   });
 });
 

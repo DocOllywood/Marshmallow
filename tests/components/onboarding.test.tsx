@@ -23,12 +23,12 @@ describe("OnboardingFlow", () => {
   it("tracks start from welcome and skips the world-preference step in Beta 1", async () => {
     render(<OnboardingFlow username="tester" displayName="Tester" />);
     expect(trackEvent).not.toHaveBeenCalled();
-    expect(screen.getByText("A Daily Experiment in Being Human")).toBeTruthy();
-    expect(screen.getByText(/Five small dilemmas about how we treat each other/i)).toBeTruthy();
+    expect(screen.getByText(/What's your price/i)).toBeTruthy();
+    expect(screen.getByText(/Money changes people/i)).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: /^Continue$/i }));
     expect(trackEvent).toHaveBeenCalledTimes(1);
-    expect(screen.getByText("How Marshmallow works")).toBeTruthy();
+    expect(screen.getByText("How it works")).toBeTruthy();
     expect(screen.queryByText("Pick what fascinates you.")).toBeNull();
   });
 
@@ -42,13 +42,15 @@ describe("OnboardingFlow", () => {
     render(<OnboardingFlow username="tester" displayName="Tester" />);
     fireEvent.click(screen.getByRole("button", { name: /^Continue$/i }));
 
-    expect(screen.getByText(/Make your instinctive choice/i)).toBeTruthy();
-    expect(screen.getByText(/discover where everyone else moved/i)).toBeTruthy();
+    expect(screen.getByText(/Make your first call/i)).toBeTruthy();
+    expect(screen.getByText(/The price/i)).toBeTruthy();
+    expect(screen.getByText(/Find where your answer changes/i)).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Got it$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Show me$/i }));
 
     const hidden = screen.getByDisplayValue(BETA_ONBOARDING_DEFAULT_TOPIC_ID);
     expect(hidden).toBeTruthy();
-    expect(screen.getByRole("button", { name: /PLAY MY FIRST MARSHMALLOW/i })).toBeTruthy();
+    expect(screen.getByText(/No financial advice/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /PLAY MY FIRST EXPERIMENT/i })).toBeTruthy();
   });
 });

@@ -32,6 +32,12 @@ export type TodaysRead = {
   tomorrowTease: string | null;
   isLegacy: boolean;
   isExperiment?: boolean;
+  isPrice?: boolean;
+  priceSections?: {
+    startedLabel: string | null;
+    endedLabel: string | null;
+    movedSummary: string | null;
+  } | null;
 };
 
 type Lean = "left" | "right" | "split";

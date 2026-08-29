@@ -21,7 +21,19 @@ export const metadata: Metadata = {
     template: "%s · Marshmallow",
   },
   description:
-    "A daily experiment in being human. Make your call, predict the crowd, and come back for the reveal.",
+    "Marshmallow is a daily experiment about money, choices, and the point where your answer changes.",
+  openGraph: {
+    title: "Marshmallow — What's your price?",
+    description:
+      "Money changes people. Find out where it changes you. One uncomfortable money experiment every day.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Marshmallow — What's your price?",
+    description:
+      "A daily experiment about money, choices, and the point where your answer changes.",
+  },
 };
 
 export const viewport: Viewport = {

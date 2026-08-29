@@ -8,8 +8,7 @@ import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
 import { EmptyState } from "@/components/EmptyState";
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import type { DailyRoundProgress } from "@/domain/daily/round";
-import { dailyHomeState } from "@/domain/daily/round";
+import { isDailyRoundVisibleOnHome, dailyHomeState, type DailyRoundProgress } from "@/domain/daily/round";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { trackEvent } from "@/server/actions/analytics";
 import { heroHomeQuick, isWaitingForSample, moreHomeQuick } from "@/domain/play/sample";
@@ -116,7 +115,7 @@ export function HomeFeedView({
           description={
             feed.hasInterests
               ? "No questions are open right now. Check back soon."
-              : "Today's experiment will show up here when it's ready."
+              : "The daily experiment lands here when it's ready."
           }
         />
       ) : null}
@@ -127,7 +126,7 @@ export function HomeFeedView({
 
       {heroQuick ? <QuickHero hero={heroQuick} more={moreQuick} /> : null}
 
-      {feed.dailyRound ? (
+      {feed.dailyRound && isDailyRoundVisibleOnHome(feed.dailyRound) ? (
         feed.dailyRound.isExperimentDaily ? (
           <ExperimentDailyHomeSection round={feed.dailyRound} />
         ) : (

@@ -17,6 +17,7 @@ export function ExperimentTodaysReadCard({
   roundId,
   tensionSlug,
   blindMirror,
+  isPriceExperiment = false,
 }: {
   read: TodaysRead;
   homeHref?: string;
@@ -24,8 +25,15 @@ export function ExperimentTodaysReadCard({
   roundId?: string;
   tensionSlug?: string | null;
   blindMirror?: BlindMirrorComparison | null;
+  isPriceExperiment?: boolean;
 }) {
   const tracked = useRef(false);
+  const priceRead = read.isPrice || isPriceExperiment;
+  const hypotheticalLines = read.bodyLines.filter((line) =>
+    /hypothetical experiment/i.test(line),
+  );
+  const showHypotheticalNearHeadline =
+    priceRead && hypotheticalLines.length > 0 && /^\$|MOVED AT/i.test(read.headline);
 
   useEffect(() => {
     if (tracked.current) return;
@@ -39,32 +47,82 @@ export function ExperimentTodaysReadCard({
 
   return (
     <div className="flex flex-col items-center gap-6 px-2 py-8 text-center">
-      <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">Today&apos;s read</p>
-      <p className="max-w-[22rem] font-display text-[clamp(1.35rem,5.5vw,1.85rem)] leading-[1.12] font-semibold tracking-tight break-words uppercase">
+      <p
+        className={`text-xs font-semibold tracking-[0.18em] uppercase ${priceRead ? "text-money" : "text-ink-muted"}`}
+      >
+        Today&apos;s read
+      </p>
+      <p className="max-w-[22rem] font-display text-[clamp(1.35rem,5.5vw,1.85rem)] leading-[1.12] font-semibold tracking-tight break-words uppercase text-ink">
         {read.headline}
       </p>
-      {read.bodyLines.map((line) => (
-        <p key={line} className="max-w-[22rem] text-sm leading-6 text-ink-muted">
-          {line}
-        </p>
-      ))}
-      {read.lineCopy ? (
-        <div className="max-w-[22rem] space-y-1 pt-2">
-          <p className="text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase">Your line</p>
-          <p className="font-display text-base font-semibold text-ink">{read.lineCopy}</p>
-        </div>
+      {showHypotheticalNearHeadline ? (
+        <p className="max-w-[22rem] text-sm leading-6 text-ink-muted">{hypotheticalLines[0]}</p>
       ) : null}
+
+      {priceRead && read.priceSections ? (
+        <div className="flex w-full max-w-[22rem] flex-col gap-4 border-t border-money-border/50 pt-4 text-left">
+          {read.priceSections.startedLabel ? (
+            <div className="flex flex-col gap-1">
+              <p className="text-[10px] font-semibold tracking-[0.2em] text-ink-muted uppercase">
+                You started
+              </p>
+              <p className="font-display text-base font-semibold uppercase text-ink">
+                {read.priceSections.startedLabel}
+              </p>
+            </div>
+          ) : null}
+          {read.priceSections.endedLabel ? (
+            <div className="flex flex-col gap-1">
+              <p className="text-[10px] font-semibold tracking-[0.2em] text-ink-muted uppercase">
+                You ended
+              </p>
+              <p className="font-display text-base font-semibold uppercase text-ink">
+                {read.priceSections.endedLabel}
+              </p>
+            </div>
+          ) : null}
+          {read.priceSections.movedSummary && !showHypotheticalNearHeadline ? (
+            <div className="flex flex-col gap-1">
+              <p className="text-[10px] font-semibold tracking-[0.2em] text-ink-muted uppercase">
+                What moved
+              </p>
+              <p className="text-sm leading-6 text-ink-muted">{read.priceSections.movedSummary}</p>
+            </div>
+          ) : null}
+          {read.lineCopy ? (
+            <div className="flex flex-col gap-1 border-t border-money-border/40 pt-3">
+              <p className="text-[10px] font-semibold tracking-[0.2em] text-money uppercase">Your line</p>
+              <p className="font-display text-base font-semibold text-ink">{read.lineCopy}</p>
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <>
+          {read.bodyLines.map((line) => (
+            <p key={line} className="max-w-[22rem] text-sm leading-6 text-ink-muted">
+              {line}
+            </p>
+          ))}
+          {read.lineCopy ? (
+            <div className="max-w-[22rem] space-y-1 pt-2">
+              <p className="text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase">Your line</p>
+              <p className="font-display text-base font-semibold text-ink">{read.lineCopy}</p>
+            </div>
+          ) : null}
+        </>
+      )}
+
       {blindMirror ? <BlindMirrorCard comparison={blindMirror} /> : null}
       <OutsideTheExperiment tensionSlug={tensionSlug} />
       <div className="flex flex-col gap-2 pt-2">
-        <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-          Your calls are locked.
+        <p className={`text-xs font-semibold tracking-[0.18em] uppercase ${priceRead ? "text-money" : "text-ink-muted"}`}>
+          {priceRead ? "Your line is locked." : "Your calls are locked."}
         </p>
         <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
           The crowd is still deciding.
         </p>
         <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
-          Come back tonight to see where everyone else moved.
+          Come back for the reveal.
         </p>
       </div>
       {read.tomorrowTease ? (

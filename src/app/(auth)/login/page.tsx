@@ -11,7 +11,7 @@ export default async function LoginPage({
     <main className="flex flex-1 flex-col">
       <PageHeader
         title="Welcome back"
-        description="Email and password. Then you're back in."
+        description="Email and password. Then you're back in for today's experiment."
       />
       <SignInForm nextPath={nextPath} />
     </main>

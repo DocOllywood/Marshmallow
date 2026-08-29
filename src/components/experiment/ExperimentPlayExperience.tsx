@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ChoiceButton } from "@/components/ChoiceButton";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { BinaryPredictor, defaultPercentsFor, MultiPredictor } from "@/components/play/Predictors";
+import { ExperimentCostDisplay } from "@/components/experiment/ExperimentCostDisplay";
 import { ExperimentMovementFeedback } from "@/components/experiment/ExperimentMovementFeedback";
 import { ExperimentStageHeader } from "@/components/experiment/ExperimentStageHeader";
 import { ExperimentTodaysReadCard } from "@/components/experiment/ExperimentTodaysReadCard";
@@ -52,8 +53,9 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
 
   const tension = marshmallow.dailyRound?.tension ?? null;
   const position = marshmallow.roundPosition ?? 1;
-  const isPrice = marshmallow.dailyRound?.experimentArchetype === "price";
+  const isPrice = marshmallow.experimentArchetype === "price";
   const priceMicrocopy = isPrice ? priceStageMicrocopy(stage) : null;
+  const showPriceIntro = isPrice && stage === "instinct" && position === 1 && !marshmallow.sealed;
 
   useEffect(() => {
     if (!marshmallow.dailyRound || dailyStarted.current) return;
@@ -263,12 +265,50 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
   }
 
   if (marshmallow.sealed || justSealed) {
+    const isLineStage = stage === "line" || marshmallow.isLine;
+    const lockedLineLabel =
+      isLineStage && choiceId
+        ? marshmallow.choices.find((item) => item.id === choiceId)?.label ?? null
+        : null;
+
+    if (lockedLineLabel && isLineStage) {
+      return (
+        <div
+          className={cn(
+            "flex flex-1 flex-col items-center gap-4 px-2 py-10 text-center",
+            justSealed && "seal-moment",
+          )}
+        >
+          <p
+            className={cn(
+              "text-xs font-semibold tracking-[0.24em] uppercase",
+              isPrice ? "text-money" : "text-ink-muted",
+            )}
+          >
+            The line
+          </p>
+          <p className="max-w-[22rem] font-display text-[clamp(1.35rem,6vw,2rem)] leading-[1.1] font-semibold tracking-tight break-words text-ink">
+            {lockedLineLabel}
+          </p>
+          <p className="max-w-[18rem] text-sm leading-6 text-ink-muted">
+            That&apos;s where you drew it today.
+          </p>
+          {marshmallow.dailyNextHref && !marshmallow.dailyRound?.allSealed ? (
+            <PrimaryButton href={marshmallow.dailyNextHref}>CONTINUE</PrimaryButton>
+          ) : marshmallow.dailyRound?.allSealed && marshmallow.dailyRound.todaysRead ? null : (
+            <PrimaryButton href="/home">HOME</PrimaryButton>
+          )}
+        </div>
+      );
+    }
+
     if (marshmallow.dailyRound?.allSealed && marshmallow.dailyRound.todaysRead) {
       return (
         <ExperimentTodaysReadCard
           read={marshmallow.dailyRound.todaysRead}
           roundId={marshmallow.dailyRound.roundId}
           tensionSlug={marshmallow.dailyRound.tension?.slug}
+          isPriceExperiment={marshmallow.experimentArchetype === "price"}
         />
       );
     }
@@ -300,6 +340,9 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
     return (
       <div className="flex flex-1 flex-col gap-8 pb-8">
         <ExperimentStageHeader tension={tension} position={position} stage="line" archetype={isPrice ? "price" : "default"} />
+        {isPrice ? (
+          <p className="text-xs font-semibold tracking-[0.22em] text-money uppercase">Your line</p>
+        ) : null}
         <h1 className="font-display text-[clamp(1.5rem,6.5vw,2rem)] leading-[1.1] font-semibold tracking-tight break-words">
           {marshmallow.question}
         </h1>
@@ -365,8 +408,28 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
 
   return (
     <div className="flex flex-1 flex-col gap-8 pb-8">
+      {showPriceIntro ? (
+        <div className="flex flex-col gap-2 border-b border-border/60 pb-4">
+          <p className="text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase">
+            Today&apos;s experiment
+          </p>
+          {tension ? (
+            <p className="text-xs font-semibold tracking-[0.2em] text-ink uppercase">
+              {tension.displayLabel}
+            </p>
+          ) : null}
+          <p className="font-display text-[clamp(1.25rem,5.5vw,1.65rem)] leading-[1.12] font-semibold tracking-tight break-words">
+            {marshmallow.dailyRound?.title}
+          </p>
+          <p className="text-sm leading-6 text-ink-muted">
+            Don&apos;t overthink it.
+            <span className="block">We&apos;ll change the circumstances as you go.</span>
+          </p>
+        </div>
+      ) : null}
+
       <ExperimentStageHeader
-        tension={tension}
+        tension={showPriceIntro ? null : tension}
         position={position}
         stage={stage}
         spacious={stage === "flip"}
@@ -374,13 +437,13 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
       />
 
       {stage === "flip" ? (
-        <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">
-          {isPrice ? "Now you're the person paying the price." : "Now change sides."}
+        <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">
+          {isPrice ? "Now you're on the other side of the offer." : "Now change sides."}
         </p>
       ) : null}
 
       {showPriorChoice ? (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 rounded-xl border border-money-border/50 bg-money-soft/25 px-4 py-3">
           <p className="text-[10px] font-semibold tracking-[0.2em] text-ink-muted uppercase">You chose</p>
           <p className="font-display text-lg font-semibold uppercase tracking-tight text-ink">
             {marshmallow.experimentPriorChoiceLabel}
@@ -389,20 +452,35 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
       ) : null}
 
       {stage === "pressure" && !isPrice ? (
-        <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">
+        <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">
           Same secret. One new fact.
         </p>
       ) : null}
 
-      {stage === "consequence" && !isPrice ? (
-        <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">
-          Now add the consequence.
+      {priceMicrocopy ? (
+        <p
+          className={cn(
+            "text-xs font-semibold tracking-[0.22em] uppercase",
+            stage === "pressure" ? "text-ink-muted" : "text-money",
+          )}
+        >
+          {priceMicrocopy}
         </p>
       ) : null}
 
-      {priceMicrocopy && stage !== "flip" ? (
-        <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">
-          {priceMicrocopy}
+      {isPrice && stage === "consequence" ? (
+        <div className="flex flex-col gap-4 border-y border-money-border/40 py-5">
+          <ExperimentCostDisplay
+            costType={marshmallow.experimentCostType}
+            costLabel={marshmallow.experimentCostLabel}
+            prominent
+          />
+        </div>
+      ) : null}
+
+      {stage === "consequence" && !isPrice ? (
+        <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">
+          Now add the consequence.
         </p>
       ) : null}
 
@@ -412,7 +490,7 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
 
       {stage === "instinct" ? (
         <p className="text-sm text-ink-muted">
-          {isPrice ? "What do you do?" : "Go with your first instinct."}
+          {isPrice ? "Make your first call." : "Go with your first instinct."}
         </p>
       ) : null}
 

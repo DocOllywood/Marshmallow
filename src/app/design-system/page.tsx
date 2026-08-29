@@ -17,7 +17,10 @@ import {
   SealedPrototype,
   WaitingPrototype,
 } from "@/components/design-system/prototypes";
+import { ExperimentCostDisplay } from "@/components/experiment/ExperimentCostDisplay";
+import { BlindMirrorCard } from "@/components/experiment/BlindMirrorCard";
 import { ExperimentMovementFeedback } from "@/components/experiment/ExperimentMovementFeedback";
+import { PriceLadderExample } from "@/components/marketing/PriceLadderExample";
 import { ExperimentStageHeader } from "@/components/experiment/ExperimentStageHeader";
 import { ExperimentTodaysReadCard } from "@/components/experiment/ExperimentTodaysReadCard";
 import { ExperimentRevealShow } from "@/components/experiment/ExperimentRevealShow";
@@ -46,12 +49,65 @@ export default function DesignSystemPage() {
         <Section title="Brand">
           <MarshmallowLogo />
           <p className="font-display text-3xl leading-[1.05] font-semibold tracking-tight">
-            What would hurt more to discover?
+            What&apos;s your price?
           </p>
           <p className="text-sm leading-6 text-ink-muted">
-            Supporting copy stays compact. Numbers use tabular figures:{" "}
-            <span className="font-semibold text-ink tabular-nums">64%</span>
+            Money changes people. Find out where it changes you.
           </p>
+        </Section>
+
+        <Section title="Money era tokens">
+          <p className="text-sm leading-6 text-ink-muted">
+            Accent only — cream and charcoal stay dominant. Purple remains the global CTA.
+          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <TokenSwatch label="money" className="bg-money text-money-foreground" />
+            <TokenSwatch label="money-soft" className="bg-money-soft text-ink border border-money-border" />
+            <TokenSwatch label="money-border" className="bg-surface text-ink border-2 border-money-border" />
+            <TokenSwatch label="money-muted" className="bg-surface text-money-muted" />
+            <TokenSwatch label="money-foreground" className="bg-money text-money-foreground" />
+          </div>
+          <div className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-5">
+            <ExperimentStageHeader
+              tension={{
+                id: "t1",
+                slug: "desire-commitment",
+                leftLabel: "COMMITMENT",
+                rightLabel: "DESIRE",
+                displayLabel: "DESIRE vs. COMMITMENT",
+              }}
+              position={3}
+              stage="consequence"
+              archetype="price"
+            />
+            <ExperimentCostDisplay costType="MONEY" costLabel="$10,000" prominent />
+            <p className="text-xs font-semibold tracking-[0.22em] text-money uppercase">Your line</p>
+            <p className="font-display text-xl font-semibold text-ink">$10,000</p>
+          </div>
+          <PriceLadderExample />
+          <BlindMirrorCard
+            comparison={{
+              principleId: "p1",
+              principleLabel: "Truth versus loyalty",
+              earlierRoundId: "r1",
+              laterRoundId: "r2",
+              earlierContext: { subject: "friend", label: "YOUR CLOSEST FRIEND" },
+              laterContext: { subject: "family", label: "YOUR SIBLING" },
+              earlierInitialSide: "right",
+              laterInitialSide: "right",
+              earlierFinalSide: "right",
+              laterFinalSide: "left",
+              earlierLine: "Tell them",
+              laterLine: "Stay quiet",
+              sameInitialPosition: true,
+              sameFinalPosition: false,
+              lineChanged: false,
+              comparisonType: "SAME_START_DIFFERENT_FINISH",
+              headline: "SAME RULE. DIFFERENT CALL.",
+              earlierResultLabel: "JUSTICE",
+              laterResultLabel: "LOYALTY",
+            }}
+          />
         </Section>
 
         <Section title="Mascot">
@@ -303,6 +359,16 @@ function Section({
       </h2>
       {children}
     </section>
+  );
+}
+
+function TokenSwatch({ label, className }: { label: string; className: string }) {
+  return (
+    <div
+      className={`flex min-h-16 items-center justify-center rounded-xl px-3 text-center text-xs font-semibold tracking-wide uppercase ${className}`}
+    >
+      {label}
+    </div>
   );
 }
 

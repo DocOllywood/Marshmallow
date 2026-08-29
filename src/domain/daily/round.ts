@@ -84,9 +84,7 @@ export function buildDailyRoundProgress(input: {
     sorted.every((q) => q.status === "revealed" || q.status === "archived");
   const anyRevealOpened = sorted.some((q) => input.openedRevealIds.has(q.id));
   const currentPlayId =
-    sorted.find((q) => !q.sealed && q.status === "open")?.id ??
-    sorted.find((q) => !q.sealed)?.id ??
-    null;
+    sorted.find((q) => !q.sealed && q.status === "open")?.id ?? null;
 
   return {
     roundId: input.roundId,
@@ -127,6 +125,20 @@ export type DailyHomeState =
   | "sealed"
   | "ready"
   | "done";
+
+/** Consumer-visible daily: open for play, in progress, or waiting on reveal the user joined. */
+export function isDailyRoundVisibleOnHome(progress: DailyRoundProgress): boolean {
+  if (progress.questions.some((q) => q.status === "open")) {
+    return true;
+  }
+  if (progress.sealedCount > 0) {
+    return true;
+  }
+  if (progress.allRevealed && progress.allSealed) {
+    return true;
+  }
+  return false;
+}
 
 export function dailyHomeState(progress: DailyRoundProgress): DailyHomeState {
   if (progress.allRevealed && progress.allSealed && !progress.anyRevealOpened) {

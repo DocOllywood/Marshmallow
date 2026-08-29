@@ -28,6 +28,7 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+import { ExperimentCostDisplay } from "@/components/experiment/ExperimentCostDisplay";
 import { ExperimentDailyHomeSection } from "@/components/experiment/ExperimentDailyHomeSection";
 import { ExperimentMovementFeedback } from "@/components/experiment/ExperimentMovementFeedback";
 import { ExperimentPlayExperience } from "@/components/experiment/ExperimentPlayExperience";
@@ -116,24 +117,27 @@ function experimentMarshmallow(
     isExperimentDaily: true,
     experimentPriorChoiceLabel: null,
     experimentPriorTensionSide: null,
+    experimentCostType: null,
+    experimentCostLabel: null,
+    experimentArchetype: "default",
     ...overrides,
   };
 }
 
 describe("experiment daily home", () => {
-  it("shows the experiment hierarchy and begin CTA", () => {
+  it("shows the money-era experiment hierarchy and begin CTA", () => {
     render(<ExperimentDailyHomeSection round={dailyRoundBase} />);
 
     expect(screen.getByText(/The daily experiment/i)).toBeTruthy();
-    expect(screen.getByText(/Today everyone is playing/i)).toBeTruthy();
+    expect(screen.getByText(/Today's price/i)).toBeTruthy();
     expect(screen.getByText("LOYALTY vs. JUSTICE")).toBeTruthy();
     expect(screen.getByText(/How much does loyalty excuse/i)).toBeTruthy();
     expect(screen.getByText(/One situation/i)).toBeTruthy();
-    expect(screen.getByText(/Five changes/i)).toBeTruthy();
-    expect(screen.getByRole("link", { name: "BEGIN" })).toBeTruthy();
+    expect(screen.getByText(/Find your line/i)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "BEGIN EXPERIMENT" })).toBeTruthy();
   });
 
-  it("shows price-specific home copy for price archetype rounds", () => {
+  it("uses unified money-era home copy for price archetype rounds", () => {
     render(
       <ExperimentDailyHomeSection
         round={{
@@ -151,9 +155,35 @@ describe("experiment daily home", () => {
       />,
     );
 
-    expect(screen.getByText(/^The price$/i)).toBeTruthy();
-    expect(screen.getByText(/Every principle has a cost/i)).toBeTruthy();
-    expect(screen.queryByText(/Today everyone is playing/i)).toBeNull();
+    expect(screen.getByText(/Today's price/i)).toBeTruthy();
+    expect(screen.getByText(/Find your line/i)).toBeTruthy();
+    expect(screen.queryByText(/Every principle has a cost/i)).toBeNull();
+  });
+
+  it("does not show begin when no open play id exists", () => {
+    render(
+      <ExperimentDailyHomeSection
+        round={{
+          ...dailyRoundBase,
+          currentPlayId: null,
+          questions: dailyRoundBase.questions.length
+            ? dailyRoundBase.questions
+            : [
+                {
+                  id: "q1",
+                  question: "Q?",
+                  position: 1,
+                  sealed: false,
+                  openedReveal: false,
+                  status: "draft",
+                  revealsAt: "",
+                },
+              ],
+        }}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "BEGIN EXPERIMENT" })).toBeNull();
   });
 });
 
@@ -161,7 +191,7 @@ describe("experiment stage header", () => {
   it("renders tension, position, and stage label", () => {
     render(<ExperimentStageHeader tension={tension} position={1} stage="instinct" />);
     expect(screen.getByText("LOYALTY vs. JUSTICE")).toBeTruthy();
-    expect(screen.getByText("01 OF 05")).toBeTruthy();
+    expect(screen.getByText("01 / 05")).toBeTruthy();
     expect(screen.getByText("INSTINCT")).toBeTruthy();
   });
 
@@ -174,7 +204,30 @@ describe("experiment stage header", () => {
         archetype="price"
       />,
     );
-    expect(screen.getByText("THE COST")).toBeTruthy();
+    expect(screen.getByText("PRESSURE")).toBeTruthy();
+
+    cleanup();
+    render(
+      <ExperimentStageHeader
+        tension={tension}
+        position={3}
+        stage="consequence"
+        archetype="price"
+      />,
+    );
+    expect(screen.getByText("THE PRICE")).toBeTruthy();
+  });
+
+  it("renders default stage labels for non-price archetype", () => {
+    render(
+      <ExperimentStageHeader
+        tension={tension}
+        position={3}
+        stage="consequence"
+        archetype="default"
+      />,
+    );
+    expect(screen.getByText("CONSEQUENCE")).toBeTruthy();
   });
 });
 
@@ -184,6 +237,29 @@ describe("experiment movement feedback", () => {
     expect(screen.getByText("YOU HELD.")).toBeTruthy();
     rerender(<ExperimentMovementFeedback feedback="moved" />);
     expect(screen.getByText("YOU MOVED.")).toBeTruthy();
+  });
+});
+
+describe("experiment play — price consequence", () => {
+  it("shows prominent cost label on the price stage", () => {
+    render(
+      <ExperimentPlayExperience
+        marshmallow={experimentMarshmallow({
+          id: "price-m3",
+          question: "Would you sell the guitar for this amount?",
+          roundPosition: 3,
+          experimentStage: "consequence",
+          experimentArchetype: "price",
+          experimentCostType: "MONEY",
+          experimentCostLabel: "$10,000",
+          experimentPriorChoiceLabel: "KEEP IT",
+          experimentPriorTensionSide: "left",
+        })}
+      />,
+    );
+
+    expect(screen.getByText("THE PRICE")).toBeTruthy();
+    expect(screen.getByText("$10,000")).toBeTruthy();
   });
 });
 
@@ -304,6 +380,34 @@ describe("experiment play — flip and read the room", () => {
 });
 
 describe("experiment play — the line", () => {
+  it("shows signature payoff after locking the line", async () => {
+    render(
+      <ExperimentPlayExperience
+        marshmallow={experimentMarshmallow({
+          id: "line-lock",
+          question: "At what price would you sell it?",
+          roundPosition: 5,
+          experimentStage: "line",
+          isLine: true,
+          experimentArchetype: "price",
+          choices: [
+            { id: "a", label: "$10,000", sort_order: 0, tensionSide: null },
+            { id: "b", label: "Never", sort_order: 1, tensionSide: null },
+          ],
+        })}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "$10,000" }));
+
+    await waitFor(() => {
+      expect(sealLinePlayAction).toHaveBeenCalled();
+    });
+    expect(await screen.findByText("The line")).toBeTruthy();
+    expect(screen.getByText("$10,000")).toBeTruthy();
+    expect(screen.getByText(/That's where you drew it today/i)).toBeTruthy();
+  });
+
   it("shows line stage without prediction", () => {
     render(
       <ExperimentPlayExperience
@@ -354,7 +458,7 @@ describe("experiment today's read and wait", () => {
     expect(screen.getByText(/Outside the experiment/i)).toBeTruthy();
     expect(screen.getByText(/Your calls are locked/i)).toBeTruthy();
     expect(screen.getByText(/The crowd is still deciding/i)).toBeTruthy();
-    expect(screen.getByText(/Come back tonight to see where everyone else moved/i)).toBeTruthy();
+    expect(screen.getByText(/Come back for the reveal/i)).toBeTruthy();
     expect(screen.getByText(/Your line/i)).toBeTruthy();
     expect(screen.getByText(/No points. No proof. Nobody needs to know/i)).toBeTruthy();
   });
@@ -648,6 +752,48 @@ describe("experiment resume behavior", () => {
 
     expect(screen.getByText(/Call locked/i)).toBeTruthy();
     expect(screen.getByRole("link", { name: "CONTINUE" })).toBeTruthy();
+  });
+});
+
+describe("ExperimentCostDisplay", () => {
+  it("renders monetary cost labels with money styling", () => {
+    render(<ExperimentCostDisplay costType="MONEY" costLabel="$10,000" prominent />);
+    expect(screen.getByText("$10,000")).toBeTruthy();
+  });
+
+  it("renders non-money cost labels editorially", () => {
+    render(<ExperimentCostDisplay costType="PERSONAL_COST" costLabel="Your reputation" prominent />);
+    expect(screen.getByText("Your reputation")).toBeTruthy();
+  });
+});
+
+describe("price today's read presentation", () => {
+  it("shows structured price sections when provided", () => {
+    render(
+      <ExperimentTodaysReadCard
+        read={{
+          headline: "YOUR ANSWER MOVED AT $10,000.",
+          bodyLines: ["Inside this hypothetical experiment, that was your line."],
+          lineCopy: "$10,000",
+          switchCopy: null,
+          tomorrowTease: null,
+          isLegacy: false,
+          isExperiment: true,
+          isPrice: true,
+          priceSections: {
+            startedLabel: "KEEP IT",
+            endedLabel: "SELL IT",
+            movedSummary: "Inside this hypothetical experiment, that was your line.",
+          },
+        }}
+        isPriceExperiment
+      />,
+    );
+
+    expect(screen.getByText("You started")).toBeTruthy();
+    expect(screen.getByText("KEEP IT")).toBeTruthy();
+    expect(screen.getByText(/Inside this hypothetical experiment/i)).toBeTruthy();
+    expect(screen.getByText(/Your line is locked/i)).toBeTruthy();
   });
 });
 

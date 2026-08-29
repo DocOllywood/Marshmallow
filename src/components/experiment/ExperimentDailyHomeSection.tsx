@@ -13,7 +13,6 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
   const state = dailyHomeState(round);
   const playHref = round.currentPlayId ? `/m/${round.currentPlayId}` : "/home";
   const viewed = useRef(false);
-  const isPrice = round.experimentArchetype === "price";
 
   useEffect(() => {
     if (viewed.current) return;
@@ -26,18 +25,12 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
   }, [round.roundId, round.tension, state]);
 
   return (
-    <section className="flex flex-col gap-5 border-l-2 border-primary/30 pl-4">
+    <section className="flex flex-col gap-5 border-l-2 border-border/80 pl-4">
       <div className="flex flex-col gap-3">
-        <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
+        <p className="text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase">
           The daily experiment
         </p>
-        {isPrice ? (
-          <p className="text-xs font-semibold tracking-[0.22em] text-ink uppercase">The price</p>
-        ) : (
-          <p className="text-[10px] font-semibold tracking-[0.2em] text-ink-muted/80 uppercase">
-            Today everyone is playing
-          </p>
-        )}
+        <p className="text-xs font-semibold tracking-[0.22em] text-money uppercase">Today&apos;s price</p>
         {round.tension ? (
           <p className="text-xs font-semibold tracking-[0.2em] text-ink uppercase">
             {round.tension.displayLabel}
@@ -47,26 +40,19 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
           {round.title}
         </p>
         <div className="space-y-1 text-sm leading-6 text-ink-muted">
-          {isPrice ? (
-            <>
-              <p>Every principle has a cost.</p>
-              <p>See whether yours does.</p>
-            </>
-          ) : (
-            <>
-              <p>One situation.</p>
-              <p>Five changes.</p>
-              <p>See where your answer moves.</p>
-            </>
-          )}
+          <p>One situation.</p>
+          <p>Five changes.</p>
+          <p>Find your line.</p>
         </div>
       </div>
 
-      {state === "play" ? <PrimaryButton href={playHref}>BEGIN</PrimaryButton> : null}
-      {state === "continue" ? (
+      {state === "play" && round.currentPlayId ? (
+        <PrimaryButton href={playHref}>BEGIN EXPERIMENT</PrimaryButton>
+      ) : null}
+      {state === "continue" && round.currentPlayId ? (
         <>
           <p className="text-sm text-ink-muted">{round.sealedCount} of 5 locked</p>
-          <PrimaryButton href={playHref}>CONTINUE</PrimaryButton>
+          <PrimaryButton href={playHref}>CONTINUE EXPERIMENT</PrimaryButton>
         </>
       ) : null}
       {state === "sealed" ? (
@@ -77,15 +63,16 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
             roundId={round.roundId}
             tensionSlug={round.tension?.slug}
             blindMirror={round.blindMirror}
+            isPriceExperiment={round.experimentArchetype === "price"}
           />
         ) : (
-          <p className="text-sm text-ink-muted">Come back tonight.</p>
+          <p className="text-sm text-ink-muted">Your calls are locked. Come back tonight.</p>
         )
       ) : null}
       {state === "ready" ? (
         <>
-          <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">The crowd is in.</p>
-          <PrimaryButton href={round.revealHref}>REVEAL THE EXPERIMENT</PrimaryButton>
+          <p className="text-xs font-semibold tracking-[0.18em] text-money uppercase">The crowd is in.</p>
+          <PrimaryButton href={round.revealHref}>SEE WHAT CHANGED</PrimaryButton>
         </>
       ) : null}
     </section>

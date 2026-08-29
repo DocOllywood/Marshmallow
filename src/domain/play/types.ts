@@ -76,4 +76,7 @@ export type PlayMarshmallow = {
   isExperimentDaily: boolean;
   experimentPriorChoiceLabel: string | null;
   experimentPriorTensionSide: TensionSide | null;
+  experimentCostType: string | null;
+  experimentCostLabel: string | null;
+  experimentArchetype: "default" | "price";
 };

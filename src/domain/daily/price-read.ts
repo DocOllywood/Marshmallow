@@ -1,13 +1,6 @@
 import type { ExperimentTodaysRead } from "@/domain/daily/experiment-read";
 import type { PriceTrajectory } from "@/domain/daily/price";
-import { containsForbiddenPriceWording } from "@/domain/daily/price";
-
-function isMonetaryCost(costType: string | null, costLabel: string | null): boolean {
-  if (costType?.toUpperCase() === "MONEY") {
-    return true;
-  }
-  return costLabel != null && /^\$[\d,]+/.test(costLabel.trim());
-}
+import { containsForbiddenPriceWording, isMonetaryCostLabel } from "@/domain/daily/price";
 
 function costTypePhrase(costType: string | null): string {
   if (!costType?.trim()) {
@@ -102,7 +95,7 @@ export function buildPriceTodaysRead(
     ];
   } else if (
     price.firstMovementStage &&
-    isMonetaryCost(price.firstMovementCostType, price.firstMovementCostLabel)
+    isMonetaryCostLabel(price.firstMovementCostType, price.firstMovementCostLabel)
   ) {
     ({ headline, bodyLines } = monetaryMovementHeadlineAndBody(price));
   } else if (price.firstMovementStage) {
@@ -116,7 +109,14 @@ export function buildPriceTodaysRead(
     bodyLines = [];
   }
 
-  const read: ExperimentTodaysRead = {
+  const read: ExperimentTodaysRead & {
+    isPrice: true;
+    priceSections: {
+      startedLabel: string | null;
+      endedLabel: string | null;
+      movedSummary: string | null;
+    };
+  } = {
     headline,
     bodyLines,
     lineCopy: price.lineChoice,
@@ -124,6 +124,12 @@ export function buildPriceTodaysRead(
     tomorrowTease,
     isLegacy: false,
     isExperiment: true,
+    isPrice: true,
+    priceSections: {
+      startedLabel: price.startingChoiceLabel,
+      endedLabel: price.endingChoiceLabel,
+      movedSummary: bodyLines[0] ?? null,
+    },
   };
 
   const combined = [read.headline, ...read.bodyLines, read.lineCopy ?? ""].join(" ");

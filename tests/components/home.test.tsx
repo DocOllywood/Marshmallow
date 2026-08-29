@@ -253,7 +253,17 @@ describe("HomeFeedView", () => {
           displayLabel: "HONESTY vs. KINDNESS",
         },
         roundDate: "2026-08-28",
-        questions: [],
+        questions: [
+          {
+            id: "31000000-0000-4000-8000-000000000010",
+            question: "Q1",
+            position: 1,
+            sealed: false,
+            openedReveal: false,
+            status: "open",
+            revealsAt: "2026-08-28T22:00:00.000Z",
+          },
+        ],
         sealedCount: 0,
         allSealed: false,
         allRevealed: false,
@@ -327,7 +337,17 @@ describe("HomeFeedView", () => {
           displayLabel: "LOYALTY vs. JUSTICE",
         },
         roundDate: "2026-08-28",
-        questions: [],
+        questions: [
+          {
+            id: "31000000-0000-4000-8000-000000000010",
+            question: "Q1",
+            position: 1,
+            sealed: false,
+            openedReveal: false,
+            status: "open",
+            revealsAt: "2026-08-28T22:00:00.000Z",
+          },
+        ],
         sealedCount: 0,
         allSealed: false,
         allRevealed: false,
@@ -344,11 +364,52 @@ describe("HomeFeedView", () => {
     render(<HomeFeedView feed={feed} firstName="Alex" />);
 
     expect(screen.getByText(/The daily experiment/i)).toBeTruthy();
+    expect(screen.getByText(/Today's price/i)).toBeTruthy();
     expect(screen.getByText("LOYALTY vs. JUSTICE")).toBeTruthy();
     expect(screen.getByText(/One situation/i)).toBeTruthy();
-    expect(screen.getByRole("link", { name: "BEGIN" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "BEGIN EXPERIMENT" })).toBeTruthy();
     expect(screen.queryByText("The Daily")).toBeNull();
     expect(screen.queryByText(/5 dilemmas/i)).toBeNull();
+  });
+
+  it("hides draft daily experiment from home", () => {
+    const feed: HomeFeed = {
+      ...emptyFeed,
+      dailyRound: {
+        roundId: "40000000-0000-4000-8000-000000000003",
+        title: "Do people really want commitment?",
+        subtitle: null,
+        topicName: "Love",
+        tension: null,
+        roundDate: "2026-08-28",
+        questions: [
+          {
+            id: "q1",
+            question: "Q1",
+            position: 1,
+            sealed: false,
+            openedReveal: false,
+            status: "draft",
+            revealsAt: "2026-08-28T22:00:00.000Z",
+          },
+        ],
+        sealedCount: 0,
+        allSealed: false,
+        allRevealed: false,
+        anyRevealOpened: false,
+        currentPlayId: null,
+        revealHref: "/daily/40000000-0000-4000-8000-000000000003/reveal",
+        todaysRead: null,
+        isExperimentDaily: true,
+        experimentArchetype: "default",
+        blindMirror: null,
+      },
+    };
+
+    render(<HomeFeedView feed={feed} firstName="Alex" />);
+
+    expect(screen.queryByText(/The daily experiment/i)).toBeNull();
+    expect(screen.queryByRole("link", { name: /BEGIN EXPERIMENT/i })).toBeNull();
   });
 
   it("stacks Cooking with humanized wait beneath the question", () => {

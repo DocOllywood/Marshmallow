@@ -5,6 +5,7 @@ import {
   dailyHomeState,
   dailyRoundSummary,
   DAILY_ROUND_SIZE,
+  isDailyRoundVisibleOnHome,
   nextDailyQuestionId,
 } from "@/domain/daily/round";
 
@@ -99,5 +100,50 @@ describe("daily round domain", () => {
 
   it("uses five questions per round", () => {
     expect(DAILY_ROUND_SIZE).toBe(5);
+  });
+
+  it("does not set currentPlayId for draft marshmallows", () => {
+    const progress = buildDailyRoundProgress({
+      roundId: "round-draft",
+      title: "Draft round",
+      subtitle: null,
+      topicName: null,
+      tension: null,
+      roundDate: "2026-08-28",
+      questions: baseQuestions.map((question) => ({ ...question, status: "draft" })),
+      openedRevealIds: new Set(),
+      isExperimentDaily: true,
+    });
+
+    expect(progress.currentPlayId).toBeNull();
+    expect(isDailyRoundVisibleOnHome(progress)).toBe(false);
+  });
+
+  it("shows daily on home when open or in progress", () => {
+    const open = buildDailyRoundProgress({
+      roundId: "round-open",
+      title: "Open",
+      subtitle: null,
+      topicName: null,
+      tension: null,
+      roundDate: "2026-08-28",
+      questions: baseQuestions,
+      openedRevealIds: new Set(),
+    });
+    expect(isDailyRoundVisibleOnHome(open)).toBe(true);
+
+    const inProgress = buildDailyRoundProgress({
+      roundId: "round-progress",
+      title: "Progress",
+      subtitle: null,
+      topicName: null,
+      tension: null,
+      roundDate: "2026-08-28",
+      questions: baseQuestions.map((question, index) =>
+        index === 0 ? { ...question, sealed: true, status: "closed" } : { ...question, status: "closed" },
+      ),
+      openedRevealIds: new Set(),
+    });
+    expect(isDailyRoundVisibleOnHome(inProgress)).toBe(true);
   });
 });

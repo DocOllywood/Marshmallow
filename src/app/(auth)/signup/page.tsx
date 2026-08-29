@@ -22,7 +22,7 @@ export default async function SignupPage({
     <main className="flex flex-1 flex-col">
       <PageHeader
         title="Join Marshmallow"
-        description="Pick a username, then make your call."
+        description="Pick a username. Then see where money changes you."
       />
       <SignUpForm nextPath={nextPath} shareId={shareId} />
     </main>

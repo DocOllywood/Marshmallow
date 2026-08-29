@@ -5,6 +5,7 @@ import {
 } from "@/domain/daily/experiment-play";
 import { priceStagePresentationLabel } from "@/domain/daily/price";
 import type { HumanTension } from "@/domain/daily/tension";
+import { cn } from "@/lib/utils";
 
 export function ExperimentStageHeader({
   tension,
@@ -21,8 +22,13 @@ export function ExperimentStageHeader({
   spacious?: boolean;
   archetype?: ExperimentArchetype;
 }) {
+  const isPrice = archetype === "price";
   const stageLabel =
-    archetype === "price" ? priceStagePresentationLabel(stage) : experimentStageHeaderLabel(stage);
+    isPrice ? priceStagePresentationLabel(stage) : experimentStageHeaderLabel(stage);
+  const stageNumber = experimentStageNumber(position);
+  const priceAccent =
+    isPrice &&
+    (stage === "consequence" || stage === "line" || stage === "pressure");
 
   return (
     <header className={`flex flex-col gap-3 ${spacious ? "pb-4 pt-6" : "pt-4"}`}>
@@ -32,9 +38,15 @@ export function ExperimentStageHeader({
         </p>
       ) : null}
       <p className="text-[11px] font-semibold tracking-[0.22em] text-ink-muted uppercase">
-        {experimentStageNumber(position)} OF {String(total).padStart(2, "0")}
+        {stageNumber} / {String(total).padStart(2, "0")}
       </p>
-      <p className="text-xs font-semibold tracking-[0.24em] text-primary uppercase">
+      <p
+        className={cn(
+          "text-xs font-semibold tracking-[0.24em] uppercase",
+          priceAccent ? "text-money" : "text-ink-muted",
+          isPrice && stage === "consequence" && "text-[0.8rem] tracking-[0.28em]",
+        )}
+      >
         {stageLabel}
       </p>
     </header>

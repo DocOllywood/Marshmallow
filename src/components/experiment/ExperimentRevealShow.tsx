@@ -72,7 +72,7 @@ export function ExperimentRevealShow({
       <ul className="flex flex-col gap-3">
         {priceCrowdHeldTrajectory.points.map((point) => (
           <li key={point.stage} className="flex items-baseline justify-between gap-4">
-            <span className="font-display text-base font-semibold tabular-nums text-ink">
+            <span className="font-display text-base font-semibold tabular-nums text-money">
               {point.costLabel}
             </span>
             <span className="min-w-0 shrink text-sm font-semibold tabular-nums text-ink-muted">
@@ -97,12 +97,14 @@ export function ExperimentRevealShow({
                 <span className="text-[11px] font-semibold tracking-[0.18em] text-ink-muted uppercase">
                   {point.stageLabel}
                 </span>
-                <span className="font-display text-base font-semibold uppercase text-ink">
+                <span
+                  className={`font-display text-base font-semibold uppercase ${isPriceExperiment && point.annotation ? "text-money" : "text-ink"}`}
+                >
                   {point.sideLabel}
                 </span>
               </div>
               {point.annotation ? (
-                <span className="text-right text-[10px] font-semibold tracking-[0.16em] text-primary uppercase">
+                <span className="text-right text-[10px] font-semibold tracking-[0.16em] text-money uppercase">
                   {point.annotation}
                 </span>
               ) : null}
@@ -113,8 +115,8 @@ export function ExperimentRevealShow({
     ) : null;
 
   const lineSection = lineReveal ? (
-    <section className="flex flex-col gap-3 border-t border-border/60 pt-8">
-      <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">
+    <section className="flex flex-col gap-3 border-t border-money-border/50 pt-8">
+      <p className="text-xs font-semibold tracking-[0.22em] text-money uppercase">
         {isPriceExperiment ? "Your line" : "Where players drew the line"}
       </p>
       {isPriceExperiment ? (
@@ -165,7 +167,7 @@ export function ExperimentRevealShow({
       )}
 
       {flipReveal ? (
-        <section className="flex flex-col gap-4 border-t border-border/60 pt-8 text-center">
+        <section className="flex flex-col gap-4 border-t border-border/60 pt-10 text-center">
           {flipReveal.gap ? (
             <GapDisplay gap={flipReveal.gap} />
           ) : (

@@ -3,7 +3,6 @@
 import { useActionState, useState } from "react";
 
 import { MarshmallowLogo } from "@/components/MarshmallowLogo";
-import { MarshmallowMascot, type MascotState } from "@/components/MarshmallowMascot";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +19,14 @@ type OnboardingFlowProps = {
 
 const STEPS = ["welcome", "how", "finish"] as const;
 type Step = (typeof STEPS)[number];
+
+const HOW_STEPS = [
+  { title: "Instinct", body: "Make your first call." },
+  { title: "Pressure", body: "One thing changes." },
+  { title: "The price", body: "Now it costs you something." },
+  { title: "Flip", body: "See it from the other side." },
+  { title: "The line", body: "Find where your answer changes." },
+] as const;
 
 export function OnboardingFlow({ username, displayName }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>("welcome");
@@ -67,7 +74,7 @@ function StepDots({ step }: { step: Step }) {
           key={item}
           className={cn(
             "h-1.5 w-6 rounded-full",
-            i <= index ? "bg-primary" : "bg-border",
+            i <= index ? "bg-money" : "bg-border",
           )}
         />
       ))}
@@ -79,18 +86,18 @@ function Welcome({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center">
       <MarshmallowLogo />
-      <MarshmallowMascot state="fluffy" size="hero" className="mt-8" />
-      <p className="mt-4 text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase">
+      <p className="mt-10 text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">
         Marshmallow
       </p>
-      <h1 className="mt-2 font-display text-[2.2rem] leading-[0.98] font-semibold tracking-tight">
-        A Daily Experiment in Being Human
+      <h1 className="mt-3 font-display text-[clamp(2rem,9vw,2.4rem)] leading-[0.98] font-semibold tracking-tight">
+        What&apos;s your price?
       </h1>
-      <p className="mt-4 max-w-[18rem] text-sm leading-6 text-ink-muted">
-        Five small dilemmas about how we treat each other.
+      <p className="mt-4 max-w-[18rem] text-sm leading-6 text-ink">
+        Money changes people.
+        <span className="block">Find out where it changes you.</span>
       </p>
       <div className="mt-10 w-full">
-        <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
+        <PrimaryButton onClick={onContinue}>CONTINUE</PrimaryButton>
       </div>
     </div>
   );
@@ -106,46 +113,34 @@ function HowToPlay({
   return (
     <div className="flex flex-1 flex-col pb-6">
       <h1 className="mt-8 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
-        How Marshmallow works
+        How it works
       </h1>
-      <ol className="mt-6 flex flex-col gap-4">
-        <HowStep state="thinking" title="CALL" body="Make your instinctive choice." />
-        <HowStep
-          state="thinking"
-          title="PRESSURE"
-          body="See what happens when circumstances change."
-        />
-        <HowStep state="sealed" title="FLIP" body="See the situation from the other side." />
-        <HowStep
-          state="toasted"
-          title="REVEAL"
-          body="Come back and discover where everyone else moved."
-        />
+      <ol className="mt-6 flex flex-col gap-3">
+        {HOW_STEPS.map((item) => (
+          <HowStep key={item.title} title={item.title} body={item.body} />
+        ))}
       </ol>
       <div className="mt-auto flex flex-col gap-3 pt-8">
-        <PrimaryButton onClick={onContinue}>Got it</PrimaryButton>
+        <PrimaryButton onClick={onContinue}>SHOW ME</PrimaryButton>
         <BackButton onClick={onBack} />
       </div>
     </div>
   );
 }
 
-function HowStep({
-  state,
-  title,
-  body,
-}: {
-  state: MascotState;
-  title: string;
-  body: string;
-}) {
+function HowStep({ title, body }: { title: string; body: string }) {
+  const priceStage = title.toLowerCase() === "the price" || title.toLowerCase() === "the line";
   return (
-    <li className="flex items-center gap-4 rounded-[1.5rem] border border-border bg-surface p-4">
-      <MarshmallowMascot state={state} size="md" />
-      <div>
-        <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">{title}</p>
-        <p className="mt-1 text-sm font-medium text-ink">{body}</p>
-      </div>
+    <li className="flex flex-col gap-1 rounded-[1.25rem] border border-border bg-surface px-4 py-3 text-left">
+      <p
+        className={cn(
+          "text-xs font-semibold tracking-[0.18em] uppercase",
+          priceStage ? "text-money" : "text-ink-muted",
+        )}
+      >
+        {title}
+      </p>
+      <p className="text-sm font-medium text-ink">{body}</p>
     </li>
   );
 }
@@ -168,8 +163,7 @@ function Finish({
   return (
     <form action={action} className="flex flex-1 flex-col pb-6">
       <input type="hidden" name="topic_ids" value={BETA_ONBOARDING_DEFAULT_TOPIC_ID} />
-      <MarshmallowMascot state="celebrating" size="lg" className="mt-8 self-center" />
-      <h1 className="mt-6 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
+      <h1 className="mt-8 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
         You&apos;re in, @{username}.
       </h1>
       <p className="mt-2 text-sm text-ink-muted">
@@ -185,6 +179,11 @@ function Finish({
           className="min-h-12 rounded-xl bg-surface px-3 text-base"
         />
       </div>
+      <p className="mt-6 text-sm leading-6 text-ink-muted">
+        No right answers.
+        <span className="block">No financial advice.</span>
+        <span className="block">Just your decisions.</span>
+      </p>
       {state?.error ? (
         <p role="alert" className="mt-4 text-sm text-toasted">
           {state.error}
@@ -192,7 +191,7 @@ function Finish({
       ) : null}
       <div className="mt-auto flex flex-col gap-3 pt-8">
         <PrimaryButton type="submit" disabled={pending}>
-          {pending ? "Saving…" : "PLAY MY FIRST MARSHMALLOW"}
+          {pending ? "Saving…" : "PLAY MY FIRST EXPERIMENT"}
         </PrimaryButton>
         <BackButton onClick={onBack} />
       </div>

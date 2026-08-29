@@ -23,6 +23,11 @@
   --color-mode-quick: var(--mode-quick);
   --color-mode-live: var(--mode-live);
   --color-mode-daily: var(--mode-daily);
+  --color-money: var(--money);
+  --color-money-foreground: var(--money-foreground);
+  --color-money-soft: var(--money-soft);
+  --color-money-border: var(--money-border);
+  --color-money-muted: var(--money-muted);
 
   --color-background: var(--canvas);
   --color-foreground: var(--ink);
@@ -88,6 +93,12 @@
   --mode-quick: #2563eb;
   --mode-live: #ea580c;
   --mode-daily: #8b7cff;
+  /* Money Era accent — desaturated old-money green; use semantic tokens only. */
+  --money: #2f5c4a;
+  --money-foreground: #f4ebe0;
+  --money-soft: #e8f0eb;
+  --money-border: #b8cfc0;
+  --money-muted: #5a7267;
   --radius: 1rem;
 }
 

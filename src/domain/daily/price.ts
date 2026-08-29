@@ -30,6 +30,8 @@ export type PriceStageCost = {
 export type PriceTrajectory = {
   startingSide: TensionSide | null;
   finalSide: TensionSide | null;
+  startingChoiceLabel: string | null;
+  endingChoiceLabel: string | null;
   firstMovementStage: ExperimentStage | null;
   firstMovementCostType: string | null;
   firstMovementCostLevel: number | null;
@@ -59,18 +61,25 @@ export function isPriceCostType(value: string | null): value is PriceCostType {
   return (PRICE_COST_TYPES as readonly string[]).includes(value);
 }
 
+export function isMonetaryCostLabel(costType: string | null, costLabel: string | null): boolean {
+  if (costType?.toUpperCase() === "MONEY") {
+    return true;
+  }
+  return costLabel != null && /^\$[\d,]+/.test(costLabel.trim());
+}
+
 export function priceStageMicrocopy(stage: ExperimentStage): string | null {
   switch (stage) {
     case "instinct":
-      return "What do you do?";
+      return null;
     case "pressure":
-      return "Now it costs you something.";
+      return "Same situation. One thing changes.";
     case "consequence":
-      return "Now it costs considerably more.";
+      return null;
     case "flip":
-      return "Now you're the person paying the price.";
+      return null;
     case "line":
-      return "Where does your answer finally change?";
+      return null;
     default:
       return null;
   }
@@ -81,9 +90,9 @@ export function priceStagePresentationLabel(stage: ExperimentStage): string {
     case "instinct":
       return "INSTINCT";
     case "pressure":
-      return "THE COST";
+      return "PRESSURE";
     case "consequence":
-      return "THE PRICE RISES";
+      return "THE PRICE";
     case "flip":
       return "FLIP";
     case "line":
@@ -124,6 +133,8 @@ export function buildPriceTrajectory(
   return {
     startingSide: trajectory.initialSide,
     finalSide: trajectory.finalSide,
+    startingChoiceLabel: binaryStages[0]?.choiceLabel ?? null,
+    endingChoiceLabel: binaryStages.at(-1)?.choiceLabel ?? null,
     firstMovementStage: trajectory.firstMovementStage,
     firstMovementCostType,
     firstMovementCostLevel,
