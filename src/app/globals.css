@@ -300,6 +300,14 @@
   --predict-track-fill: var(--money);
 }
 
+.money-experiment .predict-dist-fill {
+  background: var(--money);
+}
+
+.predict-dist-fill {
+  background: var(--primary);
+}
+
 .predict-slider::-moz-range-track {
   height: 0.85rem;
   border-radius: 9999px;

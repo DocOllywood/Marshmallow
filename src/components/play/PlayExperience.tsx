@@ -40,7 +40,7 @@ export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }
     const experience = <ExperimentPlayExperience marshmallow={marshmallow} />;
     if (isPrice) {
       return (
-        <div className="money-experiment flex flex-1 flex-col">
+        <div className="money-experiment flex flex-1 flex-col pt-[env(safe-area-inset-top,0px)]">
           <MoneyBrandHeader className="pt-2 pb-0" />
           {experience}
         </div>

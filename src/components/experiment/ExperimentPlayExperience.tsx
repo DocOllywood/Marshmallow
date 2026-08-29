@@ -46,6 +46,7 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
   const [sealing, setSealing] = useState(false);
   const [justSealed, setJustSealed] = useState(false);
   const [stageReaction, setStageReaction] = useState<ExperimentStageReaction | null>(null);
+  const [showTodaysRead, setShowTodaysRead] = useState(false);
   const [flipPhase, setFlipPhase] = useState<FlipPhase>(
     stage === "flip" && marshmallow.ownChoiceId && !marshmallow.sealed ? "predict" : "pick",
   );
@@ -61,6 +62,9 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
   const accentLink = isPrice ? "text-money" : "text-primary";
   const priceMicrocopy = isPrice ? priceStageMicrocopy(stage) : null;
   const showPriceIntro = isPrice && stage === "instinct" && position === 1 && !marshmallow.sealed;
+  const scenarioTextClass =
+    "font-display text-[clamp(1.275rem,5.25vw,2rem)] leading-[1.05] font-semibold tracking-tight break-words md:text-[clamp(1.5rem,6.5vw,2rem)] md:leading-[1.1]";
+  const playStageGapClass = "gap-6 md:gap-8";
 
   useEffect(() => {
     if (!marshmallow.dailyRound || dailyStarted.current) return;
@@ -295,12 +299,37 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
       isLineStage && choiceId
         ? marshmallow.choices.find((item) => item.id === choiceId)?.label ?? null
         : null;
+    const hasTodaysRead =
+      Boolean(marshmallow.dailyRound?.allSealed && marshmallow.dailyRound.todaysRead);
 
     if (lockedLineLabel && isLineStage) {
+      if (hasTodaysRead && showTodaysRead) {
+        return (
+          <ExperimentTodaysReadCard
+            read={marshmallow.dailyRound!.todaysRead!}
+            roundId={marshmallow.dailyRound!.roundId}
+            tensionSlug={marshmallow.dailyRound!.tension?.slug}
+            isPriceExperiment={marshmallow.experimentArchetype === "price"}
+            isContinuousPlay={marshmallow.entrySurface === "continuous"}
+            keepPlayingHref={marshmallow.continuousNextHref}
+            onKeepPlayingClick={() => {
+              void trackEvent(
+                ANALYTICS_EVENTS.nextMarshmallowClicked,
+                {
+                  entry_surface: marshmallow.entrySurface ?? "daily",
+                  source: "keep_playing",
+                },
+                marshmallow.dailyRound?.roundId,
+              );
+            }}
+          />
+        );
+      }
+
       return (
         <div
           className={cn(
-            "flex flex-1 flex-col items-center gap-4 px-2 py-10 text-center",
+            "flex flex-1 flex-col items-center gap-4 px-2 py-8 text-center md:py-10",
             justSealed && "seal-moment",
           )}
         >
@@ -318,22 +347,25 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
           <p className="max-w-[18rem] text-sm leading-6 text-ink-muted">
             That&apos;s where you drew it today.
           </p>
-          {marshmallow.dailyNextHref && !marshmallow.dailyRound?.allSealed ? (
+          {hasTodaysRead ? (
+            <ActionButton onClick={() => setShowTodaysRead(true)}>SEE YOUR READ</ActionButton>
+          ) : marshmallow.dailyNextHref && !marshmallow.dailyRound?.allSealed ? (
             <ActionButton href={marshmallow.dailyNextHref}>CONTINUE</ActionButton>
-          ) : marshmallow.dailyRound?.allSealed && marshmallow.dailyRound.todaysRead ? null : (
+          ) : (
             <ActionButton href="/home">HOME</ActionButton>
           )}
         </div>
       );
     }
 
-    if (marshmallow.dailyRound?.allSealed && marshmallow.dailyRound.todaysRead) {
+    if (hasTodaysRead) {
       return (
         <ExperimentTodaysReadCard
-          read={marshmallow.dailyRound.todaysRead}
-          roundId={marshmallow.dailyRound.roundId}
-          tensionSlug={marshmallow.dailyRound.tension?.slug}
+          read={marshmallow.dailyRound!.todaysRead!}
+          roundId={marshmallow.dailyRound!.roundId}
+          tensionSlug={marshmallow.dailyRound!.tension?.slug}
           isPriceExperiment={marshmallow.experimentArchetype === "price"}
+          isContinuousPlay={marshmallow.entrySurface === "continuous"}
           keepPlayingHref={marshmallow.continuousNextHref}
           onKeepPlayingClick={() => {
             void trackEvent(
@@ -374,12 +406,12 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
 
   if (stage === "line" || marshmallow.isLine) {
     return (
-      <div className="flex flex-1 flex-col gap-8 pb-8">
+      <div className={cn("flex flex-1 flex-col pb-8", playStageGapClass)}>
         <ExperimentStageHeader tension={tension} position={position} stage="line" archetype={isPrice ? "price" : "default"} />
         {isPrice ? (
           <p className="text-xs font-semibold tracking-[0.22em] text-money uppercase">Your line</p>
         ) : null}
-        <h1 className="font-display text-[clamp(1.5rem,6.5vw,2rem)] leading-[1.1] font-semibold tracking-tight break-words">
+        <h1 className={scenarioTextClass}>
           {marshmallow.question}
         </h1>
         <div className="flex flex-col gap-3">
@@ -401,7 +433,7 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
 
   if (stage === "flip" && flipPhase === "predict" && choiceId) {
     return (
-      <div className="flex flex-1 flex-col gap-8 pb-8">
+      <div className={cn("flex flex-1 flex-col pb-8", playStageGapClass)}>
         <ExperimentStageHeader tension={tension} position={position} stage="flip" spacious archetype={isPrice ? "price" : "default"} />
         <div className="flex flex-col gap-4">
           <p className={`text-xs font-semibold tracking-[0.22em] uppercase ${accentEyebrow}`}>Read the room</p>
@@ -443,7 +475,7 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
     (stage === "pressure" || stage === "consequence") && marshmallow.experimentPriorChoiceLabel;
 
   return (
-    <div className="flex flex-1 flex-col gap-8 pb-8">
+    <div className={cn("flex flex-1 flex-col pb-8", playStageGapClass)}>
       {showPriceIntro ? (
         <div className="flex flex-col gap-2 border-b border-border/60 pb-4">
           <p className="text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase">
@@ -505,7 +537,7 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
       ) : null}
 
       {isPrice && stage === "consequence" ? (
-        <div className="flex flex-col gap-4 border-y border-money-border/40 py-5">
+        <div className="flex flex-col gap-3 border-y border-money-border/40 py-4 md:gap-4 md:py-5">
           <ExperimentCostDisplay
             costType={marshmallow.experimentCostType}
             costLabel={marshmallow.experimentCostLabel}
@@ -520,7 +552,7 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
         </p>
       ) : null}
 
-      <h1 className="font-display text-[clamp(1.5rem,6.5vw,2rem)] leading-[1.1] font-semibold tracking-tight break-words">
+      <h1 className={scenarioTextClass}>
         {marshmallow.question}
       </h1>
 

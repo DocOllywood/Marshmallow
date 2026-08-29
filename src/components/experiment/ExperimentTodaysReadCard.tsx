@@ -23,6 +23,7 @@ export function ExperimentTodaysReadCard({
   tensionSlug,
   blindMirror,
   isPriceExperiment = false,
+  isContinuousPlay = false,
   skipAnalytics = false,
 }: {
   read: TodaysRead;
@@ -32,6 +33,7 @@ export function ExperimentTodaysReadCard({
   tensionSlug?: string | null;
   blindMirror?: BlindMirrorComparison | null;
   isPriceExperiment?: boolean;
+  isContinuousPlay?: boolean;
   skipAnalytics?: boolean;
   keepPlayingHref?: string | null;
   onKeepPlayingClick?: () => void;
@@ -126,17 +128,19 @@ export function ExperimentTodaysReadCard({
         <DareSomeoneCard roundId={roundId} isPriceExperiment={priceRead} />
       ) : null}
       <OutsideTheExperiment tensionSlug={tensionSlug} moneyTone={priceRead} />
-      <div className="flex flex-col gap-2 pt-2">
-        <p className={`text-xs font-semibold tracking-[0.18em] uppercase ${priceRead ? "text-money" : "text-ink-muted"}`}>
-          {priceRead ? "Your line is locked." : "Your calls are locked."}
-        </p>
-        <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
-          The crowd is still deciding.
-        </p>
-        <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
-          Come back for the reveal.
-        </p>
-      </div>
+      {!isContinuousPlay ? (
+        <div className="flex flex-col gap-2 pt-2">
+          <p className={`text-xs font-semibold tracking-[0.18em] uppercase ${priceRead ? "text-money" : "text-ink-muted"}`}>
+            {priceRead ? "Your line is locked." : "Your calls are locked."}
+          </p>
+          <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
+            The crowd is still deciding.
+          </p>
+          <p className="max-w-[20rem] text-sm leading-6 text-ink-muted">
+            Come back for the reveal.
+          </p>
+        </div>
+      ) : null}
       {read.tomorrowTease ? (
         <div className="flex flex-col gap-1 border-t border-border/60 pt-5">
           <p className="text-[10px] font-semibold tracking-[0.2em] text-ink-muted uppercase">Tomorrow</p>

@@ -106,7 +106,7 @@ export function BinaryPredictor({
           className={cn("flex h-2.5", !reducedMotion && "transition-[width] duration-150 ease-out")}
           style={{ width: `${selectedPct}%` }}
         >
-          <div className="h-full w-full bg-primary" />
+          <div className="predict-dist-fill h-full w-full" />
         </div>
       </div>
 

@@ -446,6 +446,60 @@ describe("experiment play — the line", () => {
     expect(screen.getByText(/That's where you drew it today/i)).toBeTruthy();
   });
 
+  it("advances from line acknowledgment to today's read when the round is complete", async () => {
+    render(
+      <ExperimentPlayExperience
+        marshmallow={experimentMarshmallow({
+          id: "line-complete",
+          question: "At what price would you sell it?",
+          roundPosition: 5,
+          experimentStage: "line",
+          isLine: true,
+          sealed: true,
+          ownChoiceId: "a",
+          experimentArchetype: "price",
+          entrySurface: "continuous",
+          choices: [
+            { id: "a", label: "$100,000", sort_order: 0, tensionSide: null },
+            { id: "b", label: "Never", sort_order: 1, tensionSide: null },
+          ],
+          dailyRound: {
+            ...dailyRoundBase,
+            allSealed: true,
+            sealedCount: 5,
+            todaysRead: {
+              headline: "YOUR ANSWER MOVED AT $100,000.",
+              bodyLines: ["Inside this hypothetical experiment, that was your line."],
+              lineCopy: "$100,000",
+              switchCopy: null,
+              tomorrowTease: null,
+              isLegacy: false,
+              isExperiment: true,
+              isPrice: true,
+              priceSections: {
+                startedLabel: "KEEP IT",
+                endedLabel: "SELL IT",
+                movedSummary: "Inside this hypothetical experiment, that was your line.",
+              },
+            },
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByText("The line")).toBeTruthy();
+    expect(screen.getByText("$100,000")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /SEE YOUR READ/i })).toBeTruthy();
+    expect(screen.queryByText(/Today's read/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /SEE YOUR READ/i }));
+
+    expect(await screen.findByText(/Today's read/i)).toBeTruthy();
+    expect(screen.getByText("YOUR ANSWER MOVED AT $100,000.")).toBeTruthy();
+    expect(screen.getByText(/Outside the experiment/i)).toBeTruthy();
+    expect(screen.queryByText(/Come back for the reveal/i)).toBeNull();
+  });
+
   it("shows line stage without prediction", () => {
     render(
       <ExperimentPlayExperience

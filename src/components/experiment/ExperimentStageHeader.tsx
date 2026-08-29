@@ -33,7 +33,12 @@ export function ExperimentStageHeader({
   const accentVar = isPrice ? experimentStageAccentVar(stage) : null;
 
   return (
-    <header className={`flex flex-col gap-3 ${spacious ? "pb-4 pt-6" : "pt-4"}`}>
+    <header
+      className={cn(
+        "flex flex-col gap-3",
+        spacious ? "pb-4 pt-4 md:pt-6" : "pt-2 md:pt-4",
+      )}
+    >
       {tension ? (
         <p className="text-xs font-semibold tracking-[0.2em] text-ink uppercase">
           {tension.displayLabel}
