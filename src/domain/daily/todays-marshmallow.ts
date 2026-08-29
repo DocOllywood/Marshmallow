@@ -19,7 +19,7 @@ const BY_TENSION_SLUG: Record<string, string> = {
     "Let one small grudge go today — or hold one boundary with kindness instead of silence.",
   "passion-security": "Give one ordinary moment your full attention today.",
   "belonging-independence":
-    "Reach out to someone who makes you feel like you belong — briefly, on your terms.",
+    "Notice how differently a sacrifice sounds depending on who is being asked to make it.",
   "desire-commitment": "Keep one small promise today that nobody asked you to make.",
   "status-authenticity":
     "Skip one performance today. Be ordinary with someone who matters.",
