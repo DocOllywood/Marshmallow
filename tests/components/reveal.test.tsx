@@ -72,6 +72,7 @@ const base: PlayMarshmallow = {
   isExperimentDaily: false,
   experimentPriorChoiceLabel: null,
   experimentPriorTensionSide: null,
+  experimentInitialTensionSide: null,
   experimentCostType: null,
   experimentCostLabel: null,
   experimentArchetype: "default",

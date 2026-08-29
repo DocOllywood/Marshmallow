@@ -117,6 +117,7 @@ function experimentMarshmallow(
     isExperimentDaily: true,
     experimentPriorChoiceLabel: null,
     experimentPriorTensionSide: null,
+    experimentInitialTensionSide: null,
     experimentCostType: null,
     experimentCostLabel: null,
     experimentArchetype: "default",
@@ -270,6 +271,7 @@ describe("experiment play — instinct", () => {
         marshmallow={experimentMarshmallow({
           id: "m1",
           question: "Your friend cheated once. Their spouse asks you directly.",
+          dailyNextHref: "/m/m2",
         })}
       />,
     );
@@ -284,7 +286,41 @@ describe("experiment play — instinct", () => {
     await waitFor(() => {
       expect(sealPickOnlyPlayAction).toHaveBeenCalled();
     });
+    expect(await screen.findByText(/THAT'S YOUR FIRST CALL/i)).toBeTruthy();
+    expect(screen.getByText(/Now change one thing/i)).toBeTruthy();
+    expect(screen.getByRole("link", { name: /CONTINUE/i })).toBeTruthy();
     expect(screen.queryByRole("slider")).toBeNull();
+  });
+});
+
+describe("experiment stage reaction interstitial", () => {
+  it("shows held reaction after sealing pressure with same side", async () => {
+    render(
+      <ExperimentPlayExperience
+        marshmallow={experimentMarshmallow({
+          id: "m2-seal",
+          question: "They will never find out unless you speak.",
+          roundPosition: 2,
+          experimentStage: "pressure",
+          experimentPriorChoiceLabel: "TELL THEM",
+          experimentPriorTensionSide: "right",
+          experimentInitialTensionSide: "right",
+          dailyNextHref: "/m/m3",
+          choices: [
+            { id: "a", label: "Tell them", sort_order: 0, tensionSide: "right" },
+            { id: "b", label: "Stay quiet", sort_order: 1, tensionSide: "left" },
+          ],
+        })}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Tell them" }));
+
+    await waitFor(() => {
+      expect(sealPickOnlyPlayAction).toHaveBeenCalled();
+    });
+    expect(await screen.findByText("YOU HELD.")).toBeTruthy();
+    expect(screen.getByText(/Now make it cost something/i)).toBeTruthy();
   });
 });
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
+import { MoneyPrimaryButton } from "@/components/MoneyPrimaryButton";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { BlindMirrorCard } from "@/components/experiment/BlindMirrorCard";
 import { OutsideTheExperiment } from "@/components/experiment/OutsideTheExperiment";
@@ -18,6 +19,7 @@ export function ExperimentTodaysReadCard({
   tensionSlug,
   blindMirror,
   isPriceExperiment = false,
+  skipAnalytics = false,
 }: {
   read: TodaysRead;
   homeHref?: string;
@@ -26,6 +28,7 @@ export function ExperimentTodaysReadCard({
   tensionSlug?: string | null;
   blindMirror?: BlindMirrorComparison | null;
   isPriceExperiment?: boolean;
+  skipAnalytics?: boolean;
 }) {
   const tracked = useRef(false);
   const priceRead = read.isPrice || isPriceExperiment;
@@ -36,14 +39,14 @@ export function ExperimentTodaysReadCard({
     priceRead && hypotheticalLines.length > 0 && /^\$|MOVED AT/i.test(read.headline);
 
   useEffect(() => {
-    if (tracked.current) return;
+    if (skipAnalytics || tracked.current) return;
     tracked.current = true;
     void trackEvent(
       ANALYTICS_EVENTS.todaysReadViewed,
       { legacy: read.isLegacy, experiment: read.isExperiment ?? true },
       roundId,
     );
-  }, [read.isExperiment, read.isLegacy, roundId]);
+  }, [read.isExperiment, read.isLegacy, roundId, skipAnalytics]);
 
   return (
     <div className="flex flex-col items-center gap-6 px-2 py-8 text-center">
@@ -113,7 +116,7 @@ export function ExperimentTodaysReadCard({
       )}
 
       {blindMirror ? <BlindMirrorCard comparison={blindMirror} /> : null}
-      <OutsideTheExperiment tensionSlug={tensionSlug} />
+      <OutsideTheExperiment tensionSlug={tensionSlug} moneyTone={priceRead} />
       <div className="flex flex-col gap-2 pt-2">
         <p className={`text-xs font-semibold tracking-[0.18em] uppercase ${priceRead ? "text-money" : "text-ink-muted"}`}>
           {priceRead ? "Your line is locked." : "Your calls are locked."}
@@ -131,7 +134,13 @@ export function ExperimentTodaysReadCard({
           <p className="font-display text-base font-semibold tracking-tight text-ink">{read.tomorrowTease}</p>
         </div>
       ) : null}
-      {showHomeButton ? <PrimaryButton href={homeHref}>HOME</PrimaryButton> : null}
+      {showHomeButton ? (
+        priceRead ? (
+          <MoneyPrimaryButton href={homeHref}>HOME</MoneyPrimaryButton>
+        ) : (
+          <PrimaryButton href={homeHref}>HOME</PrimaryButton>
+        )
+      ) : null}
     </div>
   );
 }

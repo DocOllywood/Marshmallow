@@ -5,10 +5,11 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { ChoiceButton } from "@/components/ChoiceButton";
+import { MoneyPrimaryButton } from "@/components/MoneyPrimaryButton";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { BinaryPredictor, defaultPercentsFor, MultiPredictor } from "@/components/play/Predictors";
 import { ExperimentCostDisplay } from "@/components/experiment/ExperimentCostDisplay";
-import { ExperimentMovementFeedback } from "@/components/experiment/ExperimentMovementFeedback";
+import { ExperimentStageReactionInterstitial } from "@/components/experiment/ExperimentStageReactionInterstitial";
 import { ExperimentStageHeader } from "@/components/experiment/ExperimentStageHeader";
 import { ExperimentTodaysReadCard } from "@/components/experiment/ExperimentTodaysReadCard";
 import { ExperimentRevealReadyGate } from "@/components/experiment/ExperimentRevealReadyGate";
@@ -16,10 +17,11 @@ import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { isValidSealDistribution } from "@/domain/play/allocations";
 import type { ExperimentStage } from "@/domain/daily/experiment";
 import {
-  compareExperimentMovement,
-  type ExperimentMovementFeedback as MovementFeedback,
-} from "@/domain/daily/experiment-play";
+  buildExperimentStageReaction,
+  type ExperimentStageReaction,
+} from "@/domain/daily/experiment-stage-reaction";
 import { priceStageMicrocopy } from "@/domain/daily/price";
+import type { TensionSide } from "@/domain/daily/tension";
 import { parseTensionSide } from "@/domain/daily/tension";
 import {
   saveDraftPlayAction,
@@ -43,7 +45,7 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
   const [error, setError] = useState<string | null>(null);
   const [sealing, setSealing] = useState(false);
   const [justSealed, setJustSealed] = useState(false);
-  const [movementFeedback, setMovementFeedback] = useState<MovementFeedback>(null);
+  const [stageReaction, setStageReaction] = useState<ExperimentStageReaction | null>(null);
   const [flipPhase, setFlipPhase] = useState<FlipPhase>(
     stage === "flip" && marshmallow.ownChoiceId && !marshmallow.sealed ? "predict" : "pick",
   );
@@ -54,6 +56,9 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
   const tension = marshmallow.dailyRound?.tension ?? null;
   const position = marshmallow.roundPosition ?? 1;
   const isPrice = marshmallow.experimentArchetype === "price";
+  const ActionButton = isPrice ? MoneyPrimaryButton : PrimaryButton;
+  const accentEyebrow = isPrice ? "text-money" : "text-primary";
+  const accentLink = isPrice ? "text-money" : "text-primary";
   const priceMicrocopy = isPrice ? priceStageMicrocopy(stage) : null;
   const showPriceIntro = isPrice && stage === "instinct" && position === 1 && !marshmallow.sealed;
 
@@ -68,6 +73,23 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
       );
     }
   }, [marshmallow.dailyRound, position]);
+
+  function reactionForSide(currentSide: TensionSide | null): ExperimentStageReaction {
+    return buildExperimentStageReaction({
+      stage,
+      previousSide: marshmallow.experimentPriorTensionSide,
+      currentSide,
+      initialSide: marshmallow.experimentInitialTensionSide,
+      costType: marshmallow.experimentCostType,
+      costLabel: marshmallow.experimentCostLabel,
+      archetype: marshmallow.experimentArchetype,
+    });
+  }
+
+  function showStageReaction(currentSide: TensionSide | null) {
+    setStageReaction(reactionForSide(currentSide));
+    setSealing(false);
+  }
 
   async function selectChoice(id: string, choiceMetadata?: unknown) {
     setChoiceId(id);
@@ -123,11 +145,8 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
     trackDailyLocked();
 
     const currentSide = parseTensionSide(choiceMetadata);
-    if (stage === "pressure" || stage === "consequence") {
-      setMovementFeedback(
-        compareExperimentMovement(marshmallow.experimentPriorTensionSide, currentSide),
-      );
-      setSealing(false);
+    if (stage === "instinct" || stage === "pressure" || stage === "consequence") {
+      showStageReaction(currentSide);
       return;
     }
 
@@ -209,11 +228,9 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
       marshmallow.id,
     );
     trackDailyLocked();
-    setJustSealed(true);
-    window.setTimeout(() => {
-      setSealing(false);
-      router.refresh();
-    }, 700);
+    const flipSide =
+      marshmallow.choices.find((choice) => choice.id === choiceId)?.tensionSide ?? null;
+    showStageReaction(flipSide);
   }
 
   async function sealLine(choice: string) {
@@ -251,13 +268,13 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
     marshmallow.sealed &&
     !marshmallow.dailyRound.allSealed &&
     marshmallow.dailyNextHref &&
-    !movementFeedback
+    !stageReaction
   ) {
     return (
       <div className="flex flex-1 flex-col items-center gap-5 px-2 py-10 text-center">
-        <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">Call locked</p>
-        <PrimaryButton href={marshmallow.dailyNextHref}>CONTINUE</PrimaryButton>
-        <Link href="/home" className="min-h-11 text-sm font-semibold text-primary">
+        <p className={`text-xs font-semibold tracking-[0.22em] uppercase ${accentEyebrow}`}>Call locked</p>
+        <ActionButton href={marshmallow.dailyNextHref}>CONTINUE</ActionButton>
+        <Link href="/home" className={`min-h-11 text-sm font-semibold ${accentLink}`}>
           Home
         </Link>
       </div>
@@ -294,9 +311,9 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
             That&apos;s where you drew it today.
           </p>
           {marshmallow.dailyNextHref && !marshmallow.dailyRound?.allSealed ? (
-            <PrimaryButton href={marshmallow.dailyNextHref}>CONTINUE</PrimaryButton>
+            <ActionButton href={marshmallow.dailyNextHref}>CONTINUE</ActionButton>
           ) : marshmallow.dailyRound?.allSealed && marshmallow.dailyRound.todaysRead ? null : (
-            <PrimaryButton href="/home">HOME</PrimaryButton>
+            <ActionButton href="/home">HOME</ActionButton>
           )}
         </div>
       );
@@ -315,24 +332,24 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
 
     return (
       <div className={cn("flex flex-1 flex-col items-center gap-4 px-2 py-10 text-center", justSealed && "seal-moment")}>
-        <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">Call locked</p>
+        <p className={`text-xs font-semibold tracking-[0.22em] uppercase ${accentEyebrow}`}>Call locked</p>
         {marshmallow.dailyNextHref && !marshmallow.dailyRound?.allSealed ? (
-          <PrimaryButton href={marshmallow.dailyNextHref}>CONTINUE</PrimaryButton>
+          <ActionButton href={marshmallow.dailyNextHref}>CONTINUE</ActionButton>
         ) : (
-          <PrimaryButton href="/home">HOME</PrimaryButton>
+          <ActionButton href="/home">HOME</ActionButton>
         )}
       </div>
     );
   }
 
-  if (movementFeedback) {
+  if (stageReaction) {
     return (
-      <div className="flex flex-1 flex-col items-center gap-6 px-2 py-12 text-center">
-        <ExperimentMovementFeedback feedback={movementFeedback} />
-        {marshmallow.dailyNextHref ? (
-          <PrimaryButton href={marshmallow.dailyNextHref}>CONTINUE</PrimaryButton>
-        ) : null}
-      </div>
+      <ExperimentStageReactionInterstitial
+        reaction={stageReaction}
+        isPrice={isPrice}
+        continueHref={marshmallow.dailyNextHref}
+        ActionButton={ActionButton}
+      />
     );
   }
 
@@ -368,7 +385,7 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
       <div className="flex flex-1 flex-col gap-8 pb-8">
         <ExperimentStageHeader tension={tension} position={position} stage="flip" spacious archetype={isPrice ? "price" : "default"} />
         <div className="flex flex-col gap-4">
-          <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">Read the room</p>
+          <p className={`text-xs font-semibold tracking-[0.22em] uppercase ${accentEyebrow}`}>Read the room</p>
           <p className="font-display text-[clamp(1.25rem,5vw,1.65rem)] leading-snug font-semibold tracking-tight">
             Now that you&apos;ve made your calls:
           </p>
@@ -395,9 +412,9 @@ export function ExperimentPlayExperience({ marshmallow }: { marshmallow: PlayMar
             disabled={sealing}
           />
         )}
-        <PrimaryButton onClick={() => void sealPrediction()} disabled={sealing || pending}>
+        <ActionButton onClick={() => void sealPrediction()} disabled={sealing || pending}>
           {sealing ? "Locking…" : "LOCK IT IN"}
-        </PrimaryButton>
+        </ActionButton>
         {error ? <p className="text-center text-sm text-toasted">{error}</p> : null}
       </div>
     );

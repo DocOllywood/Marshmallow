@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { ChoiceButton } from "@/components/ChoiceButton";
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
+import { MoneyBrandHeader } from "@/components/MoneyBrandHeader";
 import { PlayModeBadge } from "@/components/play/PlayModeBadge";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { BinaryPredictor, defaultPercentsFor, MultiPredictor } from "@/components/play/Predictors";
@@ -35,7 +36,17 @@ import { cn } from "@/lib/utils";
 
 export function PlayExperience({ marshmallow }: { marshmallow: PlayMarshmallow }) {
   if (marshmallow.isExperimentDaily && marshmallow.dailyRound) {
-    return <ExperimentPlayExperience marshmallow={marshmallow} />;
+    const isPrice = marshmallow.experimentArchetype === "price";
+    const experience = <ExperimentPlayExperience marshmallow={marshmallow} />;
+    if (isPrice) {
+      return (
+        <div className="money-experiment flex flex-1 flex-col">
+          <MoneyBrandHeader className="pt-2 pb-0" />
+          {experience}
+        </div>
+      );
+    }
+    return experience;
   }
 
   return <LegacyPlayExperience marshmallow={marshmallow} />;

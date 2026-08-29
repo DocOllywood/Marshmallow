@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/AppShell";
-import { MarshmallowLogo } from "@/components/MarshmallowLogo";
+import { MoneyBrandHeader } from "@/components/MoneyBrandHeader";
 
 export default function AuthLayout({
   children,
@@ -8,9 +8,7 @@ export default function AuthLayout({
 }) {
   return (
     <AppShell>
-      <div className="pt-6">
-        <MarshmallowLogo size="sm" />
-      </div>
+      <MoneyBrandHeader />
       {children}
     </AppShell>
   );

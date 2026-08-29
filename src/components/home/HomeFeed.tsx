@@ -113,7 +113,7 @@ export function HomeFeedView({
           ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Link href="/notifications" className="text-sm font-semibold text-primary">
+          <Link href="/notifications" className="text-sm font-semibold text-money">
             Inbox
           </Link>
           <AccountMenu username={username} />

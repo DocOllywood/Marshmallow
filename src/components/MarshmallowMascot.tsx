@@ -42,6 +42,8 @@ type MarshmallowMascotProps = {
   size?: MascotSize;
   className?: string;
   title?: string;
+  /** 0–5 progressive sage glow depth for experiment stages (optional). */
+  accentDepth?: 0 | 1 | 2 | 3 | 4 | 5;
   /** Cooking warmth only. 0 cool, 1 warm, 2 almost ready. Timestamps only — never results. */
   heat?: 0 | 1 | 2;
   /** 0–100 lean while predicting. Visual only — never authoritative. */
@@ -58,6 +60,7 @@ export function MarshmallowMascot({
   size = "md",
   className,
   title,
+  accentDepth = 0,
   heat = 0,
   predictionLean,
 }: MarshmallowMascotProps) {
@@ -92,6 +95,17 @@ export function MarshmallowMascot({
       )}
       overflow="visible"
     >
+      {accentDepth > 0 ? (
+        <ellipse
+          cx="40"
+          cy="52"
+          rx={22 + accentDepth * 0.8}
+          ry={24 + accentDepth * 0.6}
+          fill="var(--mascot-accent)"
+          opacity={0.08 + accentDepth * 0.025}
+          aria-hidden
+        />
+      ) : null}
       {resolved === "celebrating" ? <Sparks /> : null}
       <ellipse cx="40" cy="73.5" rx="15" ry="3.2" fill="var(--ink)" opacity="0.1" />
       <g className="mascot-body" transform={bodyTransform}>

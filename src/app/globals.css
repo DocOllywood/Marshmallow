@@ -28,6 +28,11 @@
   --color-money-soft: var(--money-soft);
   --color-money-border: var(--money-border);
   --color-money-muted: var(--money-muted);
+  --color-money-stage-1: var(--money-stage-1);
+  --color-money-stage-2: var(--money-stage-2);
+  --color-money-stage-3: var(--money-stage-3);
+  --color-money-stage-4: var(--money-stage-4);
+  --color-money-stage-5: var(--money-stage-5);
 
   --color-background: var(--canvas);
   --color-foreground: var(--ink);
@@ -93,12 +98,18 @@
   --mode-quick: #2563eb;
   --mode-live: #ea580c;
   --mode-daily: #8b7cff;
-  /* Money Era accent — desaturated old-money green; use semantic tokens only. */
-  --money: #2f5c4a;
-  --money-foreground: #f4ebe0;
-  --money-soft: #e8f0eb;
-  --money-border: #b8cfc0;
-  --money-muted: #5a7267;
+  /* Money Era accent — warm sage green; use semantic tokens only. */
+  --money: #4a7c66;
+  --money-foreground: #fffef9;
+  --money-soft: #e5f0ea;
+  --money-border: #b5d4c4;
+  --money-muted: #4a6359;
+  --money-stage-1: #b8d4c6;
+  --money-stage-2: #8fbaa4;
+  --money-stage-3: #6fa089;
+  --money-stage-4: #588a72;
+  --money-stage-5: #4a7c66;
+  --mascot-accent: #8fb5a0;
   --radius: 1rem;
 }
 
@@ -269,16 +280,24 @@
   outline-offset: 4px;
 }
 
+.money-experiment .predict-slider:focus-visible {
+  outline-color: var(--money);
+}
+
 .predict-slider::-webkit-slider-runnable-track {
   height: 0.85rem;
   border-radius: 9999px;
   background: linear-gradient(
     to right,
-    var(--primary) 0%,
-    var(--primary) var(--pct, 50%),
+    var(--predict-track-fill, var(--primary)) 0%,
+    var(--predict-track-fill, var(--primary)) var(--pct, 50%),
     var(--border) var(--pct, 50%),
     var(--border) 100%
   );
+}
+
+.money-experiment {
+  --predict-track-fill: var(--money);
 }
 
 .predict-slider::-moz-range-track {
@@ -290,7 +309,7 @@
 .predict-slider::-moz-range-progress {
   height: 0.85rem;
   border-radius: 9999px;
-  background: var(--primary);
+  background: var(--predict-track-fill, var(--primary));
 }
 
 .predict-slider::-webkit-slider-thumb {
@@ -301,7 +320,7 @@
   margin-top: -0.58rem;
   border-radius: 9999px;
   border: 3px solid #fff;
-  background: var(--primary);
+  background: var(--predict-track-fill, var(--primary));
   box-shadow: 0 2px 8px rgba(58, 36, 24, 0.18);
 }
 
@@ -310,7 +329,7 @@
   height: 2rem;
   border-radius: 9999px;
   border: 3px solid #fff;
-  background: var(--primary);
+  background: var(--predict-track-fill, var(--primary));
   box-shadow: 0 2px 8px rgba(58, 36, 24, 0.18);
 }
 

@@ -1,3 +1,7 @@
+import {
+  experimentStageAccentVar,
+  experimentStageAccentStyle,
+} from "@/domain/daily/experiment-stage-accent";
 import type { ExperimentArchetype, ExperimentStage } from "@/domain/daily/experiment";
 import {
   experimentStageHeaderLabel,
@@ -26,9 +30,7 @@ export function ExperimentStageHeader({
   const stageLabel =
     isPrice ? priceStagePresentationLabel(stage) : experimentStageHeaderLabel(stage);
   const stageNumber = experimentStageNumber(position);
-  const priceAccent =
-    isPrice &&
-    (stage === "consequence" || stage === "line" || stage === "pressure");
+  const accentVar = isPrice ? experimentStageAccentVar(stage) : null;
 
   return (
     <header className={`flex flex-col gap-3 ${spacious ? "pb-4 pt-6" : "pt-4"}`}>
@@ -43,12 +45,20 @@ export function ExperimentStageHeader({
       <p
         className={cn(
           "text-xs font-semibold tracking-[0.24em] uppercase",
-          priceAccent ? "text-money" : "text-ink-muted",
+          !isPrice && "text-ink-muted",
           isPrice && stage === "consequence" && "text-[0.8rem] tracking-[0.28em]",
         )}
+        style={isPrice ? experimentStageAccentStyle(stage) : undefined}
       >
         {stageLabel}
       </p>
+      {isPrice && accentVar ? (
+        <span
+          className="h-0.5 w-10 rounded-full"
+          style={{ backgroundColor: `var(${accentVar})` }}
+          aria-hidden
+        />
+      ) : null}
     </header>
   );
 }

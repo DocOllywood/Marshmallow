@@ -2,8 +2,9 @@
 
 import { useActionState, useState } from "react";
 
-import { MarshmallowLogo } from "@/components/MarshmallowLogo";
-import { PrimaryButton } from "@/components/PrimaryButton";
+import { MoneyBrandHeader } from "@/components/MoneyBrandHeader";
+import { MarshmallowMascot } from "@/components/MarshmallowMascot";
+import { MoneyPrimaryButton } from "@/components/MoneyPrimaryButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
@@ -85,11 +86,9 @@ function StepDots({ step }: { step: Step }) {
 function Welcome({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center">
-      <MarshmallowLogo />
-      <p className="mt-10 text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">
-        Marshmallow
-      </p>
-      <h1 className="mt-3 font-display text-[clamp(2rem,9vw,2.4rem)] leading-[0.98] font-semibold tracking-tight">
+      <MoneyBrandHeader className="w-full text-left" />
+      <MarshmallowMascot state="fluffy" size="lg" className="mt-4" aria-hidden />
+      <h1 className="mt-6 font-display text-[clamp(2rem,9vw,2.4rem)] leading-[0.98] font-semibold tracking-tight">
         What&apos;s your price?
       </h1>
       <p className="mt-4 max-w-[18rem] text-sm leading-6 text-ink">
@@ -97,7 +96,7 @@ function Welcome({ onContinue }: { onContinue: () => void }) {
         <span className="block">Find out where it changes you.</span>
       </p>
       <div className="mt-10 w-full">
-        <PrimaryButton onClick={onContinue}>CONTINUE</PrimaryButton>
+        <MoneyPrimaryButton onClick={onContinue}>CONTINUE</MoneyPrimaryButton>
       </div>
     </div>
   );
@@ -112,7 +111,8 @@ function HowToPlay({
 }) {
   return (
     <div className="flex flex-1 flex-col pb-6">
-      <h1 className="mt-8 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
+      <MoneyBrandHeader />
+      <h1 className="mt-4 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
         How it works
       </h1>
       <ol className="mt-6 flex flex-col gap-3">
@@ -121,7 +121,7 @@ function HowToPlay({
         ))}
       </ol>
       <div className="mt-auto flex flex-col gap-3 pt-8">
-        <PrimaryButton onClick={onContinue}>SHOW ME</PrimaryButton>
+        <MoneyPrimaryButton onClick={onContinue}>SHOW ME</MoneyPrimaryButton>
         <BackButton onClick={onBack} />
       </div>
     </div>
@@ -162,8 +162,9 @@ function Finish({
 }) {
   return (
     <form action={action} className="flex flex-1 flex-col pb-6">
+      <MoneyBrandHeader />
       <input type="hidden" name="topic_ids" value={BETA_ONBOARDING_DEFAULT_TOPIC_ID} />
-      <h1 className="mt-8 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
+      <h1 className="mt-4 font-display text-[2.1rem] leading-[1.05] font-semibold tracking-tight">
         You&apos;re in, @{username}.
       </h1>
       <p className="mt-2 text-sm text-ink-muted">
@@ -190,9 +191,9 @@ function Finish({
         </p>
       ) : null}
       <div className="mt-auto flex flex-col gap-3 pt-8">
-        <PrimaryButton type="submit" disabled={pending}>
+        <MoneyPrimaryButton type="submit" disabled={pending}>
           {pending ? "Saving…" : "PLAY MY FIRST EXPERIMENT"}
-        </PrimaryButton>
+        </MoneyPrimaryButton>
         <BackButton onClick={onBack} />
       </div>
     </form>

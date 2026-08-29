@@ -102,3 +102,109 @@ export const LAUNCH_MONEY_DAILY_OUTSIDE_INVITATION =
   "Notice how differently a sacrifice sounds depending on who is being asked to make it.";
 
 export const LAUNCH_MONEY_DAILY_DIRECT_QA_PATH = `/m/${LAUNCH_MONEY_DAILY_MARSHMALLOWS[0]}`;
+
+/** Canonical Day 1 editorial — mirrors hosted refine migration (single source for rehearsal). */
+export const LAUNCH_MONEY_DAILY_TITLE = "Would you move for their dream job?";
+export const LAUNCH_MONEY_DAILY_SUBTITLE = "One offer. Two lives. See where your answer moves.";
+export const LAUNCH_MONEY_DAILY_TENSION_DISPLAY = "BELONGING vs. INDEPENDENCE";
+
+export const LAUNCH_MONEY_DAILY_BINARY_LABELS = {
+  move: "Move with them",
+  stay: "Stay where you are",
+} as const;
+
+export const LAUNCH_MONEY_DAILY_FLIP_LABELS = {
+  stay: "No, I would stay",
+  go: "Yes, I would go",
+} as const;
+
+export const LAUNCH_MONEY_DAILY_QUESTIONS = [
+  "Your partner was offered a job they've wanted for years in another city. You'd have to leave your job, your friends, and the life you built where you are. Would you move with them?",
+  "The role comes with a 40% raise for them — but you would likely be unemployed for at least three months after moving, with no guarantee you'd find work quickly. What now?",
+  "Moving means giving up your $68,000-a-year job — with nothing else lined up. What do you do?",
+  "Now you're your partner. You got the offer in another city. They say they won't move — they won't leave their job, friends, or the life they built. Would you take the job anyway?",
+  "When is it fair to ask your partner to move for your career?",
+] as const;
+
+export const LAUNCH_MONEY_DAILY_Q2 = {
+  move: "31000000-0000-4000-8000-000000000511",
+  stay: "31000000-0000-4000-8000-000000000512",
+} as const;
+
+export const LAUNCH_MONEY_DAILY_Q3 = {
+  move: "31000000-0000-4000-8000-000000000521",
+  stay: "31000000-0000-4000-8000-000000000522",
+} as const;
+
+export const LAUNCH_MONEY_DAILY_Q4 = {
+  stay: "31000000-0000-4000-8000-000000000531",
+  go: "31000000-0000-4000-8000-000000000532",
+} as const;
+
+export type LaunchMoneyDailyStageContent = {
+  position: number;
+  marshmallowId: string;
+  stage: (typeof LAUNCH_MONEY_DAILY_STAGE_SPEC)[number]["stage"];
+  question: string;
+  requiresPrediction: boolean;
+  pressureType: string | null;
+  costType: string | null;
+  costLabel: string | null;
+  isLine: boolean;
+  choices: readonly { id: string; label: string; tensionSide: "left" | "right" }[];
+};
+
+export const LAUNCH_MONEY_DAILY_STAGES: readonly LaunchMoneyDailyStageContent[] =
+  LAUNCH_MONEY_DAILY_STAGE_SPEC.map((spec, index) => {
+    const position = spec.position;
+    const question = LAUNCH_MONEY_DAILY_QUESTIONS[index] ?? "";
+    if (position === 5) {
+      return {
+        ...spec,
+        marshmallowId: LAUNCH_MONEY_DAILY_MARSHMALLOWS[4]!,
+        question,
+        isLine: true,
+        choices: LAUNCH_MONEY_DAILY_LINE_CHOICES.map((choice) => ({
+          id: choice.id,
+          label: choice.label,
+          tensionSide: choice.tensionSide as "left" | "right",
+        })),
+      };
+    }
+    if (position === 4) {
+      return {
+        ...spec,
+        marshmallowId: LAUNCH_MONEY_DAILY_MARSHMALLOWS[3]!,
+        question,
+        isLine: false,
+        choices: [
+          { id: LAUNCH_MONEY_DAILY_Q4.stay, label: LAUNCH_MONEY_DAILY_FLIP_LABELS.stay, tensionSide: "left" },
+          { id: LAUNCH_MONEY_DAILY_Q4.go, label: LAUNCH_MONEY_DAILY_FLIP_LABELS.go, tensionSide: "right" },
+        ],
+      };
+    }
+    const qChoices =
+      position === 1
+        ? LAUNCH_MONEY_DAILY_Q1
+        : position === 2
+          ? LAUNCH_MONEY_DAILY_Q2
+          : LAUNCH_MONEY_DAILY_Q3;
+    return {
+      ...spec,
+      marshmallowId: LAUNCH_MONEY_DAILY_MARSHMALLOWS[position - 1]!,
+      question,
+      isLine: false,
+      choices: [
+        {
+          id: qChoices.move,
+          label: LAUNCH_MONEY_DAILY_BINARY_LABELS.move,
+          tensionSide: "left" as const,
+        },
+        {
+          id: qChoices.stay,
+          label: LAUNCH_MONEY_DAILY_BINARY_LABELS.stay,
+          tensionSide: "right" as const,
+        },
+      ],
+    };
+  });

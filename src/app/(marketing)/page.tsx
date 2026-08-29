@@ -13,8 +13,7 @@ export default function LandingPage() {
 
       <div className="flex flex-col items-center text-center">
         <MarshmallowMascot state="fluffy" size="lg" className="mb-1" aria-hidden />
-        <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">Marshmallow</p>
-        <h1 className="mt-3 font-display text-[clamp(2rem,9vw,2.65rem)] leading-[0.98] font-semibold tracking-tight text-ink">
+        <h1 className="mt-3 font-display text-[clamp(2rem,9vw,2.65rem)] leading-[0.98] font-semibold tracking-tight text-ink uppercase">
           What&apos;s your price?
         </h1>
         <p className="mt-4 max-w-[21rem] text-base leading-7 text-ink">

@@ -35,7 +35,7 @@ export function BottomNav({ readyCount = 0 }: { readyCount?: number }) {
                 aria-label={showReady ? `Home, ${readyCount} ready` : item.label}
                 className={cn(
                   "flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium",
-                  active ? "text-primary" : "text-ink-muted",
+                  active ? "text-money" : "text-ink-muted",
                 )}
               >
                 <span className="relative">
@@ -47,7 +47,7 @@ export function BottomNav({ readyCount = 0 }: { readyCount?: number }) {
                   {showReady ? (
                     <span
                       aria-hidden
-                      className="absolute -top-1 -right-1.5 min-w-3.5 rounded-full bg-primary px-0.5 text-center text-[9px] leading-3.5 font-semibold text-canvas"
+                      className="absolute -top-1 -right-1.5 min-w-3.5 rounded-full bg-money px-0.5 text-center text-[9px] leading-3.5 font-semibold text-money-foreground"
                     >
                       {readyCount > 9 ? "9+" : readyCount}
                     </span>

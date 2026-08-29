@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
-import { PrimaryButton } from "@/components/PrimaryButton";
+import { MoneyPrimaryButton } from "@/components/MoneyPrimaryButton";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { openDailyRoundRevealAction } from "@/server/actions/play";
 import { trackEvent } from "@/server/actions/analytics";
@@ -45,13 +45,13 @@ export function ExperimentRevealReadyGate({
   return (
     <div className="flex flex-1 flex-col items-center gap-6 px-2 py-12 text-center">
       <MarshmallowMascot state={pending ? "toasted" : "cooking"} size="lg" heat={2} />
-      <p className="text-xs font-semibold tracking-[0.22em] text-primary uppercase">The crowd is in.</p>
+      <p className="text-xs font-semibold tracking-[0.22em] text-money uppercase">The crowd is in.</p>
       <p className="max-w-[20rem] font-display text-[clamp(1.35rem,5.5vw,1.75rem)] leading-snug font-semibold tracking-tight">
         Where did everyone else move?
       </p>
-      <PrimaryButton onClick={() => void open()} disabled={pending}>
+      <MoneyPrimaryButton onClick={() => void open()} disabled={pending}>
         {pending ? "Opening…" : "REVEAL THE EXPERIMENT"}
-      </PrimaryButton>
+      </MoneyPrimaryButton>
       {error ? <p className="text-sm text-toasted">{error}</p> : null}
       <p className="sr-only">{title}</p>
     </div>

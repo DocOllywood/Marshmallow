@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { GapDisplay } from "@/components/daily/GapDisplay";
+import { MoneyPrimaryButton } from "@/components/MoneyPrimaryButton";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import type { DailyRoundQuestionReveal, DailyRoundSummary } from "@/domain/daily/round";
@@ -20,6 +21,8 @@ export function ExperimentRevealShow({
   userPath,
   roundId,
   isPriceExperiment = false,
+  skipAnalytics = false,
+  rehearsalLabel = false,
 }: {
   reveals: DailyRoundQuestionReveal[];
   summary: DailyRoundSummary;
@@ -28,20 +31,22 @@ export function ExperimentRevealShow({
   userPath: UserPathPoint[];
   roundId?: string;
   isPriceExperiment?: boolean;
+  skipAnalytics?: boolean;
+  rehearsalLabel?: boolean;
 }) {
   const tracked = useRef(false);
   const flipReveal = reveals.find((item) => item.position === 4 && !item.isLine);
   const lineReveal = reveals.find((item) => item.isLine);
 
   useEffect(() => {
-    if (tracked.current) return;
+    if (skipAnalytics || tracked.current) return;
     tracked.current = true;
     void trackEvent(
       ANALYTICS_EVENTS.dailyRevealOpened,
       { viewed: true, round_id: roundId ?? null, experiment: true },
       roundId,
     );
-  }, [roundId]);
+  }, [roundId, skipAnalytics]);
 
   const crowdSection = crowdTrajectory ? (
     <section className="flex flex-col gap-4">
@@ -59,7 +64,7 @@ export function ExperimentRevealShow({
         ))}
       </ul>
       {describeCrowdMovement(crowdTrajectory) ? (
-        <p className="pt-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+        <p className="pt-2 text-xs font-semibold tracking-[0.18em] text-money uppercase">
           {describeCrowdMovement(crowdTrajectory)}
         </p>
       ) : null}
@@ -154,6 +159,11 @@ export function ExperimentRevealShow({
 
   return (
     <div className="flex flex-1 flex-col gap-10 pb-28 pt-6">
+      {rehearsalLabel ? (
+        <p className="text-center text-[10px] font-semibold tracking-[0.2em] text-ink-muted uppercase">
+          Rehearsal data
+        </p>
+      ) : null}
       {isPriceExperiment ? (
         <>
           {pathSection}
@@ -200,7 +210,11 @@ export function ExperimentRevealShow({
 
       {isPriceExperiment ? lineSection : lineReveal ? lineSection : null}
 
-      <PrimaryButton href="/home">HOME</PrimaryButton>
+      {isPriceExperiment ? (
+        <MoneyPrimaryButton href="/home">HOME</MoneyPrimaryButton>
+      ) : (
+        <PrimaryButton href="/home">HOME</PrimaryButton>
+      )}
     </div>
   );
 }

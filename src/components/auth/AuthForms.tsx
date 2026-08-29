@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 
-import { PrimaryButton } from "@/components/PrimaryButton";
+import { MoneyPrimaryButton } from "@/components/MoneyPrimaryButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -23,9 +23,9 @@ export function SignInForm({ nextPath }: { nextPath?: string }) {
       <EmailField />
       <PasswordField autoComplete="current-password" />
       <AuthMessage state={state} />
-      <PrimaryButton type="submit" disabled={pending}>
+      <MoneyPrimaryButton type="submit" disabled={pending}>
         {pending ? "Logging in…" : "Log in"}
-      </PrimaryButton>
+      </MoneyPrimaryButton>
       <p className="text-sm text-ink-muted">
         <Link href="/forgot-password" className="underline-offset-2 hover:underline">
           Forgot password
@@ -67,9 +67,9 @@ export function SignUpForm({
       <EmailField />
       <PasswordField autoComplete="new-password" />
       <AuthMessage state={state} />
-      <PrimaryButton type="submit" disabled={pending}>
+      <MoneyPrimaryButton type="submit" disabled={pending}>
         {pending ? "Creating…" : "Create account"}
-      </PrimaryButton>
+      </MoneyPrimaryButton>
       <p className="text-sm text-ink-muted">
         Already in?{" "}
         <Link href={nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : "/login"} className="underline-offset-2 hover:underline">

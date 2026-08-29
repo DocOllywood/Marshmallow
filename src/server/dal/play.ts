@@ -120,6 +120,7 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
 
   let experimentPriorChoiceLabel: string | null = null;
   let experimentPriorTensionSide: TensionSide | null = null;
+  let experimentInitialTensionSide: TensionSide | null = null;
   if (
     isExperimentDaily &&
     data.daily_round_id &&
@@ -133,6 +134,15 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     );
     experimentPriorChoiceLabel = prior.label;
     experimentPriorTensionSide = prior.tensionSide;
+  }
+  if (
+    isExperimentDaily &&
+    data.daily_round_id &&
+    data.round_position != null &&
+    data.round_position >= 3
+  ) {
+    const initial = await loadExperimentPriorChoice(supabase, data.daily_round_id, 1);
+    experimentInitialTensionSide = initial.tensionSide;
   }
 
   let screen = resolvePlayScreen({
@@ -217,6 +227,7 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     isExperimentDaily,
     experimentPriorChoiceLabel,
     experimentPriorTensionSide,
+    experimentInitialTensionSide,
     experimentCostType: experimentMeta?.costType ?? null,
     experimentCostLabel: experimentMeta?.costLabel ?? null,
     experimentArchetype: dailyRound?.experimentArchetype ?? "default",
