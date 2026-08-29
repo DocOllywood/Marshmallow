@@ -12,7 +12,7 @@ export const PRICE_QA_CONTINUOUS_ROUND_DATE = "2099-12-31";
 /** Long-lived lifecycle for always-available play (migration 20260829240000). */
 export const PRICE_QA_CONTINUOUS_LIFECYCLE = {
   opensAt: "2026-08-29T00:00:00.000Z",
-  closesAt: "2099-12-31T23:59:59.000Z",
+  closesAt: "2099-12-31T00:00:00.000Z",
   revealsAt: "2099-12-31T23:59:59.000Z",
   hardRevealsAt: "2099-12-31T23:59:59.000Z",
 } as const;

@@ -11,7 +11,7 @@ DECLARE
   v_tension_id uuid := '50000000-0000-4000-8000-000000000008';
   v_inventory_date date := '2099-12-31';
   v_opens_at timestamptz := '2026-08-29T00:00:00Z';
-  v_closes_at timestamptz := '2099-12-31T23:59:59Z';
+  v_closes_at timestamptz := '2099-12-31T00:00:00Z';
   v_reveals_at timestamptz := '2099-12-31T23:59:59Z';
   v_hard_reveals_at timestamptz := v_reveals_at;
   v_component_count int;
