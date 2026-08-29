@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
       env,
       include: [
         "tests/domain/**/*.test.ts",
+        "tests/dal/**/*.test.ts",
         "tests/lib/**/*.test.ts",
         "tests/components/**/*.test.ts",
         "tests/components/**/*.test.tsx",
