@@ -13,7 +13,9 @@ import type { TopicRow } from "@/domain/onboarding/topics";
 import type { Database } from "@/lib/supabase/types";
 import type { DailyRoundProgress } from "@/domain/daily/round";
 import { isStandaloneHomeInventory } from "@/domain/home/inventory";
+import type { ScheduledExperimentPreview } from "@/domain/daily/scheduled-preview";
 import { getTodayDailyRoundProgress } from "@/server/dal/daily-round";
+import { getNextScheduledExperimentPreview } from "@/server/dal/scheduled-experiment";
 
 type MarshmallowRow = Pick<
   Database["public"]["Tables"]["marshmallows"]["Row"],
@@ -52,6 +54,7 @@ export type HomeFeed = {
   quickPlay: HomeFeedCard[];
   liveNow: HomeFeedCard[];
   dailyRound: DailyRoundProgress | null;
+  nextScheduledExperiment: ScheduledExperimentPreview | null;
   cooking: HomeFeedCard[];
   waiting: HomeFeedCard[];
   openNow: HomeFeedCard[];
@@ -104,7 +107,10 @@ export async function getHomeFeed(
   const scoreByMarshmallow = new Map((scores ?? []).map((row) => [row.marshmallow_id, row]));
   const topicName = new Map(topics.map((topic) => [topic.id, topic.name]));
   const topicImage = new Map(topics.map((topic) => [topic.id, topic.image_url]));
-  const dailyRound = await getTodayDailyRoundProgress(topicName);
+  const [dailyRound, nextScheduledExperiment] = await Promise.all([
+    getTodayDailyRoundProgress(topicName),
+    getNextScheduledExperimentPreview(),
+  ]);
 
   const cards: HomeFeedCard[] = (marshmallows ?? []).map((row) => {
     const entry = entryByMarshmallow.get(row.id);
@@ -231,6 +237,7 @@ export async function getHomeFeed(
     quickPlay,
     liveNow,
     dailyRound,
+    nextScheduledExperiment,
     cooking: cooking.slice(0, HOME_COOKING_VISIBLE),
     waiting: waiting.slice(0, HOME_COOKING_VISIBLE),
     openNow: [],

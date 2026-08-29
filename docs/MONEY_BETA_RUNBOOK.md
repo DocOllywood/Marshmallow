@@ -328,3 +328,21 @@ No KPI thresholds for Beta — qualitative pattern recognition first.
 - [ ] Deploy with updated `vercel.json` cron schedules
 - [ ] Founder Day 1 play checklist completed
 - [ ] 10–30 invite list ready
+
+---
+
+## Founder QA — new-user testing (no account reset)
+
+**Do not** ship a “reset my account” button to normal users.
+
+**Recommended flow (Option A):**
+
+1. On Home, tap **@username** (top right) → **Log out**
+2. Confirm you land on `/` (Money Era landing)
+3. Tap **PLAY TODAY'S EXPERIMENT** for a fresh anonymous guest, **or** sign up / log in with a **separate QA email** (e.g. `founder-qa-2@…`)
+4. Complete onboarding as the new user
+5. Prior account progress is preserved — logging back into the original account restores history
+
+**Option B (existing tooling):** Settings and Profile also expose **Log out**. Guest anonymous sessions can use **Start fresh** on Profile when applicable.
+
+**Exclude from beta KPIs:** tag events from founder QA emails and pre-launch test accounts when interpreting analytics.

@@ -8,6 +8,12 @@ vi.mock("@/server/actions/analytics", () => ({
   trackEvent: vi.fn(async () => undefined),
 }));
 
+vi.mock("@/components/account/AccountMenu", () => ({
+  AccountMenu: ({ username }: { username: string }) => (
+    <button type="button">{`Account menu for ${username}`}</button>
+  ),
+}));
+
 afterEach(() => cleanup());
 
 function card(overrides: Partial<HomeFeedCard> & Pick<HomeFeedCard, "id" | "question">): HomeFeedCard {
@@ -44,6 +50,7 @@ const emptyFeed: HomeFeed = {
   quickPlay: [],
   liveNow: [],
   dailyRound: null,
+  nextScheduledExperiment: null,
   cooking: [],
   waiting: [],
   openNow: [],
@@ -85,7 +92,14 @@ describe("HomeFeedView", () => {
       ],
     };
 
-    render(<HomeFeedView feed={feed} firstName="Alex" identity={{ rating: null, qualified: false, remaining: 5, scoredCount: 2, revealStreak: 0 }} />);
+    render(
+      <HomeFeedView
+        feed={feed}
+        firstName="Alex"
+        username="alex"
+        identity={{ rating: null, qualified: false, remaining: 5, scoredCount: 2, revealStreak: 0 }}
+      />,
+    );
 
     expect(screen.getByText("Ready")).toBeTruthy();
     expect(screen.queryByText(/^Quick$/)).toBeNull();
@@ -142,7 +156,7 @@ describe("HomeFeedView", () => {
       },
     };
 
-    render(<HomeFeedView feed={feed} firstName="Alex" />);
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
 
     expect(screen.getByText("The Daily")).toBeTruthy();
     expect(screen.getByText(/Today everyone is playing/i)).toBeTruthy();
@@ -228,7 +242,7 @@ describe("HomeFeedView", () => {
       },
     };
 
-    render(<HomeFeedView feed={feed} firstName="Alex" />);
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
 
     expect(screen.getByText(/Today everyone is playing/i)).toBeTruthy();
     expect(screen.getByText("HONESTY vs. KINDNESS")).toBeTruthy();
@@ -277,7 +291,7 @@ describe("HomeFeedView", () => {
       },
     };
 
-    render(<HomeFeedView feed={feed} firstName="Alex" />);
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
 
     expect(screen.getByText("HONESTY vs. KINDNESS")).toBeTruthy();
   });
@@ -313,7 +327,7 @@ describe("HomeFeedView", () => {
       },
     };
 
-    render(<HomeFeedView feed={feed} firstName="Alex" />);
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
 
     expect(screen.getByText(/Today's read/i)).toBeTruthy();
     expect(screen.getByText(/Your calls are locked/i)).toBeTruthy();
@@ -361,7 +375,7 @@ describe("HomeFeedView", () => {
       },
     };
 
-    render(<HomeFeedView feed={feed} firstName="Alex" />);
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
 
     expect(screen.getByText(/The daily experiment/i)).toBeTruthy();
     expect(screen.getByText(/Today's price/i)).toBeTruthy();
@@ -406,7 +420,7 @@ describe("HomeFeedView", () => {
       },
     };
 
-    render(<HomeFeedView feed={feed} firstName="Alex" />);
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
 
     expect(screen.queryByText(/The daily experiment/i)).toBeNull();
     expect(screen.queryByRole("link", { name: /BEGIN EXPERIMENT/i })).toBeNull();
@@ -426,7 +440,7 @@ describe("HomeFeedView", () => {
       ],
     };
 
-    render(<HomeFeedView feed={feed} firstName="Alex" />);
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
 
     expect(screen.getByText("Cooking")).toBeTruthy();
     expect(screen.getByText(/Results in about 4 min/i)).toBeTruthy();
@@ -448,10 +462,38 @@ describe("HomeFeedView", () => {
       ],
     };
 
-    render(<HomeFeedView feed={feed} firstName="Alex" />);
+    render(<HomeFeedView feed={feed} firstName="Alex" username="alex" />);
 
     expect(screen.getByText("Recent")).toBeTruthy();
     expect(screen.getByText("Accuracy 92")).toBeTruthy();
     expect(screen.queryByText(/Aug/i)).toBeNull();
+  });
+
+  it("shows scheduled experiment anticipation when no playable daily exists", () => {
+    const feed: HomeFeed = {
+      ...emptyFeed,
+      nextScheduledExperiment: {
+        roundId: "40000000-0000-4000-8000-000000000009",
+        opensAt: "2026-09-02T12:00:00.000Z",
+        archetype: "price",
+      },
+    };
+
+    render(
+      <HomeFeedView
+        feed={feed}
+        firstName="Richie"
+        username="richieg"
+        identity={{ rating: null, qualified: false, remaining: 1, scoredCount: 4, revealStreak: 0 }}
+      />,
+    );
+
+    expect(screen.getByText(/The next experiment/i)).toBeTruthy();
+    expect(screen.getByText(/What's your price/i)).toBeTruthy();
+    expect(screen.getByText(/Come back then/i)).toBeTruthy();
+    expect(screen.queryByText(/dream job/i)).toBeNull();
+    expect(screen.queryByText(/Nothing is cooking yet/i)).toBeNull();
+    expect(screen.getByText(/4\/5 to unlock/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Account menu for richieg/i })).toBeTruthy();
   });
 });

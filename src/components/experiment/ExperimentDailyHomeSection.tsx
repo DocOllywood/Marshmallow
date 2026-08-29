@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { ExperimentTodaysReadCard } from "@/components/experiment/ExperimentTodaysReadCard";
-import { PrimaryButton } from "@/components/PrimaryButton";
+import { MoneyPrimaryButton } from "@/components/MoneyPrimaryButton";
 import type { DailyRoundProgress } from "@/domain/daily/round";
 import { dailyHomeState } from "@/domain/daily/round";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
@@ -25,7 +25,7 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
   }, [round.roundId, round.tension, state]);
 
   return (
-    <section className="flex flex-col gap-5 border-l-2 border-border/80 pl-4">
+    <section className="flex flex-col gap-5 border-l-2 border-money-border pl-4">
       <div className="flex flex-col gap-3">
         <p className="text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase">
           The daily experiment
@@ -47,12 +47,12 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
       </div>
 
       {state === "play" && round.currentPlayId ? (
-        <PrimaryButton href={playHref}>BEGIN EXPERIMENT</PrimaryButton>
+        <MoneyPrimaryButton href={playHref}>BEGIN EXPERIMENT</MoneyPrimaryButton>
       ) : null}
       {state === "continue" && round.currentPlayId ? (
         <>
           <p className="text-sm text-ink-muted">{round.sealedCount} of 5 locked</p>
-          <PrimaryButton href={playHref}>CONTINUE EXPERIMENT</PrimaryButton>
+          <MoneyPrimaryButton href={playHref}>CONTINUE EXPERIMENT</MoneyPrimaryButton>
         </>
       ) : null}
       {state === "sealed" ? (
@@ -72,7 +72,7 @@ export function ExperimentDailyHomeSection({ round }: { round: DailyRoundProgres
       {state === "ready" ? (
         <>
           <p className="text-xs font-semibold tracking-[0.18em] text-money uppercase">The crowd is in.</p>
-          <PrimaryButton href={round.revealHref}>SEE WHAT CHANGED</PrimaryButton>
+          <MoneyPrimaryButton href={round.revealHref}>SEE WHAT CHANGED</MoneyPrimaryButton>
         </>
       ) : null}
     </section>

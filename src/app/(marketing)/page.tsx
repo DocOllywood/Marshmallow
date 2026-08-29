@@ -1,4 +1,5 @@
 import { MarshmallowLogo } from "@/components/MarshmallowLogo";
+import { MarshmallowMascot } from "@/components/MarshmallowMascot";
 import { PriceLadderExample } from "@/components/marketing/PriceLadderExample";
 import { PlayMarshmallowButton } from "@/components/auth/PlayMarshmallowButton";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -7,10 +8,11 @@ export default function LandingPage() {
   return (
     <main className="flex flex-1 flex-col gap-10 pb-8 pt-6">
       <div className="flex items-center justify-between">
-        <MarshmallowLogo />
+        <MarshmallowLogo showMascot />
       </div>
 
       <div className="flex flex-col items-center text-center">
+        <MarshmallowMascot state="fluffy" size="lg" className="mb-1" aria-hidden />
         <p className="text-xs font-semibold tracking-[0.22em] text-ink-muted uppercase">Marshmallow</p>
         <h1 className="mt-3 font-display text-[clamp(2rem,9vw,2.65rem)] leading-[0.98] font-semibold tracking-tight text-ink">
           What&apos;s your price?

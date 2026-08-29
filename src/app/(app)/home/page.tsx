@@ -41,6 +41,7 @@ export default async function HomePage() {
     <HomeFeedView
       feed={feed}
       firstName={profile.display_name.split(" ")[0] ?? profile.username}
+      username={profile.username}
       identity={identity}
     />
   );

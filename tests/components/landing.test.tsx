@@ -3,7 +3,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/auth/PlayMarshmallowButton", () => ({
   PlayMarshmallowButton: ({ label }: { label: string }) => (
-    <a href="/home">{label}</a>
+    <a href="/home" className="bg-money text-money-foreground">
+      {label}
+    </a>
   ),
 }));
 
@@ -21,6 +23,8 @@ describe("LandingPage", () => {
     expect(screen.getByText(/Find out where it changes you/i)).toBeTruthy();
     expect(screen.getByText(/One uncomfortable money experiment every day/i)).toBeTruthy();
     expect(screen.getByRole("link", { name: "PLAY TODAY'S EXPERIMENT" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "PLAY TODAY'S EXPERIMENT" }).className).toMatch(/bg-money/);
+    expect(screen.getAllByLabelText(/Fluffy marshmallow/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/One situation/i)).toBeTruthy();
     expect(screen.getByText(/The price changes/i)).toBeTruthy();
     expect(screen.getByText(/\$1,000/)).toBeTruthy();

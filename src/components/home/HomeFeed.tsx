@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
+import { AccountMenu } from "@/components/account/AccountMenu";
 import { ExperimentDailyHomeSection } from "@/components/experiment/ExperimentDailyHomeSection";
 import { TodaysReadCard } from "@/components/daily/TodaysReadCard";
 import { EmptyState } from "@/components/EmptyState";
 import { MarshmallowMascot } from "@/components/MarshmallowMascot";
+import { ScheduledExperimentHomeSection } from "@/components/home/ScheduledExperimentHomeSection";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { isDailyRoundVisibleOnHome, dailyHomeState, type DailyRoundProgress } from "@/domain/daily/round";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
@@ -57,10 +59,12 @@ function compactCookingLabel(
 export function HomeFeedView({
   feed,
   firstName,
+  username,
   identity,
 }: {
   feed: HomeFeed;
   firstName: string;
+  username: string;
   identity?: {
     rating: number | null;
     qualified: boolean;
@@ -71,8 +75,13 @@ export function HomeFeedView({
 }) {
   const heroQuick = heroHomeQuick(feed.quickPlay);
   const moreQuick = moreHomeQuick(feed.quickPlay);
+  const hasPlayableDaily =
+    feed.dailyRound != null && isDailyRoundVisibleOnHome(feed.dailyRound);
+  const showScheduledExperiment = !hasPlayableDaily && feed.nextScheduledExperiment != null;
 
   const empty =
+    !showScheduledExperiment &&
+    !hasPlayableDaily &&
     !feed.dailyRound &&
     feed.readyToReveal.length === 0 &&
     feed.cooking.length === 0 &&
@@ -87,7 +96,7 @@ export function HomeFeedView({
           <h1 className="font-display text-[1.65rem] leading-tight font-semibold tracking-tight">
             Hey {firstName}.
           </h1>
-          {identity ? (
+          {identity && !showScheduledExperiment ? (
             <p className="mt-1 text-xs text-ink-muted">
               CrowdSense ·{" "}
               {identity.qualified && identity.rating != null ? (
@@ -103,10 +112,31 @@ export function HomeFeedView({
             </p>
           ) : null}
         </div>
-        <Link href="/notifications" className="shrink-0 text-sm font-semibold text-primary">
-          Inbox
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link href="/notifications" className="text-sm font-semibold text-primary">
+            Inbox
+          </Link>
+          <AccountMenu username={username} />
+        </div>
       </header>
+
+      {showScheduledExperiment && feed.nextScheduledExperiment ? (
+        <ScheduledExperimentHomeSection preview={feed.nextScheduledExperiment} />
+      ) : null}
+
+      {identity && showScheduledExperiment ? (
+        <p className="text-[10px] leading-5 text-ink-muted/80">
+          CrowdSense ·{" "}
+          {identity.qualified && identity.rating != null ? (
+            <>
+              <span className="font-semibold tabular-nums text-ink">{identity.rating}</span>
+              {identity.revealStreak > 0 ? <span> · 🔥 {identity.revealStreak}</span> : null}
+            </>
+          ) : (
+            <span>{identity.scoredCount}/5 to unlock</span>
+          )}
+        </p>
+      ) : null}
 
       {empty ? (
         <EmptyState
