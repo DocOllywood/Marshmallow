@@ -4,6 +4,21 @@ Operational guide for launching the first 10–30 user Money Week cohort. **Do n
 
 ---
 
+## Beta research question (primary)
+
+This beta is **not** “Do people like Marshmallow?”
+
+**Primary question:** Will someone voluntarily complete one escalating dilemma, care about where their Line landed, return for the crowd reveal, and then play another dilemma the next day?
+
+**Secondary questions:**
+
+- Do they comprehend Instinct → Pressure → Price → Flip → Line?
+- Does their answer move when cost rises?
+- Do they debate it with someone else?
+- Do they want to share the question?
+
+---
+
 ## Round inventory (Money Week)
 
 | Day | Round ID | QA `round_date` | Title | Direct QA (Q1) |
@@ -153,29 +168,71 @@ Review qualitative notes (see interview questions below). Prep next day's promot
 
 ---
 
-## Proposed Beta calendar (US Eastern)
+## Proposed Beta calendar — seven consecutive days (US Eastern)
 
-Assumes cohort launch **Monday 2026-09-08** (founder adjusts dates at promotion time). Pattern each day:
+**First cohort start:** Wednesday **2026-09-02**.  
+**Daily cadence (EDT, UTC−4):** open 08:00 ET · close 21:00 ET · reveal 23:30 ET.
 
-| Phase | Local (ET) | UTC (EDT, UTC-4) |
-|-------|------------|------------------|
-| Open | 8:00 AM | 12:00 |
-| Close | 9:00 PM | 01:00 (+1 day) |
-| Reveal | 11:30 PM | 03:30 (+1 day) |
+| Phase | Eastern | UTC (EDT) |
+|-------|---------|-----------|
+| Open | 08:00 same calendar day | 12:00 same day |
+| Close | 21:00 same calendar day | 01:00 **next** UTC day |
+| Reveal | 23:30 same calendar day | 03:30 **next** UTC day |
 
 **Play window:** ~13 hours. **Reveal wait:** 2.5 hours after close.
 
-| Day | Round ID | Title | Local date | Open UTC | Close UTC | Reveal UTC |
-|-----|----------|-------|------------|----------|-----------|------------|
-| 1 | …000009 | Partner dream job | Mon 2026-09-08 | 2026-09-08T12:00:00Z | 2026-09-09T01:00:00Z | 2026-09-09T03:30:00Z |
-| 2 | …000010 | Cover for a friend | Mon 2026-09-15 | 2026-09-15T12:00:00Z | 2026-09-16T01:00:00Z | 2026-09-16T03:30:00Z |
-| 3 | …000011 | Bigger paycheck | Mon 2026-09-22 | 2026-09-22T12:00:00Z | 2026-09-23T01:00:00Z | 2026-09-23T03:30:00Z |
-| 4 | …000012 | Private story | Mon 2026-09-29 | 2026-09-29T12:00:00Z | 2026-09-30T01:00:00Z | 2026-09-30T03:30:00Z |
-| 5 | …000013 | Equal fair? | Mon 2026-10-06 | 2026-10-06T12:00:00Z | 2026-10-07T01:00:00Z | 2026-10-07T03:30:00Z |
-| 6 | …000014 | Promotion belief | Mon 2026-10-13 | — | — | — |
-| 7 | …000015 | Co-sign family | Mon 2026-10-20 | — | — | — |
+| Day | Weekday | Calendar date | Round ID | Title | Open UTC | Close UTC | Reveal UTC |
+|-----|---------|---------------|----------|-------|----------|-----------|------------|
+| 1 | Wed | 2026-09-02 | `…000009` | Would you move for their dream job? | 2026-09-02T12:00:00Z | 2026-09-03T01:00:00Z | 2026-09-03T03:30:00Z |
+| 2 | Thu | 2026-09-03 | `…000010` | How much should you cover for a friend? | 2026-09-03T12:00:00Z | 2026-09-04T01:00:00Z | 2026-09-04T03:30:00Z |
+| 3 | Fri | 2026-09-04 | `…000011` | What would you trade for a bigger paycheck? | 2026-09-04T12:00:00Z | 2026-09-05T01:00:00Z | 2026-09-05T03:30:00Z |
+| 4 | Sat | 2026-09-05 | `…000012` | Would you sell a private story? | 2026-09-05T12:00:00Z | 2026-09-06T01:00:00Z | 2026-09-06T03:30:00Z |
+| 5 | Sun | 2026-09-06 | `…000013` | Is equal always fair? | 2026-09-06T12:00:00Z | 2026-09-07T01:00:00Z | 2026-09-07T03:30:00Z |
+| 6 | Mon | 2026-09-07 | `…000014` | Would you take a promotion you don't believe in? | 2026-09-07T12:00:00Z | 2026-09-08T01:00:00Z | 2026-09-08T03:30:00Z |
+| 7 | Tue | 2026-09-08 | `…000015` | Would you co-sign for family? | 2026-09-08T12:00:00Z | 2026-09-09T01:00:00Z | 2026-09-09T03:30:00Z |
 
-**Note:** Days 6–7 QA dates currently conflict with Blind Mirror / guitar QA on those calendar dates — **reassign `round_date` at promotion** to non-conflicting live dates (e.g. 2026-10-14 and 2026-10-21).
+Set `round_date` to each **calendar date** at promotion. QA dates in DB stay unchanged until then.
+
+---
+
+## Lifecycle cron
+
+**Job:** `GET/POST /api/cron/lifecycle` → `runDueLifecycle("cron")` → Supabase RPC `run_due_lifecycle`.
+
+**What it does:**
+
+1. `scheduled` → `open` when `opens_at <= now()`
+2. `open` → `closed` when `closes_at <= now()`
+3. `closed` → `revealed` when `ready_to_finalize()` — requires `now() >= reveals_at`, and either enough sealed entries **or** `now() >= hard_reveals_at`
+
+**Repo schedule (`vercel.json`, UTC):** `0 1`, `30 3`, `0 2`, `0 8` daily.
+
+**Verify in Vercel:** `CRON_SECRET` env var; cron jobs active after deploy.
+
+---
+
+## Production metadata
+
+```
+NEXT_PUBLIC_SITE_URL=https://mallowup.com
+```
+
+Root layout `metadataBase` reads this env var. Localhost when unset.
+
+---
+
+## Founder Day 1 play checklist
+
+**LANDING** — “What’s your price?” sets right expectation?  
+**Q1** — One-read understandable?  
+**Q2** — One new fact, not a new scenario?  
+**Q3** — Your $68k sacrifice feels like *your* price?  
+**Q4 Flip** — Fair, not accusatory?  
+**READ THE ROOM** — Secondary to your call?  
+**Q5 Line** — Payoff, not survey?  
+**TODAY'S READ** — Movement without diagnosis?  
+**OUTSIDE** — Quiet, not preachy?  
+**WAIT** — Clear when to return?
 
 ---
 
@@ -206,16 +263,14 @@ Events in `src/lib/analytics/events.ts`:
 | `todays_read_viewed` | User viewed Today's Read |
 | `daily_reveal_available` | Reveal gate passed / available state shown |
 | `daily_reveal_opened` | User opened reveal |
-| `next_daily_return` | User returned for next Daily |
-| `prediction_started` | Flip prediction begun |
-| `prediction_sealed` | Flip prediction locked |
-| `waiting_viewed` / `waiting_returned` | Wait screen engagement |
-| `share_created` / `share_opened` / `share_play_clicked` | Share funnel |
-| `notification_clicked` | Notification engagement |
-| `home_viewed` | Home feed view |
-| `gap_viewed` | Gap / between-stage UI |
+| `next_daily_return` | User tapped **PLAY ANOTHER** after reveal (`DailyRoundRevealExperience`) |
+| `prediction_started` / `prediction_sealed` | Flip prediction flow |
+| `waiting_viewed` / `waiting_returned` | Wait screen (`/m/[id]` when closed, not yet reveal) |
+| `share_*` / `notification_clicked` / `home_viewed` / `gap_viewed` | Secondary funnel |
 
-No external analytics service required — events flow through existing `trackEvent` → Supabase.
+**`next_daily_return` semantics:** Explicit button click after viewing reveal — not automatic next-day return and not starting the next Daily.
+
+Events flow through `trackEvent` → Supabase. Payload includes `round_id` and/or `position` where applicable; entity id column stores round or marshmallow UUID.
 
 ---
 
@@ -225,8 +280,8 @@ No external analytics service required — events flow through existing `trackEv
 |------|-----------|-------------|----------------|
 | Daily view | Users with `daily_viewed` | Eligible users (invited, onboarded) | `daily_viewed` |
 | Daily start | `daily_started` | `daily_viewed` | analytics |
-| Q1 sealed | `daily_question_locked` where stage=1 | `daily_started` | analytics payload |
-| Q3 reached | `daily_question_locked` where stage=3 | `daily_started` | analytics payload |
+| Q1 sealed | `daily_question_locked` where `payload.position = 1` | `daily_started` | analytics payload |
+| Q3 reached | `daily_question_locked` where `payload.position = 3` | `daily_started` | analytics payload |
 | Q5 completed | `daily_completed` | `daily_started` | analytics |
 | Today's Read | `todays_read_viewed` | `daily_completed` | analytics |
 | Reveal returned | `daily_reveal_opened` | Users who completed before close | analytics |
@@ -266,8 +321,10 @@ No KPI thresholds for Beta — qualitative pattern recognition first.
 
 ## Pre-invite blockers
 
-- [ ] Founder promotes Day 1 explicitly (not done in prep tasks)
-- [ ] `metadataBase` set for production OG URLs (build currently warns)
-- [ ] Lifecycle cron authorized in production
-- [ ] Day 6/7 live dates avoid QA collisions
+- [ ] Founder promotes Day 1 explicitly
+- [ ] `NEXT_PUBLIC_SITE_URL=https://mallowup.com` in Vercel production env
+- [ ] Deploy with `metadataBase` fix (see Production metadata)
+- [ ] `CRON_SECRET` set; Vercel cron invocations confirmed in logs
+- [ ] Deploy with updated `vercel.json` cron schedules
+- [ ] Founder Day 1 play checklist completed
 - [ ] 10–30 invite list ready
