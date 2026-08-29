@@ -2,7 +2,7 @@
 
 import { AppShell } from "@/components/AppShell";
 import { ErrorState } from "@/components/ErrorState";
-import { PrimaryButton } from "@/components/PrimaryButton";
+import { MoneyPrimaryButton } from "@/components/MoneyPrimaryButton";
 
 export default function RootError({
   reset,
@@ -17,7 +17,7 @@ export default function RootError({
           title="Something got toasted."
           description="Try that again in a moment."
         />
-        <PrimaryButton onClick={reset}>Try again</PrimaryButton>
+        <MoneyPrimaryButton onClick={reset}>Try again</MoneyPrimaryButton>
       </main>
     </AppShell>
   );

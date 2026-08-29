@@ -9,6 +9,7 @@ import {
 import { isDailyRoundVisibleOnHome } from "@/domain/daily/round";
 import {
   continuousCurrentPlayMarshmallowId,
+  isContinuousInventoryAccessError,
   isContinuousRoundComplete,
   isContinuousRoundPlayableNow,
   pickEligibleContinuousRoundId,
@@ -41,25 +42,43 @@ export type LandingPlayContext = {
   hasContinuousInventory: boolean;
 };
 
+const EMPTY_CONTINUOUS_ROUND_DATA = {
+  marshmallowsByRound: new Map<string, ContinuousRoundMarshmallow[]>(),
+  userStates: new Map<string, { sealedMarshmallowIds: Set<string>; sealedCount: number }>(),
+};
+
 async function loadContinuousRoundData(): Promise<{
   marshmallowsByRound: Map<string, ContinuousRoundMarshmallow[]>;
   userStates: Map<string, { sealedMarshmallowIds: Set<string>; sealedCount: number }>;
 }> {
   const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const roundIds = CONTINUOUS_EXPERIMENT_CATALOG.map((entry) => entry.roundId);
 
-  const [{ data: marshmallows, error: marshmallowError }, { data: entries, error: entryError }] =
-    await Promise.all([
-      supabase
-        .from("marshmallows")
-        .select("id, daily_round_id, round_position, status, opens_at, closes_at")
-        .in("daily_round_id", roundIds)
-        .order("round_position", { ascending: true }),
-      supabase.from("entries").select("marshmallow_id, sealed_at"),
-    ]);
+  const [{ data: marshmallows, error: marshmallowError }, entryResult] = await Promise.all([
+    supabase
+      .from("marshmallows")
+      .select("id, daily_round_id, round_position, status, opens_at, closes_at")
+      .in("daily_round_id", roundIds)
+      .order("round_position", { ascending: true }),
+    user
+      ? supabase.from("entries").select("marshmallow_id, sealed_at")
+      : Promise.resolve({ data: [], error: null }),
+  ]);
 
-  if (marshmallowError) throw new Error(marshmallowError.message);
-  if (entryError) throw new Error(entryError.message);
+  if (marshmallowError) {
+    throw new Error(marshmallowError.message);
+  }
+
+  const { data: entries, error: entryError } = entryResult;
+  if (entryError) {
+    if (isContinuousInventoryAccessError(entryError)) {
+      return EMPTY_CONTINUOUS_ROUND_DATA;
+    }
+    throw new Error(entryError.message);
+  }
 
   const sealedIds = new Set(
     (entries ?? []).filter((row) => row.sealed_at != null).map((row) => row.marshmallow_id),
@@ -95,6 +114,20 @@ async function loadContinuousRoundData(): Promise<{
   return { marshmallowsByRound, userStates };
 }
 
+async function loadContinuousRoundDataSafely(): Promise<{
+  marshmallowsByRound: Map<string, ContinuousRoundMarshmallow[]>;
+  userStates: Map<string, { sealedMarshmallowIds: Set<string>; sealedCount: number }>;
+}> {
+  try {
+    return await loadContinuousRoundData();
+  } catch (error) {
+    if (isContinuousInventoryAccessError(error)) {
+      return EMPTY_CONTINUOUS_ROUND_DATA;
+    }
+    throw error;
+  }
+}
+
 async function buildOfferForRound(
   roundId: string,
   marshmallowsByRound: Map<string, ContinuousRoundMarshmallow[]>,
@@ -111,20 +144,36 @@ async function buildOfferForRound(
   if (!playId) return null;
 
   const supabase = await createSupabaseServerClient();
-  const { data: round, error } = await supabase
-    .from("daily_rounds")
-    .select("title, subtitle, metadata")
-    .eq("id", roundId)
-    .maybeSingle();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (error) throw new Error(error.message);
+  let title = catalog.homeHeadline;
+  let subtitle: string | null = catalog.homeTeaser;
+
+  if (user) {
+    const { data: round, error } = await supabase
+      .from("daily_rounds")
+      .select("title, subtitle, metadata")
+      .eq("id", roundId)
+      .maybeSingle();
+
+    if (error) {
+      if (!isContinuousInventoryAccessError(error)) {
+        throw new Error(error.message);
+      }
+    } else if (round) {
+      title = round.title ?? catalog.homeHeadline;
+      subtitle = round.subtitle ?? catalog.homeTeaser;
+    }
+  }
 
   const sealedCount = marshmallows.filter((item) => sealedMarshmallowIds.has(item.id)).length;
 
   return {
     roundId,
-    title: round?.title ?? catalog.homeHeadline,
-    subtitle: round?.subtitle ?? catalog.homeTeaser,
+    title,
+    subtitle,
     homeHeadline: catalog.homeHeadline,
     homeTeaser: catalog.homeTeaser,
     playHref: `/m/${playId}`,
@@ -137,26 +186,37 @@ async function buildOfferForRound(
 export async function getContinuousExperimentOffer(
   excludeRoundIds: readonly string[] = [],
 ): Promise<ContinuousExperimentOffer | null> {
-  const { marshmallowsByRound, userStates } = await loadContinuousRoundData();
-  const roundId = pickEligibleContinuousRoundId({
-    marshmallowsByRound,
-    userStates: new Map(
-      [...userStates.entries()].map(([id, state]) => [
-        id,
-        {
-          roundId: id,
-          sealedCount: state.sealedCount,
-          sealedMarshmallowIds: state.sealedMarshmallowIds,
-        },
-      ]),
-    ),
-    excludeRoundIds,
-  });
+  try {
+    const { marshmallowsByRound, userStates } = await loadContinuousRoundDataSafely();
+    const roundId = pickEligibleContinuousRoundId({
+      marshmallowsByRound,
+      userStates: new Map(
+        [...userStates.entries()].map(([id, state]) => [
+          id,
+          {
+            roundId: id,
+            sealedCount: state.sealedCount,
+            sealedMarshmallowIds: state.sealedMarshmallowIds,
+          },
+        ]),
+      ),
+      excludeRoundIds,
+    });
 
-  if (!roundId) return null;
+    if (!roundId) return null;
 
-  const state = userStates.get(roundId);
-  return buildOfferForRound(roundId, marshmallowsByRound, state?.sealedMarshmallowIds ?? new Set());
+    const state = userStates.get(roundId);
+    return buildOfferForRound(
+      roundId,
+      marshmallowsByRound,
+      state?.sealedMarshmallowIds ?? new Set(),
+    );
+  } catch (error) {
+    if (isContinuousInventoryAccessError(error)) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function getNextContinuousPlayHrefAfter(
@@ -167,7 +227,7 @@ export async function getNextContinuousPlayHrefAfter(
 }
 
 export async function isContinuousInventoryExhausted(): Promise<boolean> {
-  const { marshmallowsByRound, userStates } = await loadContinuousRoundData();
+  const { marshmallowsByRound, userStates } = await loadContinuousRoundDataSafely();
   const anyPlayable = CONTINUOUS_EXPERIMENT_CATALOG.some((entry) => {
     const marshmallows = marshmallowsByRound.get(entry.roundId);
     if (!marshmallows || !isContinuousRoundPlayableNow(marshmallows)) return false;
@@ -180,9 +240,16 @@ export async function isContinuousInventoryExhausted(): Promise<boolean> {
 export async function getContinuousCaughtUp(
   nextDailyOpensAt: string | null,
 ): Promise<ContinuousCaughtUp | null> {
-  const exhausted = await isContinuousInventoryExhausted();
-  if (!exhausted) return null;
-  return { nextDailyOpensAt };
+  try {
+    const exhausted = await isContinuousInventoryExhausted();
+    if (!exhausted) return null;
+    return { nextDailyOpensAt };
+  } catch (error) {
+    if (isContinuousInventoryAccessError(error)) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function resolvePostOnboardingPlayHref(): Promise<string> {

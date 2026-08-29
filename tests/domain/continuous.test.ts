@@ -12,6 +12,7 @@ import {
   continuousCurrentPlayMarshmallowId,
   isContinuousRoundComplete,
   isContinuousRoundPlayableNow,
+  isContinuousInventoryAccessError,
   pickEligibleContinuousRoundId,
   resolveEntrySurface,
   type ContinuousRoundMarshmallow,
@@ -91,6 +92,18 @@ describe("continuous eligibility", () => {
     ).toBe("continuous");
     expect(resolveEntrySurface(LAUNCH_MONEY_DAILY_ROUND_ID, LAUNCH_MONEY_DAILY_ROUND_ID)).toBe(
       "daily",
+    );
+  });
+
+  it("recognizes expected continuous inventory access boundaries", () => {
+    expect(isContinuousInventoryAccessError(new Error("permission denied for table entries"))).toBe(
+      true,
+    );
+    expect(
+      isContinuousInventoryAccessError(new Error("permission denied for table daily_rounds")),
+    ).toBe(true);
+    expect(isContinuousInventoryAccessError(new Error("home_payload_leaked_aggregates"))).toBe(
+      false,
     );
   });
 });

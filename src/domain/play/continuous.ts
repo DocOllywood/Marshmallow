@@ -105,3 +105,14 @@ export function resolveEntrySurface(
   if (isContinuousPlaySurface(roundId, featuredDailyRoundId)) return "continuous";
   return "daily";
 }
+
+/** Expected RLS/auth boundaries when optional continuous inventory is unavailable. */
+export function isContinuousInventoryAccessError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("permission denied for table entries") ||
+    message.includes("permission denied for table daily_rounds") ||
+    message.includes("42501")
+  );
+}
