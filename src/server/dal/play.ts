@@ -19,6 +19,7 @@ import {
   marshmallowRequiresPrediction,
   resolveMarshmallowExperimentMetadata,
 } from "@/domain/daily/experiment";
+import { resolveExperimentPresentationMode } from "@/domain/host/presentation";
 import { parseTensionSide, type TensionSide } from "@/domain/daily/tension";
 
 export type { PlayAllocation, PlayChoice, PlayMarshmallow, RevealChoiceRow, RevealPayload };
@@ -246,6 +247,7 @@ export async function getPlayMarshmallow(id: string): Promise<PlayMarshmallow | 
     experimentCostType: experimentMeta?.costType ?? null,
     experimentCostLabel: experimentMeta?.costLabel ?? null,
     experimentArchetype: dailyRound?.experimentArchetype ?? "default",
+    presentationMode: resolveExperimentPresentationMode(roundMetadata),
     entrySurface,
     continuousNextHref,
   };

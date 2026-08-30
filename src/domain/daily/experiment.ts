@@ -1,6 +1,11 @@
+import type { ExperimentPresentationMode } from "@/domain/host/presentation";
+import { parseExperimentPresentationMode } from "@/domain/host/presentation";
+
 export const EXPERIMENT_VERSION = 1 as const;
 
 export type ExperimentArchetype = "default" | "price";
+
+export type { ExperimentPresentationMode };
 
 export type ExperimentStage = "instinct" | "pressure" | "consequence" | "flip" | "line";
 
@@ -17,6 +22,7 @@ export type DailyRoundExperimentMetadata = {
   version: typeof EXPERIMENT_VERSION;
   archetype: ExperimentArchetype;
   priceReferenceSide: "left" | "right" | null;
+  presentation: ExperimentPresentationMode;
 };
 
 const STAGES_BY_POSITION: Record<number, ExperimentStage> = {
@@ -39,6 +45,7 @@ export function parseDailyRoundExperimentMetadata(
       version: EXPERIMENT_VERSION,
       archetype: parseExperimentArchetype(metadata),
       priceReferenceSide: parsePriceReferenceSide(metadata),
+      presentation: parseExperimentPresentationMode(metadata),
     };
   }
   return null;

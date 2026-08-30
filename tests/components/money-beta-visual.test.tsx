@@ -118,6 +118,7 @@ function priceMarshmallow(): PlayMarshmallow {
     experimentCostType: null,
     experimentCostLabel: "Before any offer details",
     experimentArchetype: "price",
+    presentationMode: "standard",
     entrySurface: "daily",
     continuousNextHref: null,
     question: "Would you move for their dream job?",

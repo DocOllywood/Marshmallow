@@ -1,6 +1,6 @@
 import type { PlayScreen } from "@/domain/play/view";
 import type { DailyRoundProgress } from "@/domain/daily/round";
-import type { ExperimentStage } from "@/domain/daily/experiment";
+import type { ExperimentPresentationMode, ExperimentStage } from "@/domain/daily/experiment";
 import type { Database } from "@/lib/supabase/types";
 import type { TensionSide } from "@/domain/daily/tension";
 
@@ -80,6 +80,7 @@ export type PlayMarshmallow = {
   experimentCostType: string | null;
   experimentCostLabel: string | null;
   experimentArchetype: "default" | "price";
+  presentationMode: ExperimentPresentationMode;
   entrySurface: "daily" | "continuous" | null;
   continuousNextHref: string | null;
 };

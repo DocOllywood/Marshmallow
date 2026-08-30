@@ -76,6 +76,7 @@ const base: PlayMarshmallow = {
   experimentCostType: null,
   experimentCostLabel: null,
   experimentArchetype: "default",
+  presentationMode: "standard",
   entrySurface: "daily",
   continuousNextHref: null,
 };

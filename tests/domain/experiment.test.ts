@@ -88,6 +88,7 @@ describe("experiment detection", () => {
       version: 1,
       archetype: "default",
       priceReferenceSide: null,
+      presentation: "standard",
     });
   });
 
