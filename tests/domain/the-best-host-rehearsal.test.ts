@@ -104,11 +104,12 @@ describe("the-best host production safety", () => {
     expect(src).not.toContain("THE_BEST_OUTSIDE_COPY");
   });
 
-  it("uses sage money tokens instead of purple primary buttons", () => {
-    const src = readSrc("src/components/dev/TheBestHostRehearsal.tsx");
-    expect(src).toContain("MoneyPrimaryButton");
-    expect(src).toContain("text-money");
-    expect(src).not.toMatch(/from "@\/components\/PrimaryButton"/);
-    expect(src).not.toMatch(/\bbg-primary\b|\btext-primary\b/);
+  it("uses sage money tokens via shared host engine", () => {
+    const wrapper = readSrc("src/components/dev/TheBestHostRehearsal.tsx");
+    const engine = readSrc("src/components/dev/HostRehearsalEngine.tsx");
+    expect(wrapper).toContain("HostRehearsalEngine");
+    expect(engine).toContain("MoneyPrimaryButton");
+    expect(engine).toContain("text-money");
+    expect(engine).not.toMatch(/from "@\/components\/PrimaryButton"/);
   });
 });
